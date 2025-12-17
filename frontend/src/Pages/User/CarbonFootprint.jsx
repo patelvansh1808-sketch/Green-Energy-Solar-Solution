@@ -1,4 +1,4 @@
-import PieChart from "../../Components/Charts/PieChart";
+import PieChart from "../../Components/Charts/PieChart.jsx";
 
 export default function CarbonFootprint() {
   return (

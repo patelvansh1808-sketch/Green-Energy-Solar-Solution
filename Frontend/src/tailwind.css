@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme tokens and dark-mode variables */
+:root{
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --glass: rgba(255,255,255,0.6);
+}
+.dark{
+  --bg: #071025;
+  --card: #081225;
+  --muted: #9ca3af;
+  --glass: rgba(8,18,37,0.4);
+}
+
+@layer base{
+  html, body, #root{
+    height: 100%;
+  }
+  body{
+    background: var(--bg);
+    color: #0f172a; /* gray-900 */
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .dark body{
+    background: var(--bg);
+    color: #e6eef8; /* light tone for dark mode */
+  }
+  code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace; }
+}
+
+/* Components and utilities - advanced, reusable tokens */
+@layer components{
+  .btn{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    box-shadow: 0 6px 22px rgba(2,6,23,0.06);
+    transition: background-color 150ms ease, transform 150ms ease;
+    background: linear-gradient(180deg, #1796ff, #0f6ed6);
+    color: white;
+  }
+  .btn-secondary{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    border: 1px solid rgba(229,231,235,1);
+    background: white;
+    color: #0f6ed6;
+  }
+  .card{
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 1.5rem; /* p-6 */
+    background: var(--card);
+    box-shadow: 0 8px 30px rgba(2,6,23,0.08);
+  }
+  .glass{
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+  }
+}
+
+/* Example utilities */
+@layer utilities{
+  .text-muted{ color: var(--muted) }
+  .heading-xl{ font-size: 1.875rem; font-weight: 700; line-height: 1.1 }
+}
+
+/* Prose default tweaks for markdown / reports (use plugin classes directly in markup when possible) */
+@layer components{
+  .prose-custom{
+    max-width: 65ch;
+    color: inherit;
+  }
+}

@@ -1,4 +1,4 @@
-import DashboardCard from "../../omponents/DashboardCard";
+import DashboardCard from "../../Components/DashboardCard";
 
 export default function UserDashboard() {
   return (

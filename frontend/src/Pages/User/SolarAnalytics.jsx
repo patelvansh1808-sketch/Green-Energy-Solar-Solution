@@ -1,5 +1,5 @@
-import LineChart from "../../components/Charts/LineChart";
-import BarChart from "../../components/Charts/BarChart";
+import LineChart from "../../Components/Charts/LineChart";
+import BarChart from "../../Components/Charts/BarChart";
 
 export default function SolarAnalytics() {
   return (

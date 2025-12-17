@@ -1,4 +1,4 @@
-import AlertBox from "../../components/AlertBox";
+import AlertBox from "../../Components/AlertBox.jsx";
 
 export default function Alerts() {
   return (

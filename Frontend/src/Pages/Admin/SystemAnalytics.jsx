@@ -1,4 +1,4 @@
-import BarChart from "../../components/Charts/BarChart";
+import BarChart from "../../Components/Charts/BarChart.jsx";
 
 export default function SystemAnalytics() {
   return (

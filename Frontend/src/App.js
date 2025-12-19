@@ -20,6 +20,9 @@ import Alerts from "./Pages/User/Alerts";
 import Notifications from "./Pages/User/Notifications";
 import Reports from "./Pages/User/Reports";
 
+import ContactUs from "./Pages/contact/ContactUs";
+
+
 // Admin
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
 import ManageUsers from "./Pages/Admin/ManageUsers";
@@ -64,6 +67,8 @@ export default function App() {
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/contact" element={<ContactUs />} />
+
 
           {/* Admin Protected Routes */}
           <Route

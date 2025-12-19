@@ -10,6 +10,10 @@ export default function Navbar() {
         <Link to="/booking">Booking</Link>
         <Link to="/subsidy">Subsidy</Link>
         <Link to="/admin">Admin</Link>
+        <Link className="hover:text-green-200" to="/contact">
+  Contact
+</Link>
+
       </div>
     </nav>
   );

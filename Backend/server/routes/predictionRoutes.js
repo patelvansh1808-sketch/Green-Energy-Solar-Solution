@@ -1,0 +1,10 @@
+const express = require("express");
+const router = express.Router();
+const auth = require("../middleware/authMiddleware");
+const {
+  predictPower,
+} = require("../controllers/predictionController");
+
+router.post("/predict", auth, predictPower);
+
+module.exports = router;

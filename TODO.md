@@ -1,0 +1,4 @@
+- [ ] Fix import paths in AuthContext.jsx to use correct case for Services directory
+- [ ] Fix import paths in Login.jsx to use correct case for Services directory
+- [ ] Fix import paths in Register.jsx to use correct case for Services directory
+- [ ] Fix import paths in ForgotPassword.jsx to use correct case for Services directory

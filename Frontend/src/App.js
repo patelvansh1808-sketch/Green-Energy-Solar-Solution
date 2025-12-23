@@ -20,6 +20,7 @@ import CostROI from "./Pages/User/CostROI";
 import Alerts from "./Pages/User/Alerts";
 import Notifications from "./Pages/User/Notifications";
 import Reports from "./Pages/User/Reports";
+import Profile from "./Pages/User/Profile";
 import ContactUs from "./Pages/contact/ContactUs";
 
 // Admin
@@ -40,10 +41,7 @@ function AnimatedRoutes() {
   const location = useLocation();
 
   return (
-    <div
-      key={location.pathname}
-      className="animate-fade animate-slideUp"
-    >
+    <div key={location.pathname} className="animate-fade animate-slideUp">
       <Routes location={location}>
         {/* Public */}
         <Route path="/" element={<LandingPage />} />
@@ -51,7 +49,7 @@ function AnimatedRoutes() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* User */}
+        {/* User Protected */}
         <Route
           path="/dashboard"
           element={
@@ -70,6 +68,17 @@ function AnimatedRoutes() {
         <Route path="/alerts" element={<Alerts />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/reports" element={<Reports />} />
+
+        {/* ✅ PROFILE ROUTE */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/contact" element={<ContactUs />} />
 
         {/* Admin */}
@@ -93,7 +102,6 @@ function AnimatedRoutes() {
 export default function App() {
   const [loading, setLoading] = useState(true);
 
-  // Simulate initial load (slow network UX)
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200);
     return () => clearTimeout(timer);

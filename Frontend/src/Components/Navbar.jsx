@@ -106,6 +106,10 @@ export default function Navbar() {
           >
             Contact
           </Link>
+          <Link to="/Profile" className="hover:text-green-200">
+  Profile
+</Link>
+
         </div>
       )}
     </nav>

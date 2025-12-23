@@ -2,10 +2,10 @@ const express = require("express");
 const cors = require("cors");
 
 // Load environment variables
-require("./config/env");
+require("./server/config/env");
 
 // Connect Database
-const connectDB = require("./config/db");
+const connectDB = require("./server/config/db");
 
 // Initialize app
 const app = express();
@@ -20,31 +20,31 @@ app.use(express.json());
 // -------------------- ROUTES --------------------
 
 // Auth
-app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/auth", require("./server/routes/authRoutes"));
 
 // User
-app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/users", require("./server/routes/userRoutes"));
 
 // Energy
-app.use("/api/energy", require("./routes/energyRoutes"));
+app.use("/api/energy", require("./server/routes/energyRoutes"));
 
 // Analytics
-app.use("/api/analytics", require("./routes/analyticsRoutes"));
+app.use("/api/analytics", require("./server/routes/analyticsRoutes"));
 
 // Booking
-app.use("/api/bookings", require("./routes/bookingRoutes"));
+app.use("/api/bookings", require("./server/routes/bookingRoutes"));
 
 // Subsidy
-app.use("/api/subsidy", require("./routes/subsidyRoutes"));
+app.use("/api/subsidy", require("./server/routes/subsidyRoutes"));
 
 // AI Prediction
-app.use("/api/predict", require("./routes/predictionRoutes"));
+app.use("/api/predict", require("./server/routes/predictionRoutes"));
 
 // Reports (PDF / Excel)
-app.use("/api/reports", require("./routes/reportRoutes"));
+app.use("/api/reports", require("./server/routes/reportRoutes"));
 
 // Admin
-app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/admin", require("./server/routes/adminRoutes"));
 
 // -------------------- DEFAULT ROUTE --------------------
 

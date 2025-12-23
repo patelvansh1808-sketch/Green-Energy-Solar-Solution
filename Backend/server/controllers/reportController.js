@@ -1,5 +1,5 @@
 const { generatePDF } = require("../utils/pdfGenerator");
-const Energy = require("../server/config/models/Energy");
+const Energy = require("../models/Energy");
 
 exports.generateReport = async (req, res) => {
   try {

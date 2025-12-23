@@ -1,5 +1,5 @@
-const User = require("../server/config/models/User");
-const Booking = require("../server/config/models/Booking");
+const User = require("../models/User");
+const Booking = require("../models/Booking");
 
 exports.getAllUsers = async (req, res) => {
   const users = await User.find().select("-password");

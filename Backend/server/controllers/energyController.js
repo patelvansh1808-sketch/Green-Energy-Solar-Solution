@@ -1,4 +1,4 @@
-const Energy = require("../server/config/models/Energy");
+const Energy = require("../models/Energy");
 
 // ADD ENERGY DATA
 exports.addEnergy = async (req, res) => {

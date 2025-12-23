@@ -1,4 +1,4 @@
-const Energy = require("../server/config/models/Energy");
+const Energy = require("../models/Energy");
 
 exports.dashboardAnalytics = async (req, res) => {
   const energy = await Energy.find({ userId: req.user.id });

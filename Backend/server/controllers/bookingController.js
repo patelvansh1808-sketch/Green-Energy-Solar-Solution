@@ -1,17 +1,18 @@
 const Booking = require("../models/Booking");
 
 exports.createBooking = async (req, res) => {
-  const booking = await Booking.create({
-    userId: req.user.id,
-    panelType: req.body.panelType,
-    capacityKW: req.body.capacityKW,
-    estimatedCost: req.body.estimatedCost,
-  });
+  try {
+    const booking = await Booking.create({
+      user: req.user.id, // comes from auth middleware
+      ...req.body,
+    });
 
-  res.status(201).json(booking);
-};
-
-exports.getBookings = async (req, res) => {
-  const bookings = await Booking.find({ userId: req.user.id });
-  res.json(bookings);
+    res.status(201).json({
+      message: "Booking created successfully",
+      booking,
+    });
+  } catch (err) {
+    console.error("BOOKING ERROR:", err.message);
+    res.status(500).json({ message: err.message });
+  }
 };

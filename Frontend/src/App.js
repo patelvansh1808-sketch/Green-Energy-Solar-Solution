@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./Context/AuthContext";
+import { useEffect, useState } from "react";
 
 // Public
 import LandingPage from "./Pages/Landing/LandingPage";
@@ -19,9 +20,7 @@ import CostROI from "./Pages/User/CostROI";
 import Alerts from "./Pages/User/Alerts";
 import Notifications from "./Pages/User/Notifications";
 import Reports from "./Pages/User/Reports";
-
 import ContactUs from "./Pages/contact/ContactUs";
-
 
 // Admin
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
@@ -34,57 +33,79 @@ import SystemAnalytics from "./Pages/Admin/SystemAnalytics";
 import Navbar from "./Components/Navbar";
 import Footer from "./Components/Footer";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import LoadingScreen from "./Components/LoadingScreen";
+
+// Wrapper for page animation
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <div
+      key={location.pathname}
+      className="animate-fade animate-slideUp"
+    >
+      <Routes location={location}>
+        {/* Public */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* User */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/analytics" element={<SolarAnalytics />} />
+        <Route path="/prediction" element={<PowerPrediction />} />
+        <Route path="/weather" element={<WeatherForecast />} />
+        <Route path="/carbon" element={<CarbonFootprint />} />
+        <Route path="/booking" element={<Booking />} />
+        <Route path="/subsidy" element={<SubsidyEligibility />} />
+        <Route path="/cost-roi" element={<CostROI />} />
+        <Route path="/alerts" element={<Alerts />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/contact" element={<ContactUs />} />
+
+        {/* Admin */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/admin/users" element={<ManageUsers />} />
+        <Route path="/admin/bookings" element={<ManageBookings />} />
+        <Route path="/admin/subsidy" element={<SubsidyRules />} />
+        <Route path="/admin/analytics" element={<SystemAnalytics />} />
+      </Routes>
+    </div>
+  );
+}
 
 export default function App() {
+  const [loading, setLoading] = useState(true);
+
+  // Simulate initial load (slow network UX)
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) return <LoadingScreen />;
+
   return (
     <AuthProvider>
       <BrowserRouter>
         <Navbar />
-
-        <Routes>
-          {/* Public */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-
-          {/* User Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <UserDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/analytics" element={<SolarAnalytics />} />
-          <Route path="/prediction" element={<PowerPrediction />} />
-          <Route path="/weather" element={<WeatherForecast />} />
-          <Route path="/carbon" element={<CarbonFootprint />} />
-          <Route path="/booking" element={<Booking />} />
-          <Route path="/subsidy" element={<SubsidyEligibility />} />
-          <Route path="/cost-roi" element={<CostROI />} />
-          <Route path="/alerts" element={<Alerts />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/contact" element={<ContactUs />} />
-
-
-          {/* Admin Protected Routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute role="admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/admin/users" element={<ManageUsers />} />
-          <Route path="/admin/bookings" element={<ManageBookings />} />
-          <Route path="/admin/subsidy" element={<SubsidyRules />} />
-          <Route path="/admin/analytics" element={<SystemAnalytics />} />
-        </Routes>
-
+        <AnimatedRoutes />
         <Footer />
       </BrowserRouter>
     </AuthProvider>

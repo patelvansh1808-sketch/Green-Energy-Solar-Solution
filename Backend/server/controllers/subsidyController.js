@@ -1,4 +1,4 @@
-const Subsidy = require("../server/config/models/Subsidy");
+const Subsidy = require("../models/Subsidy");
 
 exports.checkSubsidy = async (req, res) => {
   const subsidy = await Subsidy.findOne({ state: req.body.state });

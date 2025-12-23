@@ -1,10 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middleware/authMiddleware");
-const {
-  checkSubsidy,
-} = require("../controllers/subsidyController");
+const { checkSubsidy } = require("../controllers/subsidyController");
 
-router.post("/check", auth, checkSubsidy);
+router.post("/check", checkSubsidy);
 
 module.exports = router;

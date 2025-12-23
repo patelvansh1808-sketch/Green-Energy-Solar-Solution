@@ -54,3 +54,17 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(404).json({ message: "Email not registered" });
+  }
+
+  // Mock reset logic (no real email)
+  res.json({
+    message: "Password reset link sent to your email (demo)",
+  });
+};

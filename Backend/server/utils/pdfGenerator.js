@@ -1,22 +1,39 @@
 const PDFDocument = require("pdfkit");
 
-exports.generatePDF = (reportData, res) => {
-  const doc = new PDFDocument();
+exports.generateROIReport = (res, data) => {
+  const doc = new PDFDocument({ margin: 40 });
 
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", "attachment; filename=solar_report.pdf");
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=ROI_Report.pdf"
+  );
 
   doc.pipe(res);
 
-  doc.fontSize(18).text("Smart Solar Energy Report", { align: "center" });
+  // TITLE
+  doc
+    .fontSize(20)
+    .text("ROI & Break-Even Analysis Report", { align: "center" })
+    .moveDown(2);
+
+  // DETAILS
+  doc.fontSize(12);
+  doc.text(`Net Investment: ₹${data.netInvestment}`);
+  doc.text(`Annual Savings: ₹${data.annualSavings}`);
+  doc.text(`Break-Even Year: ${data.breakEvenYear}`);
+  doc.text(
+    `Profit After ${data.yearlySavings.length} Years: ₹${data.profitAfterYears}`
+  );
+
   doc.moveDown();
 
-  reportData.forEach((item) => {
-    doc
-      .fontSize(12)
-      .text(`Date: ${item.date}`)
-      .text(`Units Generated: ${item.unitsGenerated}`)
-      .moveDown();
+  // TABLE HEADER
+  doc.fontSize(14).text("Year-wise Savings", { underline: true });
+  doc.moveDown(0.5);
+
+  data.yearlySavings.forEach((y) => {
+    doc.fontSize(11).text(`Year ${y.year}: ₹${y.savings}`);
   });
 
   doc.end();

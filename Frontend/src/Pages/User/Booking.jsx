@@ -5,15 +5,13 @@ const solarPlans = {
   Residential: [
     { kW: 1, cost: 60000, subsidy: 0.3 },
     { kW: 3, cost: 150000, subsidy: 0.3 },
-    { kW: 5, cost: 250000, subsidy: 0.3 }
+    { kW: 5, cost: 250000, subsidy: 0.3 },
   ],
   Commercial: [
     { kW: 10, cost: 400000, subsidy: 0.2 },
-    { kW: 25, cost: 900000, subsidy: 0.2 }
+    { kW: 25, cost: 900000, subsidy: 0.2 },
   ],
-  Industrial: [
-    { kW: 100, cost: 3500000, subsidy: 0.1 }
-  ]
+  Industrial: [{ kW: 100, cost: 3500000, subsidy: 0.1 }],
 };
 
 export default function Booking() {
@@ -25,7 +23,7 @@ export default function Booking() {
   const [loading, setLoading] = useState(false);
 
   const subsidyAmount =
-    plan && applySubsidy ? plan.cost * plan.subsidy : 0;
+    plan && applySubsidy ? Math.round(plan.cost * plan.subsidy) : 0;
 
   const finalCost = plan ? plan.cost - subsidyAmount : 0;
 
@@ -40,7 +38,7 @@ export default function Booking() {
     try {
       setLoading(true);
 
-      await api.post("/bookings", {
+      await api.post("/bookings/create", {
         systemType: type,
         capacity: plan.kW,
         baseCost: plan.cost,
@@ -49,12 +47,12 @@ export default function Booking() {
         finalCost,
         emiEnabled: useEmi,
         emiYears: useEmi ? emiYears : null,
-        monthlyEmi: useEmi ? emiAmount : null
+        monthlyEmi: useEmi ? emiAmount : null,
       });
 
       alert("✅ Booking successful!");
     } catch (err) {
-      console.error(err);
+      console.error("BOOKING ERROR:", err.response?.data || err.message);
       alert("❌ Booking failed");
     } finally {
       setLoading(false);
@@ -120,10 +118,16 @@ export default function Booking() {
         <div className="card mt-8 space-y-4">
           <h2 className="text-xl font-bold">💰 Cost Breakdown</h2>
 
-          <p><strong>Capacity:</strong> {plan.kW} kW</p>
-          <p><strong>Original Cost:</strong> ₹{plan.cost.toLocaleString()}</p>
+          <p>
+            <strong>Capacity:</strong> {plan.kW} kW
+          </p>
 
-          {/* Subsidy */}
+          <p>
+            <strong>Original Cost:</strong>{" "}
+            ₹{plan.cost.toLocaleString()}
+          </p>
+
+          {/* Subsidy Toggle */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -135,15 +139,17 @@ export default function Booking() {
 
           {applySubsidy && (
             <p className="text-green-700">
-              Subsidy Applied: -₹{subsidyAmount.toLocaleString()}
+              Subsidy Applied: -₹
+              {subsidyAmount.toLocaleString()}
             </p>
           )}
 
           <p className="text-lg font-semibold">
-            Final Payable Cost: ₹{finalCost.toLocaleString()}
+            Final Payable Cost: ₹
+            {finalCost.toLocaleString()}
           </p>
 
-          {/* EMI */}
+          {/* EMI Option */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -158,7 +164,9 @@ export default function Booking() {
               <select
                 className="input"
                 value={emiYears}
-                onChange={(e) => setEmiYears(Number(e.target.value))}
+                onChange={(e) =>
+                  setEmiYears(Number(e.target.value))
+                }
               >
                 <option value={3}>3 Years</option>
                 <option value={5}>5 Years</option>
@@ -166,7 +174,8 @@ export default function Booking() {
               </select>
 
               <p className="text-primary font-semibold">
-                Monthly EMI: ₹{emiAmount.toLocaleString()}
+                Monthly EMI: ₹
+                {emiAmount.toLocaleString()}
               </p>
             </>
           )}

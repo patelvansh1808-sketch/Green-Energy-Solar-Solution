@@ -2,27 +2,53 @@ const mongoose = require("mongoose");
 
 const bookingSchema = new mongoose.Schema(
   {
-    userId: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    panelType: {
+
+    systemType: {
       type: String,
       required: true,
     },
-    capacityKW: {
+
+    capacity: {
       type: Number,
       required: true,
     },
-    estimatedCost: {
+
+    baseCost: {
       type: Number,
       required: true,
     },
-    status: {
-      type: String,
-      enum: ["Pending", "Approved", "Installed", "Cancelled"],
-      default: "Pending",
+
+    subsidyApplied: {
+      type: Boolean,
+      default: false,
+    },
+
+    subsidyAmount: {
+      type: Number,
+      default: 0,
+    },
+
+    finalCost: {
+      type: Number,
+      required: true,
+    },
+
+    emiEnabled: {
+      type: Boolean,
+      default: false,
+    },
+
+    emiYears: {
+      type: Number,
+    },
+
+    monthlyEmi: {
+      type: Number,
     },
   },
   { timestamps: true }

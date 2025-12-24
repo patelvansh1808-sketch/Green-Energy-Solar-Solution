@@ -2,13 +2,13 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./Context/AuthContext";
 import { useEffect, useState } from "react";
 
-// Public
+// ===== PUBLIC PAGES =====
 import LandingPage from "./Pages/Landing/LandingPage";
 import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Register";
 import ForgotPassword from "./Pages/Auth/ForgotPassword";
 
-// User
+// ===== USER PAGES =====
 import UserDashboard from "./Pages/User/UserDashboard";
 import SolarAnalytics from "./Pages/User/SolarAnalytics";
 import PowerPrediction from "./Pages/User/PowerPrediction";
@@ -23,33 +23,35 @@ import Reports from "./Pages/User/Reports";
 import Profile from "./Pages/User/Profile";
 import ContactUs from "./Pages/contact/ContactUs";
 
-// Admin
+// ===== ADMIN PAGES =====
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
 import ManageUsers from "./Pages/Admin/ManageUsers";
 import ManageBookings from "./Pages/Admin/ManageBookings";
 import SubsidyRules from "./Pages/Admin/SubsidyRules";
 import SystemAnalytics from "./Pages/Admin/SystemAnalytics";
 
-// Components
+// ===== COMPONENTS =====
 import Navbar from "./Components/Navbar";
 import Footer from "./Components/Footer";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import LoadingScreen from "./Components/LoadingScreen";
 
-// Wrapper for page animation
+// ===== ROUTE ANIMATION WRAPPER =====
 function AnimatedRoutes() {
   const location = useLocation();
 
   return (
     <div key={location.pathname} className="animate-fade animate-slideUp">
       <Routes location={location}>
-        {/* Public */}
+
+        {/* ===== PUBLIC ROUTES ===== */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/contact" element={<ContactUs />} />
 
-        {/* User Protected */}
+        {/* ===== USER PROTECTED ROUTES ===== */}
         <Route
           path="/dashboard"
           element={
@@ -58,18 +60,88 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/analytics" element={<SolarAnalytics />} />
-        <Route path="/prediction" element={<PowerPrediction />} />
-        <Route path="/weather" element={<WeatherForecast />} />
-        <Route path="/carbon" element={<CarbonFootprint />} />
-        <Route path="/booking" element={<Booking />} />
-        <Route path="/subsidy" element={<SubsidyEligibility />} />
-        <Route path="/cost-roi" element={<CostROI />} />
-        <Route path="/alerts" element={<Alerts />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/reports" element={<Reports />} />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <SolarAnalytics />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/prediction"
+          element={
+            <ProtectedRoute>
+              <PowerPrediction />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/weather"
+          element={
+            <ProtectedRoute>
+              <WeatherForecast />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/carbon"
+          element={
+            <ProtectedRoute>
+              <CarbonFootprint />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/booking"
+          element={
+            <ProtectedRoute>
+              <Booking />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/subsidy"
+          element={
+            <ProtectedRoute>
+              <SubsidyEligibility />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cost-roi"
+          element={
+            <ProtectedRoute>
+              <CostROI />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/alerts"
+          element={
+            <ProtectedRoute>
+              <Alerts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* ✅ PROFILE ROUTE */}
+        {/* ✅ USER PROFILE */}
         <Route
           path="/profile"
           element={
@@ -79,9 +151,7 @@ function AnimatedRoutes() {
           }
         />
 
-        <Route path="/contact" element={<ContactUs />} />
-
-        {/* Admin */}
+        {/* ===== ADMIN ROUTES (ROLE PROTECTED) ===== */}
         <Route
           path="/admin"
           element={
@@ -90,10 +160,38 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/admin/users" element={<ManageUsers />} />
-        <Route path="/admin/bookings" element={<ManageBookings />} />
-        <Route path="/admin/subsidy" element={<SubsidyRules />} />
-        <Route path="/admin/analytics" element={<SystemAnalytics />} />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute role="admin">
+              <ManageUsers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/bookings"
+          element={
+            <ProtectedRoute role="admin">
+              <ManageBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/subsidy"
+          element={
+            <ProtectedRoute role="admin">
+              <SubsidyRules />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/analytics"
+          element={
+            <ProtectedRoute role="admin">
+              <SystemAnalytics />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </div>
   );
@@ -102,6 +200,7 @@ function AnimatedRoutes() {
 export default function App() {
   const [loading, setLoading] = useState(true);
 
+  // Simulated loading (slow network UX)
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200);
     return () => clearTimeout(timer);

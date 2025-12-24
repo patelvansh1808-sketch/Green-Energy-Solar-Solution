@@ -14,22 +14,22 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-green-700 text-white shadow-md">
+    <nav className="bg-green-700 text-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
 
-        {/* Logo + Name */}
+        {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <img
             src="/favicon.png"
             alt="SuryaUrja"
-            className="h-7 w-7"
+            className="h-8 w-8"
           />
           <span className="text-lg md:text-xl font-bold">
             SuryaUrja
           </span>
         </Link>
 
-        {/* Desktop Menu */}
+        {/* ===== DESKTOP MENU ===== */}
         <div className="hidden md:flex gap-6 text-sm font-medium items-center">
           <Link to="/" className="hover:text-green-200">Home</Link>
 
@@ -47,6 +47,16 @@ export default function Navbar() {
               <Link to="/profile" className="hover:text-green-200">
                 Profile
               </Link>
+
+              {/* ADMIN MENU */}
+              {user.role === "admin" && (
+                <Link
+                  to="/admin"
+                  className="text-yellow-300 font-semibold hover:text-yellow-400"
+                >
+                  Admin Panel
+                </Link>
+              )}
             </>
           )}
 
@@ -73,7 +83,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Hamburger */}
+        {/* ===== MOBILE HAMBURGER ===== */}
         <button
           className="md:hidden focus:outline-none"
           onClick={() => setOpen(!open)}
@@ -102,9 +112,9 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* ===== MOBILE MENU ===== */}
       {open && (
-        <div className="md:hidden bg-green-600 px-4 py-3 space-y-3 text-sm">
+        <div className="md:hidden bg-green-600 px-4 py-4 space-y-3 text-sm">
           <Link to="/" onClick={() => setOpen(false)} className="block">
             Home
           </Link>
@@ -123,6 +133,16 @@ export default function Navbar() {
               <Link to="/profile" onClick={() => setOpen(false)} className="block">
                 Profile
               </Link>
+
+              {user.role === "admin" && (
+                <Link
+                  to="/admin"
+                  onClick={() => setOpen(false)}
+                  className="block text-yellow-300 font-semibold"
+                >
+                  Admin Panel
+                </Link>
+              )}
             </>
           )}
 

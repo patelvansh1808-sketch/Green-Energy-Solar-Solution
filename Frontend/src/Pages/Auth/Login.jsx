@@ -21,11 +21,8 @@ export default function Login() {
         password,
       });
 
-      // save token
-      localStorage.setItem("token", res.data.token);
-
-      // save user in context
-      login(res.data.user);
+      // ✅ ONLY THIS (AuthContext handles storage & decoding)
+      login(res.data.token);
 
       navigate("/dashboard");
     } catch (err) {

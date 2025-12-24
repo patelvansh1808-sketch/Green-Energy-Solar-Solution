@@ -2,13 +2,14 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./Context/AuthContext";
 import { useEffect, useState } from "react";
 
-// ===== PUBLIC PAGES =====
+/* ===== PUBLIC PAGES ===== */
 import LandingPage from "./Pages/Landing/LandingPage";
 import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Register";
 import ForgotPassword from "./Pages/Auth/ForgotPassword";
+import ContactUs from "./Pages/contact/ContactUs";
 
-// ===== USER PAGES =====
+/* ===== USER PAGES ===== */
 import UserDashboard from "./Pages/User/UserDashboard";
 import SolarAnalytics from "./Pages/User/SolarAnalytics";
 import PowerPrediction from "./Pages/User/PowerPrediction";
@@ -21,22 +22,21 @@ import Alerts from "./Pages/User/Alerts";
 import Notifications from "./Pages/User/Notifications";
 import Reports from "./Pages/User/Reports";
 import Profile from "./Pages/User/Profile";
-import ContactUs from "./Pages/contact/ContactUs";
 
-// ===== ADMIN PAGES =====
+/* ===== ADMIN PAGES ===== */
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
 import ManageUsers from "./Pages/Admin/ManageUsers";
 import ManageBookings from "./Pages/Admin/ManageBookings";
 import SubsidyRules from "./Pages/Admin/SubsidyRules";
 import SystemAnalytics from "./Pages/Admin/SystemAnalytics";
 
-// ===== COMPONENTS =====
+/* ===== COMPONENTS ===== */
 import Navbar from "./Components/Navbar";
 import Footer from "./Components/Footer";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import LoadingScreen from "./Components/LoadingScreen";
 
-// ===== ROUTE ANIMATION WRAPPER =====
+/* ===== PAGE TRANSITION WRAPPER ===== */
 function AnimatedRoutes() {
   const location = useLocation();
 
@@ -50,6 +50,8 @@ function AnimatedRoutes() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/contact" element={<ContactUs />} />
+        
+
 
         {/* ===== USER PROTECTED ROUTES ===== */}
         <Route
@@ -60,6 +62,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/analytics"
           element={
@@ -68,6 +71,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/prediction"
           element={
@@ -84,6 +88,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/carbon"
           element={
@@ -92,6 +97,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/booking"
           element={
@@ -100,6 +106,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/subsidy"
           element={
@@ -108,6 +115,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/cost-roi"
           element={
@@ -116,6 +124,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/alerts"
           element={
@@ -124,6 +133,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/notifications"
           element={
@@ -132,6 +142,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/reports"
           element={
@@ -141,7 +152,7 @@ function AnimatedRoutes() {
           }
         />
 
-        {/* ✅ USER PROFILE */}
+        {/* ===== USER PROFILE ===== */}
         <Route
           path="/profile"
           element={
@@ -151,7 +162,7 @@ function AnimatedRoutes() {
           }
         />
 
-        {/* ===== ADMIN ROUTES (ROLE PROTECTED) ===== */}
+        {/* ===== ADMIN ROUTES (ROLE BASED) ===== */}
         <Route
           path="/admin"
           element={
@@ -160,6 +171,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/users"
           element={
@@ -168,6 +180,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/bookings"
           element={
@@ -176,6 +189,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/subsidy"
           element={
@@ -184,6 +198,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/analytics"
           element={
@@ -200,7 +215,7 @@ function AnimatedRoutes() {
 export default function App() {
   const [loading, setLoading] = useState(true);
 
-  // Simulated loading (slow network UX)
+  // App loading animation (slow network UX)
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200);
     return () => clearTimeout(timer);

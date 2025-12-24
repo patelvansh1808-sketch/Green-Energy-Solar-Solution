@@ -10,13 +10,9 @@ export const AuthProvider = ({ children }) => {
 
   // Check token on app load
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      // In real app, decode token or fetch profile
-      setUser({ role: "user" }); // default role
-    }
-    setLoading(false);
-  }, []);
+  setLoading(false);
+}, []);
+
 
   const login = (userData) => {
     setUser(userData);

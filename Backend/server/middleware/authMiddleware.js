@@ -3,10 +3,9 @@ const jwt = require("jsonwebtoken");
 const authMiddleware = (req, res, next) => {
   let token;
 
-  // Check Authorization header
   if (
     req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
+    req.headers.authorization.startsWith("Bearer ")
   ) {
     token = req.headers.authorization.split(" ")[1];
   }
@@ -17,10 +16,17 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { id, role }
+
+    // ✅ Normalize user object
+    req.user = {
+      id: decoded.id || decoded._id,
+      role: decoded.role,
+    };
+
     next();
   } catch (error) {
-    res.status(401).json({ message: "Token invalid" });
+    console.error("JWT ERROR:", error.message);
+    return res.status(401).json({ message: "Token invalid" });
   }
 };
 

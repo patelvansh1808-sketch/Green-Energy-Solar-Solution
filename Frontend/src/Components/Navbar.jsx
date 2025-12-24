@@ -38,12 +38,24 @@ export default function Navbar() {
               <Link to="/dashboard" className="hover:text-green-200">
                 Dashboard
               </Link>
+
+              <Link to="/analytics" className="hover:text-green-200">
+                Analytics
+              </Link>
+
+              {/* ✅ PREDICTION ADDED */}
+              <Link to="/prediction" className="hover:text-green-200">
+                Prediction
+              </Link>
+
               <Link to="/booking" className="hover:text-green-200">
                 Booking
               </Link>
+
               <Link to="/subsidy" className="hover:text-green-200">
                 Subsidy
               </Link>
+
               <Link to="/profile" className="hover:text-green-200">
                 Profile
               </Link>
@@ -96,17 +108,9 @@ export default function Navbar() {
             viewBox="0 0 24 24"
           >
             {open ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             )}
           </svg>
         </button>
@@ -124,12 +128,24 @@ export default function Navbar() {
               <Link to="/dashboard" onClick={() => setOpen(false)} className="block">
                 Dashboard
               </Link>
+
+              <Link to="/analytics" onClick={() => setOpen(false)} className="block">
+                Analytics
+              </Link>
+
+              {/* ✅ PREDICTION (MOBILE) */}
+              <Link to="/prediction" onClick={() => setOpen(false)} className="block">
+                Prediction
+              </Link>
+
               <Link to="/booking" onClick={() => setOpen(false)} className="block">
                 Booking
               </Link>
+
               <Link to="/subsidy" onClick={() => setOpen(false)} className="block">
                 Subsidy
               </Link>
+
               <Link to="/profile" onClick={() => setOpen(false)} className="block">
                 Profile
               </Link>
@@ -150,16 +166,7 @@ export default function Navbar() {
             Contact
           </Link>
 
-          {!user ? (
-            <>
-              <Link to="/login" onClick={() => setOpen(false)} className="block">
-                Login
-              </Link>
-              <Link to="/register" onClick={() => setOpen(false)} className="block">
-                Register
-              </Link>
-            </>
-          ) : (
+          {user && (
             <button
               onClick={handleLogout}
               className="w-full text-left bg-red-600 px-3 py-1 rounded hover:bg-red-700 transition"

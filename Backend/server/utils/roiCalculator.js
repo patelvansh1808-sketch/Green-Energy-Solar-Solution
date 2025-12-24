@@ -1,13 +1,36 @@
-exports.calculateROI = (capacityKW, cost, unitsPerDay) => {
-  const annualUnits = unitsPerDay * 365;
-  const unitPrice = 6; // ₹ per unit (average India)
-  const annualSavings = annualUnits * unitPrice;
+exports.calculateROI = ({
+  installationCost,
+  subsidy,
+  annualEnergy,
+  electricityRate,
+  years = 25,
+}) => {
+  const netInvestment = installationCost - subsidy;
+  const annualSavings = annualEnergy * electricityRate;
 
-  const paybackYears = cost / annualSavings;
+  if (annualSavings <= 0) {
+    throw new Error("Annual savings must be greater than zero");
+  }
+
+  const breakEvenYear = Math.ceil(netInvestment / annualSavings);
+
+  const yearlySavings = [];
+  const cumulativeSavings = [];
+
+  for (let year = 1; year <= years; year++) {
+    const savings = annualSavings * year;
+    yearlySavings.push({ year, savings });
+    cumulativeSavings.push(savings);
+  }
+
+  const profitAfterYears = annualSavings * years - netInvestment;
 
   return {
-    annualUnits,
+    netInvestment,
     annualSavings,
-    paybackYears: paybackYears.toFixed(2),
+    breakEvenYear,
+    profitAfterYears,
+    yearlySavings,
+    cumulativeSavings,
   };
 };

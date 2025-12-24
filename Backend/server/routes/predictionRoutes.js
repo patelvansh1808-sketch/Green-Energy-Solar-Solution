@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
-const { predictSolarPower } = require("../controllers/predictionController");
 
-router.post("/", auth, predictSolarPower);
+const { predictPower } = require("../controllers/predictionController");
+
+router.post("/", auth, predictPower);
 
 module.exports = router;

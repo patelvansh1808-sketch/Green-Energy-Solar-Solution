@@ -40,6 +40,8 @@ app.use("/api/subsidy", require("./server/routes/subsidyRoutes"));
 // AI Prediction
 app.use("/api/prediction", require("./server/routes/predictionRoutes"));
 
+app.use("/api/roi", require("./server/routes/roiRoutes"));
+
 
 // Reports (PDF / Excel)
 app.use("/api/reports", require("./server/routes/reportRoutes"));

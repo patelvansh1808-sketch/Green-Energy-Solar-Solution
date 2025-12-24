@@ -1,6 +1,4 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { logoutUser } from "../services/authService";
-
 
 const AuthContext = createContext();
 
@@ -8,18 +6,27 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check token on app load
   useEffect(() => {
-  setLoading(false);
-}, []);
+    const token = localStorage.getItem("token");
 
+    if (token) {
+      // decode payload without library
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      setUser(payload);
+    }
 
-  const login = (userData) => {
-    setUser(userData);
+    setLoading(false);
+  }, []);
+
+  const login = (token) => {
+    localStorage.setItem("token", token);
+
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    setUser(payload);
   };
 
   const logout = () => {
-    logoutUser();
+    localStorage.removeItem("token");
     setUser(null);
   };
 

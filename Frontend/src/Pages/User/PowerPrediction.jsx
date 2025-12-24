@@ -5,24 +5,30 @@ export default function PowerPrediction() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const predict = async () => {
-    try {
-      setLoading(true);
+ const predict = async () => {
+  try {
+    setLoading(true);
 
-      const history = [
-        { temp: 32, sunlight: 8, power: 12 },
-        { temp: 30, sunlight: 7, power: 10 },
-        { temp: 31, sunlight: 8, power: 11 }
-      ];
+    const payload = {
+      sunlightHours: 6,
+      temperature: 30,
+    };
 
-      const res = await api.post("/prediction", { history });
-      setResult(res.data.predictedKwh);
-    } catch (err) {
-      alert("Prediction failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+    console.log("Sending payload:", payload);
+
+    const res = await api.post("/prediction", payload);
+
+    console.log("Prediction response:", res.data);
+
+    setResult(res.data.predictedKwh);
+  } catch (err) {
+    console.error("Prediction error:", err.response?.data || err.message);
+    alert(err.response?.data?.message || "Prediction failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="p-6 max-w-3xl mx-auto">

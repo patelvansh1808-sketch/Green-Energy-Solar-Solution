@@ -14,130 +14,132 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-green-700 text-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+    <nav className="bg-green-700 text-white shadow-lg sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
 
         {/* LOGO */}
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/favicon.png" alt="SuryaUrja" className="h-8 w-8" />
+        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition">
+          <span className="text-2xl">☀️</span>
           <span className="text-lg md:text-xl font-bold">SuryaUrja</span>
         </Link>
 
         {/* ===== DESKTOP MENU ===== */}
-        <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
 
-          <Link to="/" className="hover:text-green-200">Home</Link>
+          <Link to="/" className="hover:text-green-200 transition flex items-center gap-1">
+            🏠 Home
+          </Link>
 
           {user && (
             <>
-              <Link to="/dashboard" className="hover:text-green-200">
-                Dashboard
+              <Link to="/dashboard" className="hover:text-green-200 transition flex items-center gap-1">
+                📊 Dashboard
               </Link>
 
               {/* FEATURES DROPDOWN */}
               <div className="relative group">
-                <button className="hover:text-green-200">
-                  Features ▾
+                <button className="hover:text-green-200 transition flex items-center gap-1">
+                  ⚡ Features <span className="text-xs">▾</span>
                 </button>
 
                 <div
                   className="
                     absolute left-0 top-full pt-2
                     hidden group-hover:block hover:block
-                    bg-white text-gray-700 rounded shadow-lg w-48 z-50
+                    bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2
                   "
                 >
-                  <Link to="/prediction" className="dropdown-item">
-                    Prediction
+                  <Link to="/prediction" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50">
+                    🤖 <span>Prediction</span>
                   </Link>
-                  <Link to="/analytics" className="dropdown-item">
-                    Analytics
+                  <Link to="/analytics" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50">
+                    📈 <span>Analytics</span>
                   </Link>
-                  <Link to="/booking" className="dropdown-item">
-                    Booking
+                  <Link to="/booking" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50">
+                    📅 <span>Booking</span>
                   </Link>
-                  <Link to="/subsidy" className="dropdown-item">
-                    Subsidy
+                  <Link to="/subsidy" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50">
+                    💰 <span>Subsidy</span>
                   </Link>
-                  <Link to="/cost-roi" className="dropdown-item font-semibold text-green-700">
-                    Cost & ROI
+                  <Link to="/cost-roi" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50 font-semibold text-green-700">
+                    💹 <span>Cost & ROI</span>
                   </Link>
                 </div>
               </div>
 
               {/* REPORTS DROPDOWN */}
               <div className="relative group">
-                <button className="hover:text-green-200">
-                  Reports ▾
+                <button className="hover:text-green-200 transition flex items-center gap-1">
+                  📄 Reports <span className="text-xs">▾</span>
                 </button>
 
                 <div
                   className="
                     absolute left-0 top-full pt-2
                     hidden group-hover:block hover:block
-                    bg-white text-gray-700 rounded shadow-lg w-48 z-50
+                    bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2
                   "
                 >
-                  <Link to="/alerts" className="dropdown-item">
-                    Alerts
+                  <Link to="/alerts" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50">
+                    🔔 <span>Alerts</span>
                   </Link>
-                  <Link to="/notifications" className="dropdown-item">
-                    Notifications
+                  <Link to="/notifications" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50">
+                    📨 <span>Notifications</span>
                   </Link>
-                  <Link to="/reports" className="dropdown-item">
-                    Reports
+                  <Link to="/reports" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50">
+                    📋 <span>Reports</span>
                   </Link>
                 </div>
               </div>
 
               {/* PROFILE DROPDOWN */}
               <div className="relative group">
-                <button className="hover:text-green-200">
-                  Profile ▾
+                <button className="hover:text-green-200 transition flex items-center gap-1">
+                  👤 Profile <span className="text-xs">▾</span>
                 </button>
 
                 <div
                   className="
                     absolute right-0 top-full pt-2
                     hidden group-hover:block hover:block
-                    bg-white text-gray-700 rounded shadow-lg w-48 z-50
+                    bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2
                   "
                 >
-                  <Link to="/profile" className="dropdown-item">
-                    My Profile
+                  <Link to="/profile" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50">
+                    👤 <span>My Profile</span>
                   </Link>
 
                   {user.role === "admin" && (
                     <Link
                       to="/admin"
-                      className="dropdown-item text-yellow-600 font-semibold"
+                      className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-yellow-50 text-yellow-600 font-semibold"
                     >
-                      Admin Panel
+                      ⚙️ <span>Admin Panel</span>
                     </Link>
                   )}
 
                   <button
                     onClick={handleLogout}
-                    className="dropdown-item text-red-600 w-full text-left"
+                    className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-red-600 w-full text-left"
                   >
-                    Logout
+                    🚪 <span>Logout</span>
                   </button>
                 </div>
               </div>
             </>
           )}
 
-          <Link to="/contact" className="hover:text-green-200">
-            Contact
+          <Link to="/contact" className="hover:text-green-200 transition flex items-center gap-1">
+            📞 Contact
           </Link>
 
           {!user && (
             <>
-              <Link to="/login" className="hover:text-green-200">
-                Login
+              <Link to="/login" className="hover:text-green-200 transition flex items-center gap-1">
+                🔑 Login
               </Link>
-              <Link to="/register" className="hover:text-green-200">
-                Register
+              <Link to="/register" className="bg-white text-green-700 hover:bg-green-50 px-4 py-2 rounded-lg font-bold transition flex items-center gap-1">
+                📝 Register
               </Link>
             </>
           )}
@@ -145,7 +147,7 @@ export default function Navbar() {
 
         {/* ===== MOBILE HAMBURGER ===== */}
         <button
-          className="md:hidden"
+          className="md:hidden p-2 hover:bg-green-600 rounded transition"
           onClick={() => setOpen(!open)}
         >
           <svg
@@ -166,79 +168,95 @@ export default function Navbar() {
 
       {/* ===== MOBILE MENU ===== */}
       {open && (
-        <div className="md:hidden bg-green-600 px-4 py-4 space-y-3 text-sm">
-          <Link to="/" onClick={() => setOpen(false)} className="block">
-            Home
+        <div className="md:hidden bg-green-600 px-4 py-4 space-y-2 text-sm">
+          <Link to="/" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+            🏠 Home
           </Link>
 
           {user && (
             <>
-              <Link to="/dashboard" onClick={() => setOpen(false)} className="block">
-                Dashboard
+              <Link to="/dashboard" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                📊 Dashboard
               </Link>
 
-              <div className="border-t border-green-500 pt-2">
-                <p className="text-green-200 text-xs uppercase">Features</p>
-                <Link to="/prediction" onClick={() => setOpen(false)} className="block">
-                  Prediction
+              <div className="border-t border-green-500 pt-2 mt-2">
+                <p className="text-green-200 text-xs font-bold uppercase mb-2">⚡ Features</p>
+                <Link to="/prediction" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                  🤖 Prediction
                 </Link>
-                <Link to="/analytics" onClick={() => setOpen(false)} className="block">
-                  Analytics
+                <Link to="/analytics" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                  📈 Analytics
                 </Link>
-                <Link to="/booking" onClick={() => setOpen(false)} className="block">
-                  Booking
+                <Link to="/booking" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                  📅 Booking
                 </Link>
-                <Link to="/subsidy" onClick={() => setOpen(false)} className="block">
-                  Subsidy
+                <Link to="/subsidy" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                  💰 Subsidy
                 </Link>
                 <Link
                   to="/cost-roi"
                   onClick={() => setOpen(false)}
-                  className="block font-semibold text-green-200"
+                  className="block py-2 px-2 hover:bg-green-500 rounded font-semibold text-green-200"
                 >
-                  Cost & ROI
+                  💹 Cost & ROI
                 </Link>
               </div>
 
-              <div className="border-t border-green-500 pt-2">
-                <p className="text-green-200 text-xs uppercase">Reports</p>
-                <Link to="/alerts" onClick={() => setOpen(false)} className="block">
-                  Alerts
+              <div className="border-t border-green-500 pt-2 mt-2">
+                <p className="text-green-200 text-xs font-bold uppercase mb-2">📄 Reports</p>
+                <Link to="/alerts" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                  🔔 Alerts
                 </Link>
-                <Link to="/notifications" onClick={() => setOpen(false)} className="block">
-                  Notifications
+                <Link to="/notifications" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                  📨 Notifications
                 </Link>
-                <Link to="/reports" onClick={() => setOpen(false)} className="block">
-                  Reports
+                <Link to="/reports" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                  📋 Reports
                 </Link>
               </div>
 
-              <Link to="/profile" onClick={() => setOpen(false)} className="block">
-                Profile
-              </Link>
-
-              {user.role === "admin" && (
-                <Link
-                  to="/admin"
-                  onClick={() => setOpen(false)}
-                  className="block text-yellow-300 font-semibold"
-                >
-                  Admin Panel
+              <div className="border-t border-green-500 pt-2 mt-2">
+                <p className="text-green-200 text-xs font-bold uppercase mb-2">👤 Account</p>
+                <Link to="/profile" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                  👤 My Profile
                 </Link>
-              )}
 
-              <button
-                onClick={handleLogout}
-                className="w-full text-left bg-red-600 px-3 py-1 rounded mt-2"
-              >
-                Logout
-              </button>
+                {user.role === "admin" && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setOpen(false)}
+                    className="block py-2 px-2 hover:bg-yellow-500 rounded text-yellow-200 font-semibold"
+                  >
+                    ⚙️ Admin Panel
+                  </Link>
+                )}
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left py-2 px-2 hover:bg-red-500 rounded text-red-200 font-bold"
+                >
+                  🚪 Logout
+                </button>
+              </div>
             </>
           )}
 
-          <Link to="/contact" onClick={() => setOpen(false)} className="block">
-            Contact
+          <Link to="/contact" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+            📞 Contact
           </Link>
+
+          {!user && (
+            <>
+              <Link to="/login" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                🔑 Login
+              </Link>
+              <div className="pt-2">
+                <Link to="/register" onClick={() => setOpen(false)} className="block py-2 px-2 bg-white text-green-700 rounded font-bold text-center hover:bg-green-50">
+                  📝 Register
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       )}
     </nav>

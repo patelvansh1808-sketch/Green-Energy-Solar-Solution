@@ -1,12 +1,20 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-function Feature({ title, desc, icon }) {
+function Feature({ title, desc, icon, to }) {
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition">
+    <div className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition flex flex-col gap-3">
       <div className="text-4xl mb-4">{icon}</div>
       <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
       <p className="text-gray-600 text-sm">{desc}</p>
+      {to && (
+        <Link
+          to={to}
+          className="mt-1 inline-flex items-center gap-2 text-green-700 font-semibold text-sm hover:text-green-800"
+        >
+          View details <span aria-hidden>→</span>
+        </Link>
+      )}
     </div>
   );
 }
@@ -122,7 +130,11 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-8">
             <Feature title="Solar Analytics" desc="Track daily, monthly, and yearly energy generation with visual charts." icon="📊" />
             <Feature title="AI Power Prediction" desc="Predict future solar output using machine learning algorithms." icon="🤖" />
-            <Feature title="Weather Impact" desc="Analyze how temperature and cloud cover affect solar performance." icon="🌦" />
+            <Feature
+              title="Weather Impact"
+              desc="Analyze how temperature and cloud cover affect solar performance."
+              icon="🌦"
+            />
             <Feature title="Carbon Footprint" desc="See how much CO₂ you save and your environmental impact." icon="🌱" />
             <Feature title="Solar Booking" desc="Book solar panel installation online with cost estimation." icon="🧾" />
             <Feature title="Subsidy Eligibility" desc="Check government subsidy eligibility and final payable amount." icon="💰" />

@@ -61,8 +61,14 @@ export default function Navbar() {
                   <Link to="/subsidy" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50">
                     💰 <span>Subsidy</span>
                   </Link>
+                  <Link to="/weather-impact" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50">
+                    🌦 <span>Weather Impact</span>
+                  </Link>
                   <Link to="/cost-roi" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50 font-semibold text-green-700">
                     💹 <span>Cost & ROI</span>
+                  </Link>
+                  <Link to="/recommendations" className="dropdown-item flex items-center gap-2 px-4 py-2 hover:bg-green-50 font-semibold text-blue-700">
+                    🎯 <span>Smart Recommendations</span>
                   </Link>
                 </div>
               </div>
@@ -193,6 +199,9 @@ export default function Navbar() {
                 <Link to="/subsidy" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
                   💰 Subsidy
                 </Link>
+                <Link to="/weather-impact" onClick={() => setOpen(false)} className="block py-2 px-2 hover:bg-green-500 rounded">
+                  🌦 Weather Impact
+                </Link>
                 <Link
                   to="/cost-roi"
                   onClick={() => setOpen(false)}
@@ -200,6 +209,7 @@ export default function Navbar() {
                 >
                   💹 Cost & ROI
                 </Link>
+
               </div>
 
               <div className="border-t border-green-500 pt-2 mt-2">

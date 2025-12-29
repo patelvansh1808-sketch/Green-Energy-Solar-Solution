@@ -22,7 +22,8 @@ import Alerts from "./Pages/User/Alerts";
 import Notifications from "./Pages/User/Notifications";
 import Reports from "./Pages/User/Reports";
 import Profile from "./Pages/User/Profile";
-
+import WeatherImpact from "./Pages/User/WeatherImpact";
+import Recommendations from "./Pages/User/Recommendations";
 /* ===== ADMIN PAGES ===== */
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
 import ManageUsers from "./Pages/Admin/ManageUsers";
@@ -99,6 +100,15 @@ function AnimatedRoutes() {
         />
 
         <Route
+  path="/weather-impact"
+  element={
+    <ProtectedRoute>
+      <WeatherImpact />
+    </ProtectedRoute>
+  }
+/>
+
+        <Route
           path="/booking"
           element={
             <ProtectedRoute>
@@ -148,6 +158,15 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <Reports />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/recommendations"
+          element={
+            <ProtectedRoute>
+              <Recommendations />
             </ProtectedRoute>
           }
         />

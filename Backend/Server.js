@@ -40,11 +40,23 @@ app.use("/api/subsidy", require("./server/routes/subsidyRoutes"));
 // AI Prediction
 app.use("/api/prediction", require("./server/routes/predictionRoutes"));
 
+// ROI & Break-even
 app.use("/api/roi", require("./server/routes/roiRoutes"));
 
+// Alerts & Anomaly Detection
+app.use("/api/alerts", require("./server/routes/alertRoutes"));
+
+// 🌦 WEATHER IMPACT ANALYSIS (NEW – DATA SCIENCE MODULE)
+app.use(
+  "/api/weather-impact",
+  require("./server/routes/weatherImpactRoutes")
+);
 
 // Reports (PDF / Excel)
 app.use("/api/reports", require("./server/routes/reportRoutes"));
+
+// Smart Recommendations (AI-assisted)
+app.use("/api/recommendations", require("./server/routes/recommendationRoutes"));
 
 // Admin
 app.use("/api/admin", require("./server/routes/adminRoutes"));

@@ -11,25 +11,20 @@ import ContactUs from "./Pages/contact/ContactUs";
 
 /* ===== USER PAGES ===== */
 import UserDashboard from "./Pages/User/UserDashboard";
-import SolarAnalytics from "./Pages/User/SolarAnalytics";
-import PowerPrediction from "./Pages/User/PowerPrediction";
-import WeatherForecast from "./Pages/User/WeatherForecast";
 import CarbonFootprint from "./Pages/User/CarbonFootprint";
 import Booking from "./Pages/User/Booking";
 import SubsidyEligibility from "./Pages/User/SubsidyEligibility";
-import CostROI from "./Pages/User/CostROI";
-import Alerts from "./Pages/User/Alerts";
-import Notifications from "./Pages/User/Notifications";
-import Reports from "./Pages/User/Reports";
 import Profile from "./Pages/User/Profile";
-import WeatherImpact from "./Pages/User/WeatherImpact";
 import Recommendations from "./Pages/User/Recommendations";
+
 /* ===== ADMIN PAGES ===== */
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
 import ManageUsers from "./Pages/Admin/ManageUsers";
 import ManageBookings from "./Pages/Admin/ManageBookings";
 import SubsidyRules from "./Pages/Admin/SubsidyRules";
 import SystemAnalytics from "./Pages/Admin/SystemAnalytics";
+import ManageCustomers from "./Pages/Admin/ManageCustomers";
+import CreateCustomer from "./Pages/Admin/CreateCustomer";
 
 /* ===== COMPONENTS ===== */
 import Navbar from "./Components/Navbar";
@@ -51,10 +46,8 @@ function AnimatedRoutes() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/contact" element={<ContactUs />} />
-        
 
-
-        {/* ===== USER PROTECTED ROUTES ===== */}
+        {/* ===== USER ROUTES ===== */}
         <Route
           path="/dashboard"
           element={
@@ -64,31 +57,7 @@ function AnimatedRoutes() {
           }
         />
 
-        <Route
-          path="/analytics"
-          element={
-            <ProtectedRoute>
-              <SolarAnalytics />
-            </ProtectedRoute>
-          }
-        />
 
-        <Route
-          path="/prediction"
-          element={
-            <ProtectedRoute>
-              <PowerPrediction />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/weather"
-          element={
-            <ProtectedRoute>
-              <WeatherForecast />
-            </ProtectedRoute>
-          }
-        />
 
         <Route
           path="/carbon"
@@ -98,15 +67,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
-        <Route
-  path="/weather-impact"
-  element={
-    <ProtectedRoute>
-      <WeatherImpact />
-    </ProtectedRoute>
-  }
-/>
 
         <Route
           path="/booking"
@@ -127,42 +87,6 @@ function AnimatedRoutes() {
         />
 
         <Route
-          path="/cost-roi"
-          element={
-            <ProtectedRoute>
-              <CostROI />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/alerts"
-          element={
-            <ProtectedRoute>
-              <Alerts />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedRoute>
-              <Notifications />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/reports"
-          element={
-            <ProtectedRoute>
-              <Reports />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
           path="/recommendations"
           element={
             <ProtectedRoute>
@@ -171,7 +95,6 @@ function AnimatedRoutes() {
           }
         />
 
-        {/* ===== USER PROFILE ===== */}
         <Route
           path="/profile"
           element={
@@ -181,7 +104,7 @@ function AnimatedRoutes() {
           }
         />
 
-        {/* ===== ADMIN ROUTES (ROLE BASED) ===== */}
+        {/* ===== ADMIN ROUTES ===== */}
         <Route
           path="/admin"
           element={
@@ -210,6 +133,24 @@ function AnimatedRoutes() {
         />
 
         <Route
+          path="/admin/customers"
+          element={
+            <ProtectedRoute role="admin">
+              <ManageCustomers />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/create-customer"
+          element={
+            <ProtectedRoute role="admin">
+              <CreateCustomer />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/admin/subsidy"
           element={
             <ProtectedRoute role="admin">
@@ -226,6 +167,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
       </Routes>
     </div>
   );
@@ -234,7 +176,6 @@ function AnimatedRoutes() {
 export default function App() {
   const [loading, setLoading] = useState(true);
 
-  // App loading animation (slow network UX)
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200);
     return () => clearTimeout(timer);

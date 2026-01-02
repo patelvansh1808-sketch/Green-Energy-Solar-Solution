@@ -7,28 +7,22 @@ const role = require("../middleware/roleMiddleware");
 const {
   getAllUsers,
   getAllBookings,
-  getAdminStats
+  getAdminStats,
 } = require("../controllers/adminController");
 
-/**
- * @route   GET /api/admin/stats
- * @desc    Get admin dashboard statistics
- * @access  Admin only
- */
+const {
+  createCustomerAccount,
+} = require("../controllers/adminCustomerController");
+
 router.get("/stats", auth, role("admin"), getAdminStats);
-
-/**
- * @route   GET /api/admin/users
- * @desc    Get all users
- * @access  Admin only
- */
 router.get("/users", auth, role("admin"), getAllUsers);
-
-/**
- * @route   GET /api/admin/bookings
- * @desc    Get all bookings
- * @access  Admin only
- */
 router.get("/bookings", auth, role("admin"), getAllBookings);
+
+router.post(
+  "/create-customer",
+  auth,
+  role("admin"),
+  createCustomerAccount
+);
 
 module.exports = router;

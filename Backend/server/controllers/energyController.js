@@ -1,13 +1,39 @@
 const Energy = require("../models/Energy");
+const Customer = require("../models/Customer");
 
 // ADD ENERGY DATA
 exports.addEnergy = async (req, res) => {
-  const energy = await Energy.create({
-    userId: req.user.id,
-    date: new Date(),
-    unitsGenerated: req.body.unitsGenerated,
-  });
-  res.status(201).json(energy);
+  try {
+    // Check if customer is active
+    const customer = await Customer.findOne({ userId: req.user.id });
+    
+    if (!customer) {
+      return res.status(400).json({
+        message: "Customer profile not found",
+        error: "No customer profile"
+      });
+    }
+
+    if (customer.status === "Inactive") {
+      return res.status(403).json({
+        message: "Your account is inactive. Please contact support.",
+        error: "Customer account inactive"
+      });
+    }
+
+    const energy = await Energy.create({
+      userId: req.user.id,
+      date: new Date(),
+      unitsGenerated: req.body.unitsGenerated,
+    });
+    res.status(201).json(energy);
+  } catch (error) {
+    console.error("ADD ENERGY ERROR:", error);
+    res.status(500).json({
+      message: "Failed to add energy data",
+      error: error.message
+    });
+  }
 };
 
 // GET ENERGY DATA

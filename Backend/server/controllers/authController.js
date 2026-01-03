@@ -33,7 +33,7 @@ exports.register = async (req, res) => {
     });
 
     res.status(201).json({
-      token: generateToken(user._id, user.role),
+      token: generateToken(user._id, user.role, user.email),
       user,
     });
   } catch (err) {
@@ -65,7 +65,7 @@ exports.login = async (req, res) => {
     }
 
     res.json({
-      token: generateToken(user._id, user.role),
+      token: generateToken(user._id, user.role, user.email),
       user,
     });
   } catch (err) {

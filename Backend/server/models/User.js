@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
 
   location: { type: String },
   role: { type: String, default: "user" },
+  googleId: { type: String, unique: true, sparse: true }, // For Google OAuth
 });
 
 module.exports = mongoose.model("User", userSchema);

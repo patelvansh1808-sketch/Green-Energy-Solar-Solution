@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import API from "../services/api";
 
 const AuthContext = createContext();
 
@@ -10,19 +11,31 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem("token");
 
     if (token) {
-      // decode payload without library
+      // Decode JWT to get basic info
       const payload = JSON.parse(atob(token.split(".")[1]));
-      setUser(payload);
+      
+      // Fetch full user data from backend using correct endpoint
+      API.get("/users/profile")
+        .then((res) => {
+          console.log("User data fetched from profile:", res.data);
+          setUser(res.data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch user profile:", err.response?.data || err.message);
+          // Fall back to decoded payload if API fails
+          setUser(payload);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-
-    setLoading(false);
   }, []);
 
-  const login = (token) => {
+  const login = (token, userData) => {
+    console.log("Login called with user data:", userData);
     localStorage.setItem("token", token);
-
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    setUser(payload);
+    // Store full user data from login response
+    setUser(userData);
   };
 
   const logout = () => {

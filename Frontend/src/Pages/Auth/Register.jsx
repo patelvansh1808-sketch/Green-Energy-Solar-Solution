@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { useAuth } from "../../Context/AuthContext";
 
 export default function Register() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -29,8 +31,8 @@ export default function Register() {
     try {
       const res = await api.post("/auth/register", formData);
 
-      // save token
-      localStorage.setItem("token", res.data.token);
+      // ✅ Pass both token and user data
+      login(res.data.token, res.data.user);
 
       navigate("/dashboard");
     } catch (err) {

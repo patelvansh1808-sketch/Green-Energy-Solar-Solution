@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Booking = require("../models/Booking");
 const Energy = require("../models/Energy");
 const Subsidy = require("../models/Subsidy");
+const Customer = require("../models/Customer");
 
 /**
  * ================================
@@ -10,21 +11,44 @@ const Subsidy = require("../models/Subsidy");
  */
 exports.getAdminStats = async (req, res) => {
   try {
+    // Basic counts
     const totalUsers = await User.countDocuments();
     const totalBookings = await Booking.countDocuments();
     const pendingSubsidies = await Subsidy.countDocuments({
       status: "pending",
     });
 
+    // Customer stats
+    const activeCustomers = await Customer.countDocuments({ status: "Active" });
+    const inactiveCustomers = await Customer.countDocuments({ status: "Inactive" });
+
+    // Energy stats
     const totalEnergy = await Energy.aggregate([
       { $group: { _id: null, total: { $sum: "$generatedKwh" } } },
     ]);
 
+    // Recent activity - bookings
+    const recentBookings = await Booking.find()
+      .populate("user", "name")
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("user status createdAt");
+
+    // Recent activity - customer status changes
+    const recentCustomers = await Customer.find()
+      .select("fullName status updatedAt")
+      .sort({ updatedAt: -1 })
+      .limit(5);
+
     res.json({
       totalUsers,
+      activeCustomers,
+      inactiveCustomers,
       totalBookings,
       pendingSubsidies,
       totalEnergy: totalEnergy[0]?.total || 0,
+      recentBookings,
+      recentCustomers,
     });
   } catch (err) {
     console.error("ADMIN STATS ERROR:", err.message);

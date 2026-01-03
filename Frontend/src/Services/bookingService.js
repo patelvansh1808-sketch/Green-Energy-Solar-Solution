@@ -1,16 +1,11 @@
 import api from "./api";
 
 export const createBooking = async (data) => {
-  const res = await api.post("/booking/create", data);
+  const res = await api.post("/bookings/create", data);
   return res.data;
 };
 
-export const getAllBookings = async () => {
-  const res = await api.get("/booking/all");
-  return res.data;
-};
-
-export const updateBookingStatus = async (id, status) => {
-  const res = await api.put(`/booking/${id}`, { status });
+export const getMyBookings = async () => {
+  const res = await api.get("/bookings/my");
   return res.data;
 };

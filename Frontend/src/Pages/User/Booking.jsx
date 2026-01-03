@@ -21,6 +21,7 @@ export default function Booking() {
   const [useEmi, setUseEmi] = useState(false);
   const [emiYears, setEmiYears] = useState(5);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const subsidyAmount =
     plan && applySubsidy ? Math.round(plan.cost * plan.subsidy) : 0;
@@ -28,16 +29,16 @@ export default function Booking() {
   const finalCost = plan ? plan.cost - subsidyAmount : 0;
 
   const emiAmount =
-    useEmi && plan
-      ? Math.round(finalCost / (emiYears * 12))
-      : 0;
+    useEmi && plan ? Math.round(finalCost / (emiYears * 12)) : 0;
 
   const confirmBooking = async () => {
     if (!plan) return;
 
     try {
       setLoading(true);
+      setError("");
 
+      // ✅ Correct API endpoint + payload matches backend schema
       await api.post("/bookings/create", {
         systemType: type,
         capacity: plan.kW,
@@ -52,8 +53,11 @@ export default function Booking() {
 
       alert("✅ Booking successful!");
     } catch (err) {
-      console.error("BOOKING ERROR:", err.response?.data || err.message);
-      alert("❌ Booking failed");
+      const message =
+        err.response?.data?.message ||
+        "Booking not allowed. Please contact support.";
+
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -61,7 +65,14 @@ export default function Booking() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto animate-fade">
-      <h1 className="title">🌞 Solar Panel Booking</h1>
+      <h1 className="text-2xl font-bold mb-6">🌞 Solar Panel Booking</h1>
+
+      {/* ERROR MESSAGE */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded">
+          {error}
+        </div>
+      )}
 
       {/* Solar Type */}
       <div className="mb-6">
@@ -76,6 +87,7 @@ export default function Booking() {
             setPlan(null);
             setApplySubsidy(true);
             setUseEmi(false);
+            setError("");
           }}
         >
           <option>Residential</option>
@@ -89,15 +101,14 @@ export default function Booking() {
         {solarPlans[type].map((item, index) => (
           <div
             key={index}
-            className={`card cursor-pointer border-2 ${
-              plan === item
-                ? "border-primary"
-                : "border-transparent"
+            className={`p-4 rounded-lg shadow cursor-pointer border-2 ${
+              plan === item ? "border-green-600" : "border-transparent"
             }`}
             onClick={() => {
               setPlan(item);
               setApplySubsidy(true);
               setUseEmi(false);
+              setError("");
             }}
           >
             <h3 className="text-xl font-semibold">
@@ -115,19 +126,15 @@ export default function Booking() {
 
       {/* Cost Section */}
       {plan && (
-        <div className="card mt-8 space-y-4">
+        <div className="bg-white rounded shadow p-6 mt-8 space-y-4">
           <h2 className="text-xl font-bold">💰 Cost Breakdown</h2>
 
+          <p><strong>Capacity:</strong> {plan.kW} kW</p>
           <p>
-            <strong>Capacity:</strong> {plan.kW} kW
+            <strong>Original Cost:</strong> ₹{plan.cost.toLocaleString()}
           </p>
 
-          <p>
-            <strong>Original Cost:</strong>{" "}
-            ₹{plan.cost.toLocaleString()}
-          </p>
-
-          {/* Subsidy Toggle */}
+          {/* Subsidy */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -139,17 +146,15 @@ export default function Booking() {
 
           {applySubsidy && (
             <p className="text-green-700">
-              Subsidy Applied: -₹
-              {subsidyAmount.toLocaleString()}
+              Subsidy Applied: -₹{subsidyAmount.toLocaleString()}
             </p>
           )}
 
           <p className="text-lg font-semibold">
-            Final Payable Cost: ₹
-            {finalCost.toLocaleString()}
+            Final Payable Cost: ₹{finalCost.toLocaleString()}
           </p>
 
-          {/* EMI Option */}
+          {/* EMI */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -164,18 +169,15 @@ export default function Booking() {
               <select
                 className="input"
                 value={emiYears}
-                onChange={(e) =>
-                  setEmiYears(Number(e.target.value))
-                }
+                onChange={(e) => setEmiYears(Number(e.target.value))}
               >
                 <option value={3}>3 Years</option>
                 <option value={5}>5 Years</option>
                 <option value={7}>7 Years</option>
               </select>
 
-              <p className="text-primary font-semibold">
-                Monthly EMI: ₹
-                {emiAmount.toLocaleString()}
+              <p className="font-semibold text-green-700">
+                Monthly EMI: ₹{emiAmount.toLocaleString()}
               </p>
             </>
           )}
@@ -183,7 +185,7 @@ export default function Booking() {
           <button
             onClick={confirmBooking}
             disabled={loading}
-            className="btn w-full"
+            className="w-full bg-green-700 hover:bg-green-800 text-white py-2 rounded font-semibold"
           >
             {loading ? "Processing..." : "Confirm Booking"}
           </button>

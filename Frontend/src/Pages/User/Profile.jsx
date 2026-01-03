@@ -12,6 +12,12 @@ export default function Profile() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // Redirect to login if user is not authenticated
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     getMyCustomer()
       .then((res) => {
         setCustomer(res.data);
@@ -25,7 +31,7 @@ export default function Profile() {
         }
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [user, navigate]);
 
   const handleLogout = () => {
     logout();
@@ -72,24 +78,45 @@ export default function Profile() {
           </h3>
 
           {customer ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <Info label="Customer Name" value={customer.fullName} />
-              <Info label="Phone" value={customer.phone} />
-              <Info label="Address" value={customer.address} />
-              <Info
-                label="System Capacity"
-                value={`${customer.systemCapacityKW} kW`}
-              />
-              <Info
-                label="Installation Date"
-                value={
-                  customer.installationDate
-                    ? customer.installationDate.slice(0, 10)
-                    : "—"
-                }
-              />
-              <StatusBadge status={customer.status} />
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
+                <Info label="Customer Name" value={customer.fullName} />
+                <Info label="Phone" value={customer.phone} />
+                <Info label="System Capacity" value={`${customer.systemCapacityKW} kW`} />
+                <Info
+                  label="Installation Date"
+                  value={
+                    customer.installationDate
+                      ? customer.installationDate.slice(0, 10)
+                      : "—"
+                  }
+                />
+                <StatusBadge status={customer.status} />
+              </div>
+
+              {/* SITE DETAILS */}
+              <div className="border-t pt-6">
+                <h4 className="text-md font-semibold text-gray-700 mb-3">
+                  Site Location Details
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <Info label="City" value={customer.city} />
+                  <Info label="State" value={customer.state} />
+                  <Info label="Pincode" value={customer.pincode} />
+                </div>
+              </div>
+
+              {/* INACTIVE WARNING */}
+              {customer.status === "Inactive" && (
+                <div className="mt-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded">
+                  ⚠️ Your solar system is currently inactive.  
+                  Booking and energy monitoring may be restricted.
+                  <br />
+                  Please contact support for assistance.
+                </div>
+              )}
+            </>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded">
               Customer profile not created yet.

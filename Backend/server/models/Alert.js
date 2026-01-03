@@ -1,3 +1,53 @@
+const mongoose = require("mongoose");
+
+const alertSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer",
+    },
+    type: {
+      type: String,
+      enum: ["ENERGY_DROP", "UNDERPERFORMANCE", "WEATHER_WARNING", "MAINTENANCE", "SYSTEM_ERROR", "INVERTER_OFFLINE"],
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    message: {
+      type: String,
+      required: true,
+    },
+    severity: {
+      type: String,
+      enum: ["low", "medium", "high", "critical"],
+      default: "medium",
+    },
+    isResolved: {
+      type: Boolean,
+      default: false,
+    },
+    resolvedAt: Date,
+    relatedEnergyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Energy",
+    },
+  },
+  { timestamps: true }
+);
+
+// Index for fast queries
+alertSchema.index({ userId: 1, createdAt: -1 });
+alertSchema.index({ userId: 1, isResolved: 1 });
+
+module.exports = mongoose.model("Alert", alertSchema);
+
 /**
  * Intelligent anomaly detection logic
  */

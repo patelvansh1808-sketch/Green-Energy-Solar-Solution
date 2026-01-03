@@ -22,4 +22,19 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Log failing responses to quickly identify endpoint and status
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.config) {
+      console.warn(
+        `[API ${error.response.status}] ${
+          error.config.method?.toUpperCase() || ""
+        } ${error.config.url}: ${error.response.data?.message || ""}`
+      );
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

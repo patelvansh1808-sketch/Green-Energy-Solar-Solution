@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -27,19 +28,19 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-8 text-sm font-medium">
 
           <Link to="/" className="hover:text-green-200 transition">
-            🏠 Home
+            Home
           </Link>
 
           {user && (
             <>
               <Link to="/dashboard" className="hover:text-green-200 transition">
-                📊 Dashboard
+                Dashboard
               </Link>
 
               {/* FEATURES */}
               <div className="relative group">
                 <button className="hover:text-green-200 transition">
-                  ⚡ Features ▾
+                  Features ▾
                 </button>
                 <div className="absolute left-0 top-full pt-2 hidden group-hover:block bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2">
                   <NavItem to="/booking" label="📅 Booking" />
@@ -47,12 +48,13 @@ export default function Navbar() {
                 </div>
               </div>
 
-
+              {/* NOTIFICATIONS BELL */}
+              <NotificationBell />
 
               {/* PROFILE */}
               <div className="relative group">
                 <button className="hover:text-green-200 transition">
-                  👤 Profile ▾
+                  Profile ▾
                 </button>
 
                 <div className="absolute right-0 top-full pt-2 hidden group-hover:block bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2">
@@ -89,19 +91,19 @@ export default function Navbar() {
           )}
 
           <Link to="/contact" className="hover:text-green-200 transition">
-            📞 Contact
+            Contact
           </Link>
 
           {!user && (
             <>
               <Link to="/login" className="hover:text-green-200 transition">
-                🔑 Login
+                Login
               </Link>
               <Link
                 to="/register"
                 className="bg-white text-green-700 px-4 py-2 rounded-lg font-bold"
               >
-                📝 Register
+                Register
               </Link>
             </>
           )}
@@ -116,12 +118,12 @@ export default function Navbar() {
       {/* ===== MOBILE MENU ===== */}
       {open && (
         <div className="md:hidden bg-green-600 px-4 py-4 space-y-2 text-sm">
-          <Link to="/" onClick={() => setOpen(false)}>🏠 Home</Link>
+          <Link to="/" onClick={() => setOpen(false)}>Home</Link>
 
           {user && (
             <>
               <Link to="/dashboard" onClick={() => setOpen(false)}>
-                📊 Dashboard
+                Dashboard
               </Link>
 
               <p className="text-xs uppercase text-green-200 mt-3">⚡ Features</p>

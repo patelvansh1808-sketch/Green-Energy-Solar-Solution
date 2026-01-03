@@ -1,15 +1,33 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middleware/authMiddleware");
-const {
-  createBooking,
-  getBookings,
-} = require("../controllers/bookingController");
 
-// Create new booking
-router.post("/create", auth, createBooking);
+// ✅ IMPORT AUTH MIDDLEWARE (CORRECT NAME)
+const authMiddleware = require("../middleware/authMiddleware");
 
-// Get logged-in user's bookings
-router.get("/my", auth, getBookings);
+// ✅ IMPORT BOOKING CONTROLLER (VERIFY PATH)
+const bookingController = require("../controllers/bookingController");
+
+/* ===============================
+   USER BOOKING ROUTES
+================================ */
+
+// 🔴 SAFETY CHECK (TEMP – REMOVE LATER)
+console.log("authMiddleware:", typeof authMiddleware);
+console.log("createBooking:", typeof bookingController.createBooking);
+console.log("getBookings:", typeof bookingController.getBookings);
+
+// CREATE BOOKING
+router.post(
+  "/create",
+  authMiddleware,
+  bookingController.createBooking
+);
+
+// GET LOGGED-IN USER BOOKINGS
+router.get(
+  "/my",
+  authMiddleware,
+  bookingController.getBookings
+);
 
 module.exports = router;

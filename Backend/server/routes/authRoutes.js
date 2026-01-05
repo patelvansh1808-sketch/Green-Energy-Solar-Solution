@@ -16,7 +16,11 @@ router.post("/forgot-password", forgotPassword);
 // Google OAuth routes
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", { 
+    scope: ["profile", "email"],
+    prompt: "select_account", // Force account selection every time
+    accessType: "offline"
+  })
 );
 
 router.get(

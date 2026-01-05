@@ -5,7 +5,7 @@ import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, hasCustomerProfile } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -33,9 +33,11 @@ export default function Navbar() {
 
           {user && (
             <>
-              <Link to="/dashboard" className="hover:text-green-200 transition">
-                Dashboard
-              </Link>
+              {hasCustomerProfile && (
+                <Link to="/dashboard" className="hover:text-green-200 transition">
+                  Dashboard
+                </Link>
+              )}
 
               {/* FEATURES */}
               <div className="relative group">
@@ -122,9 +124,11 @@ export default function Navbar() {
 
           {user && (
             <>
-              <Link to="/dashboard" onClick={() => setOpen(false)}>
-                Dashboard
-              </Link>
+              {hasCustomerProfile && (
+                <Link to="/dashboard" onClick={() => setOpen(false)}>
+                  Dashboard
+                </Link>
+              )}
 
               <p className="text-xs uppercase text-green-200 mt-3">⚡ Features</p>
               <MobileItem to="/booking" label="📅 Booking" />

@@ -46,7 +46,9 @@ export default function Navbar() {
                 </button>
                 <div className="absolute left-0 top-full pt-2 hidden group-hover:block bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2">
                   <NavItem to="/booking" label="📅 Booking" />
-                  <NavItem to="/subsidy" label="💰 Subsidy" />
+                  <NavItem to="/booking-status" label="📊 Booking Status" />
+                  <NavItem to="/apply-subsidy" label="💰 Apply for Subsidy" />
+                  <NavItem to="/subsidy-status" label="📈 Subsidy Status" />
                 </div>
               </div>
 
@@ -74,27 +76,33 @@ export default function Navbar() {
                       />
 
                       <NavItem
-                        to="/admin"
-                        label="⚙️ Admin Dashboard"
-                        admin
-                      />
-                    </>
-                  )}
+                    to="/admin/subsidy-applications"
+                    label="📋 Subsidy Applications"
+                    admin
+                  />
 
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
-                  >
-                    🚪 Logout
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
+                  <NavItem
+                    to="/admin"
+                    label="⚙️ Admin Dashboard"
+                    admin
+                  />
+                </>
+              )}
 
-          <Link to="/contact" className="hover:text-green-200 transition">
-            Contact
-          </Link>
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
+              >
+                🚪 Logout
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      <Link to="/contact" className="hover:text-green-200 transition">
+        Contact
+      </Link>
 
           {!user && (
             <>
@@ -132,7 +140,9 @@ export default function Navbar() {
 
               <p className="text-xs uppercase text-green-200 mt-3">⚡ Features</p>
               <MobileItem to="/booking" label="📅 Booking" />
-              <MobileItem to="/subsidy" label="💰 Subsidy" />
+              <MobileItem to="/booking-status" label="📊 Booking Status" />
+              <MobileItem to="/apply-subsidy" label="💰 Apply for Subsidy" />
+              <MobileItem to="/subsidy-status" label="📈 Subsidy Status" />
 
               <p className="text-xs uppercase text-green-200 mt-3">👤 Account</p>
               <MobileItem to="/profile" label="My Profile" />
@@ -140,6 +150,7 @@ export default function Navbar() {
               {user.role === "admin" && (
                 <>
                   <MobileItem to="/admin/customers" label="🧑‍💼 Manage Customers" />
+                  <MobileItem to="/admin/subsidy-applications" label="📋 Subsidy Applications" />
                   <MobileItem to="/admin" label="⚙️ Admin Dashboard" />
                 </>
               )}

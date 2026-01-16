@@ -15,7 +15,10 @@ import Dashboard from "./Pages/User/Dashboard";
 import Alerts from "./Pages/User/Alerts";
 import CarbonFootprint from "./Pages/User/CarbonFootprint";
 import Booking from "./Pages/User/Booking";
+import BookingStatus from "./Pages/User/BookingStatus";
 import SubsidyEligibility from "./Pages/User/SubsidyEligibility";
+import ApplyForSubsidy from "./Pages/User/ApplyForSubsidy";
+import SubsidyStatus from "./Pages/User/SubsidyStatus";
 import Profile from "./Pages/User/Profile";
 import Recommendations from "./Pages/User/Recommendations";
 import Notifications from "./Pages/User/Notifications";
@@ -25,6 +28,7 @@ import Messages from "./Pages/User/Messages";
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
 import ManageUsers from "./Pages/Admin/ManageUsers";
 import ManageBookings from "./Pages/Admin/ManageBookings";
+import ManageSubsidyApplications from "./Pages/Admin/ManageSubsidyApplications";
 import SubsidyRules from "./Pages/Admin/SubsidyRules";
 import SystemAnalytics from "./Pages/Admin/SystemAnalytics";
 import ManageCustomers from "./Pages/Admin/ManageCustomers";
@@ -82,10 +86,37 @@ function AnimatedRoutes() {
         />
 
         <Route
+          path="/booking-status"
+          element={
+            <ProtectedRoute>
+              <BookingStatus />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/subsidy"
           element={
             <ProtectedRoute>
               <SubsidyEligibility />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/apply-subsidy"
+          element={
+            <ProtectedRoute>
+              <ApplyForSubsidy />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/subsidy-status"
+          element={
+            <ProtectedRoute>
+              <SubsidyStatus />
             </ProtectedRoute>
           }
         />
@@ -159,6 +190,15 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute role="admin">
               <ManageBookings />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/subsidy-applications"
+          element={
+            <ProtectedRoute role="admin">
+              <ManageSubsidyApplications />
             </ProtectedRoute>
           }
         />

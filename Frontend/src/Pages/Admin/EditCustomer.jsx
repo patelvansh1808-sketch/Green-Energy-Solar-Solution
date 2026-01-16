@@ -1,22 +1,55 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "../../services/api";
+import LocationService from "../../services/locationService";
 
 export default function EditCustomer() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [states, setStates] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [discoms, setDiscoms] = useState([]);
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
     address: "",
     city: "",
     state: "",
+    district: "",
+    discom: "",
     pincode: "",
     systemCapacityKW: "",
     installationDate: "",
   });
+
+  /* 🔹 Load states on mount */
+  useEffect(() => {
+    const allStates = LocationService.getStates();
+    setStates(allStates);
+  }, []);
+
+  /* 🔹 Load districts and DISCOMs when state changes */
+  useEffect(() => {
+    if (form.state) {
+      const stateDistricts = LocationService.getDistricts(form.state);
+      setDistricts(stateDistricts);
+    } else {
+      setDistricts([]);
+      setDiscoms([]);
+    }
+  }, [form.state]);
+
+  /* 🔹 Load DISCOMs when state or district changes */
+  useEffect(() => {
+    if (form.state) {
+      const stateDISCOMs = LocationService.getDISCOMs(form.state, form.district);
+      setDiscoms(stateDISCOMs);
+    } else {
+      setDiscoms([]);
+    }
+  }, [form.state, form.district]);
 
   useEffect(() => {
     const loadCustomer = async () => {
@@ -30,6 +63,8 @@ export default function EditCustomer() {
           address: customer.address || "",
           city: customer.city || "",
           state: customer.state || "",
+          district: customer.district || "",
+          discom: customer.discom || "",
           pincode: customer.pincode || "",
           systemCapacityKW: customer.systemCapacityKW || "",
           installationDate: customer.installationDate 
@@ -70,6 +105,8 @@ export default function EditCustomer() {
         address: form.address.trim(),
         city: form.city.trim(),
         state: form.state.trim(),
+        district: form.district.trim(),
+        discom: form.discom.trim(),
         pincode: form.pincode.trim(),
         systemCapacityKW: parseFloat(form.systemCapacityKW),
         installationDate: form.installationDate || null,
@@ -134,25 +171,59 @@ export default function EditCustomer() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-2">City</label>
-            <input
-              name="city"
-              value={form.city}
-              onChange={handleChange}
-              placeholder="City"
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-2">State</label>
-            <input
+            <label className="block text-sm font-semibold mb-2">State *</label>
+            <select
               name="state"
               value={form.state}
               onChange={handleChange}
-              placeholder="State"
+              required
               className="w-full border rounded px-3 py-2"
-            />
+            >
+              <option value="">-- Select State --</option>
+              {states.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-2">District *</label>
+            <select
+              name="district"
+              value={form.district}
+              onChange={handleChange}
+              required
+              disabled={!form.state}
+              className="w-full border rounded px-3 py-2 disabled:bg-gray-100"
+            >
+              <option value="">-- Select District --</option>
+              {districts.map((district) => (
+                <option key={district} value={district}>
+                  {district}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-2">DISCOM *</label>
+            <select
+              name="discom"
+              value={form.discom}
+              onChange={handleChange}
+              required
+              disabled={!form.state}
+              className="w-full border rounded px-3 py-2 disabled:bg-gray-100"
+            >
+              <option value="">-- Select DISCOM --</option>
+              {discoms.map((discom) => (
+                <option key={discom} value={discom}>
+                  {discom}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../services/api";
+import LocationService from "../../services/locationService";
 
 export default function CreateCustomer() {
   const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [states, setStates] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [discoms, setDiscoms] = useState([]);
 
   const [form, setForm] = useState({
     userId: "",
@@ -15,6 +19,8 @@ export default function CreateCustomer() {
     address: "",
     city: "",
     state: "",
+    district: "",
+    discom: "",
     pincode: "",
     systemCapacityKW: "",
   });
@@ -25,6 +31,39 @@ export default function CreateCustomer() {
       setUsers(res.data);
     });
   }, []);
+
+  /* 🔹 Load states on mount */
+  useEffect(() => {
+    const allStates = LocationService.getStates();
+    setStates(allStates);
+  }, []);
+
+  /* 🔹 Load districts when state changes */
+  useEffect(() => {
+    if (form.state) {
+      const stateDistricts = LocationService.getDistricts(form.state);
+      setDistricts(stateDistricts);
+      // Reset district when state changes
+      setForm(prev => ({ ...prev, district: "", discom: "" }));
+    } else {
+      setDistricts([]);
+      setDiscoms([]);
+    }
+  }, [form.state]);
+
+  /* 🔹 Load DISCOMs when state or district changes */
+  useEffect(() => {
+    if (form.state) {
+      const stateDISCOMs = LocationService.getDISCOMs(form.state, form.district);
+      setDiscoms(stateDISCOMs);
+      // Reset discom when state/district changes
+      if (form.district) {
+        setForm(prev => ({ ...prev, discom: "" }));
+      }
+    } else {
+      setDiscoms([]);
+    }
+  }, [form.state, form.district]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -80,8 +119,66 @@ export default function CreateCustomer() {
           <Input name="fullName" label="Full Name" onChange={handleChange} required />
           <Input name="phone" label="Phone" onChange={handleChange} required />
           <Input name="address" label="Address" onChange={handleChange} required />
-          <Input name="city" label="City" onChange={handleChange} />
-          <Input name="state" label="State" onChange={handleChange} />
+
+          {/* State Dropdown */}
+          <div>
+            <label className="text-sm text-gray-600">State *</label>
+            <select
+              name="state"
+              value={form.state}
+              onChange={handleChange}
+              required
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="">-- Select State --</option>
+              {states.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* District Dropdown */}
+          <div>
+            <label className="text-sm text-gray-600">District *</label>
+            <select
+              name="district"
+              value={form.district}
+              onChange={handleChange}
+              required
+              disabled={!form.state}
+              className="w-full border rounded px-3 py-2 disabled:bg-gray-100"
+            >
+              <option value="">-- Select District --</option>
+              {districts.map((district) => (
+                <option key={district} value={district}>
+                  {district}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* DISCOM Dropdown */}
+          <div>
+            <label className="text-sm text-gray-600">DISCOM *</label>
+            <select
+              name="discom"
+              value={form.discom}
+              onChange={handleChange}
+              required
+              disabled={!form.state}
+              className="w-full border rounded px-3 py-2 disabled:bg-gray-100"
+            >
+              <option value="">-- Select DISCOM --</option>
+              {discoms.map((discom) => (
+                <option key={discom} value={discom}>
+                  {discom}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <Input name="pincode" label="Pincode" onChange={handleChange} />
           <Input
             name="systemCapacityKW"

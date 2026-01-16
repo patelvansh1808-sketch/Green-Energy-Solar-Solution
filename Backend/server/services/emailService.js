@@ -59,26 +59,26 @@ exports.sendBookingConfirmationEmail = async (userEmail, userName, bookingDetail
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Capacity:</span>
-                  <span class="detail-value">${bookingDetails.capacity} kW</span>
+                  <span class="detail-value">${bookingDetails.capacity || 0} kW</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Base Cost:</span>
-                  <span class="detail-value">₹${bookingDetails.baseCost.toLocaleString()}</span>
+                  <span class="detail-value">₹${(bookingDetails.baseCost || 0).toLocaleString()}</span>
                 </div>
                 ${bookingDetails.subsidyApplied ? `
                 <div class="detail-row">
                   <span class="detail-label">Subsidy Applied:</span>
-                  <span class="detail-value">₹${bookingDetails.subsidyAmount.toLocaleString()}</span>
+                  <span class="detail-value">₹${(bookingDetails.subsidyAmount || 0).toLocaleString()}</span>
                 </div>
                 ` : ''}
                 <div class="detail-row">
                   <span class="detail-label">Final Cost:</span>
-                  <span class="detail-value" style="font-size: 18px;">₹${bookingDetails.finalCost.toLocaleString()}</span>
+                  <span class="detail-value" style="font-size: 18px;">₹${(bookingDetails.finalCost || 0).toLocaleString()}</span>
                 </div>
                 ${bookingDetails.emiEnabled ? `
                 <div class="detail-row">
                   <span class="detail-label">EMI Plan:</span>
-                  <span class="detail-value">${bookingDetails.emiYears} years @ ₹${bookingDetails.monthlyEmi.toLocaleString()}/month</span>
+                  <span class="detail-value">${bookingDetails.emiYears || 0} years @ ₹${(bookingDetails.monthlyEmi || 0).toLocaleString()}/month</span>
                 </div>
                 ` : ''}
               </div>

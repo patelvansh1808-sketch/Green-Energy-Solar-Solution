@@ -22,12 +22,12 @@ const bookingService = {
   },
 
   getAllBookings: async () => {
-    const res = await api.get("/bookings");
+    const res = await api.get("/admin/bookings");
     return res.data;
   },
 
   updateBookingStatus: async (id, data) => {
-    const res = await api.patch(`/bookings/${id}`, data);
+    const res = await api.patch(`/admin/bookings/${id}`, data);
     return res.data;
   },
 

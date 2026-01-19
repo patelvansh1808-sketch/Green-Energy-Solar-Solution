@@ -84,7 +84,7 @@ export default function AdminDashboard() {
 
           {/* Active Customers */}
           <button
-            onClick={() => navigate("/admin/manage-customers?status=Active")}
+            onClick={() => navigate("/admin/customers?status=Active")}
             className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition cursor-pointer text-left"
           >
             <div className="flex items-center justify-between">
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
 
           {/* Inactive Customers */}
           <button
-            onClick={() => navigate("/admin/manage-customers?status=Inactive")}
+            onClick={() => navigate("/admin/customers?status=Inactive")}
             className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition cursor-pointer text-left"
           >
             <div className="flex items-center justify-between">
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
             </button>
 
             <button
-              onClick={() => navigate("/admin/manage-customers")}
+              onClick={() => navigate("/admin/customers")}
               className="flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition text-blue-700 font-medium"
             >
               <span className="text-2xl mr-2">👥</span> Manage Customers

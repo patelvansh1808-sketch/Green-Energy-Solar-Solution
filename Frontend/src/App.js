@@ -13,7 +13,6 @@ import ContactUs from "./Pages/contact/ContactUs";
 /* ===== USER PAGES ===== */
 import Dashboard from "./Pages/User/Dashboard";
 import Alerts from "./Pages/User/Alerts";
-import CarbonFootprint from "./Pages/User/CarbonFootprint";
 import Booking from "./Pages/User/Booking";
 import BookingStatus from "./Pages/User/BookingStatus";
 import SubsidyEligibility from "./Pages/User/SubsidyEligibility";
@@ -63,15 +62,6 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/carbon"
-          element={
-            <ProtectedRoute>
-              <CarbonFootprint />
             </ProtectedRoute>
           }
         />

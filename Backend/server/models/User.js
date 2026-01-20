@@ -14,6 +14,10 @@ const userSchema = new mongoose.Schema({
   location: { type: String },
   role: { type: String, default: "user" },
   googleId: { type: String, unique: true, sparse: true }, // For Google OAuth
+
+  // Password reset
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
 });
 
 module.exports = mongoose.model("User", userSchema);

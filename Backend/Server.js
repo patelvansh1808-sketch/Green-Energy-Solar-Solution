@@ -56,6 +56,8 @@ app.use("/api/messages", require("./server/routes/messageRoutes"));
 app.use("/api/admin", require("./server/routes/adminRoutes"));
 app.use("/api/customers", require("./server/routes/customerRoutes"));
 
+// Lead Management
+app.use("/api/leads", require("./server/routes/leadRoutes"));
 
 // -------------------- DEFAULT ROUTE --------------------
 

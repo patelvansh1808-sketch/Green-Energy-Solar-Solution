@@ -34,6 +34,13 @@ import ManageCustomers from "./Pages/Admin/ManageCustomers";
 import CreateCustomer from "./Pages/Admin/CreateCustomer";
 import EditCustomer from "./Pages/Admin/EditCustomer";
 
+/* ===== CRM PAGES ===== */
+import LeadManagement from "./Pages/LeadManagement";
+import LeadAnalytics from "./Pages/LeadAnalytics";
+import CRMDashboard from "./Pages/CRMDashboard";
+import SalesDashboard from "./Pages/SalesDashboard";
+import TeamMemberDashboard from "./Pages/TeamMemberDashboard";
+
 /* ===== COMPONENTS ===== */
 import Navbar from "./Components/Navbar";
 import Footer from "./Components/Footer";
@@ -234,6 +241,53 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute role="admin">
               <SystemAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ===== CRM ROUTES ===== */}
+        <Route
+          path="/crm/dashboard"
+          element={
+            <ProtectedRoute role="admin">
+              <CRMDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/crm/sales-dashboard"
+          element={
+            <ProtectedRoute role="admin">
+              <SalesDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/crm/leads"
+          element={
+            <ProtectedRoute role="admin">
+              <LeadManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/crm/analytics"
+          element={
+            <ProtectedRoute role="admin">
+              <LeadAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ===== TEAM MEMBER ROUTES ===== */}
+        <Route
+          path="/team/my-leads"
+          element={
+            <ProtectedRoute>
+              <TeamMemberDashboard />
             </ProtectedRoute>
           }
         />

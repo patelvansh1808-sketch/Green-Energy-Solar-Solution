@@ -266,57 +266,33 @@ const CRMDashboard = () => {
                         </select>
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        {lead.assignedSalesEngineer ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-900 font-medium">
-                              {lead.assignedSalesEngineer.firstName} {lead.assignedSalesEngineer.lastName}
-                            </span>
-                            <select 
-                              value={lead.assignedSalesEngineer._id}
-                              onChange={(e) => handleAssignLead(lead._id, e.target.value)}
-                              className="px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-green-500"
-                            >
-                              <option value={lead.assignedSalesEngineer._id}>
-                                {lead.assignedSalesEngineer.firstName} {lead.assignedSalesEngineer.lastName}
-                              </option>
-                              <option value="">Unassign</option>
-                              {teamMembers
+                        {lead.assignedSalesEngineer?._id ? (
+                          <select
+                            value={lead.assignedSalesEngineer._id}
+                            onChange={(e) => handleAssignLead(lead._id, e.target.value)}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white"
+                          >
+                            <option value={lead.assignedSalesEngineer._id}>
+                              {lead.assignedSalesEngineer?.firstName && lead.assignedSalesEngineer?.lastName
+                                ? `${lead.assignedSalesEngineer.firstName} ${lead.assignedSalesEngineer.lastName}`
+                                : lead.assignedSalesEngineer?.name || 'Assigned'}
+                            </option>
+                            {teamMembers && teamMembers.length > 0 && (
+                              teamMembers
                                 .filter(member => member._id !== lead.assignedSalesEngineer._id)
                                 .map((member) => {
                                   const displayName = member.firstName && member.lastName 
                                     ? `${member.firstName} ${member.lastName}`
                                     : member.name || member.email || 'Unknown Member';
-                                  const roleText = member.role || 'N/A';
                                   return (
                                     <option key={member._id} value={member._id}>
-                                      {displayName} ({roleText})
+                                      {displayName}
                                     </option>
                                   );
                                 })
-                              }
-                            </select>
-                          </div>
-                        ) : (
-                          <select 
-                            value=""
-                            onChange={(e) => handleAssignLead(lead._id, e.target.value)}
-                            className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                          >
-                            <option value="">Assign to...</option>
-                            {teamMembers.map((member) => {
-                              console.log('[CRM] Rendering member:', member);
-                              const displayName = member.firstName && member.lastName 
-                                ? `${member.firstName} ${member.lastName}`
-                                : member.name || member.email || 'Unknown Member';
-                              const roleText = member.role || 'N/A';
-                              return (
-                                <option key={member._id} value={member._id}>
-                                  {displayName} ({roleText})
-                                </option>
-                              );
-                            })}
+                            )}
                           </select>
-                        )}
+                        ) : null}
                       </td>
                       <td className="px-6 py-4">
                         <select className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500">

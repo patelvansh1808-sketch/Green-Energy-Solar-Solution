@@ -86,9 +86,9 @@ const SalesDashboard = () => {
           <div className="space-y-4">
             {[
               { stage: 'New', icon: '🆕', color: 'from-blue-400 to-blue-600' },
-              { stage: 'Contacted', icon: '📞', color: 'from-yellow-400 to-yellow-600' },
-              { stage: 'Quoted', icon: '📋', color: 'from-purple-400 to-purple-600' },
-              { stage: 'Converted', icon: '✅', color: 'from-green-400 to-green-600' }
+              { stage: 'Contacted', icon: '📞', color: 'from-blue-400 to-blue-600' },
+              { stage: 'Quoted', icon: '📋', color: 'from-blue-400 to-blue-600' },
+              { stage: 'Converted', icon: '✅', color: 'from-blue-400 to-blue-600' }
             ].map((item) => {
               const count = leads.filter(lead => lead.stage === item.stage).length;
               const percentage = leads.length > 0 ? (count / leads.length) * 100 : 0;

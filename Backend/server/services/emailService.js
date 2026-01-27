@@ -119,6 +119,34 @@ exports.sendBookingConfirmationEmail = async (userEmail, userName, bookingDetail
   }
 };
 
+// Send password reset email
+exports.sendPasswordResetEmail = async (userEmail, userName, resetLink) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER || "noreply@suryaurja.com",
+    to: userEmail,
+    subject: "Reset your password",
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <body style="font-family: Arial, sans-serif; background: #f8fafc; padding: 24px;">
+        <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+          <h2 style="color: #16a34a;">Hi ${userName || "there"},</h2>
+          <p style="color: #334155; line-height: 1.6;">We received a request to reset your password. Click the button below to set a new password. This link will expire in 1 hour.</p>
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${resetLink}" style="background: #16a34a; color: #ffffff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">Reset Password</a>
+          </div>
+          <p style="color: #475569; line-height: 1.6;">If the button doesn't work, copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #0ea5e9;">${resetLink}</p>
+          <p style="color: #94a3b8; font-size: 12px;">If you did not request a password reset, you can safely ignore this email.</p>
+        </div>
+      </body>
+      </html>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
 // Send subsidy approval email
 exports.sendSubsidyApprovalEmail = async (userEmail, userName, subsidyDetails) => {
   try {

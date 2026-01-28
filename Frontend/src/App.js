@@ -23,6 +23,7 @@ import Profile from "./Pages/User/Profile";
 import Recommendations from "./Pages/User/Recommendations";
 import Notifications from "./Pages/User/Notifications";
 import Messages from "./Pages/User/Messages";
+import Support from "./Pages/User/Support";
 
 /* ===== ADMIN PAGES ===== */
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
@@ -34,6 +35,19 @@ import SystemAnalytics from "./Pages/Admin/SystemAnalytics";
 import ManageCustomers from "./Pages/Admin/ManageCustomers";
 import CreateCustomer from "./Pages/Admin/CreateCustomer";
 import EditCustomer from "./Pages/Admin/EditCustomer";
+import RoleManagement from "./Pages/Admin/RoleManagement";
+import ProjectTracking from "./Pages/Admin/ProjectTracking";
+import TicketManagement from "./Pages/Admin/TicketManagement";
+
+/* ===== CRM PAGES ===== */
+import LeadManagement from "./Pages/LeadManagement";
+import LeadAnalytics from "./Pages/LeadAnalytics";
+import CRMDashboard from "./Pages/CRMDashboard";
+import SalesDashboard from "./Pages/SalesDashboard";
+import TeamMemberDashboard from "./Pages/TeamMemberDashboard";
+
+/* ===== ENGINEER PAGES ===== */
+import EngineerDashboard from "./Pages/EngineerDashboard";
 
 /* ===== COMPONENTS ===== */
 import Navbar from "./Components/Navbar";
@@ -157,6 +171,14 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/support"
+          element={
+            <ProtectedRoute>
+              <Support />
+            </ProtectedRoute>
+          }
+        />
 
         {/* ===== ADMIN ROUTES ===== */}
         <Route
@@ -236,6 +258,83 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute role="admin">
               <SystemAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/roles"
+          element={
+            <ProtectedRoute role="admin">
+              <RoleManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/projects"
+          element={
+            <ProtectedRoute role="admin">
+              <ProjectTracking />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/tickets"
+          element={
+            <ProtectedRoute role="admin">
+              <TicketManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/engineer/dashboard"
+          element={
+            <ProtectedRoute role="engineer">
+              <EngineerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/crm/dashboard"
+          element={
+            <ProtectedRoute role="admin">
+              <CRMDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/crm/sales-dashboard"
+          element={
+            <ProtectedRoute role="admin">
+              <SalesDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/crm/leads"
+          element={
+            <ProtectedRoute role="admin">
+              <LeadManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/crm/analytics"
+          element={
+            <ProtectedRoute role="admin">
+              <LeadAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/team/my-leads"
+          element={
+            <ProtectedRoute>
+              <TeamMemberDashboard />
             </ProtectedRoute>
           }
         />

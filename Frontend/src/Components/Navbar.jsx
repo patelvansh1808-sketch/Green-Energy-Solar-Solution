@@ -52,6 +52,33 @@ export default function Navbar() {
                 </div>
               </div>
 
+              {/* CRM */}
+              {user.role === "admin" && (
+                <div className="relative group">
+                  <button className="hover:text-green-200 transition">
+                    CRM ▾
+                  </button>
+                  <div className="absolute left-0 top-full pt-2 hidden group-hover:block bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2">
+                    <NavItem to="/crm/dashboard" label="📊 CRM Dashboard" highlight />
+                    <NavItem to="/crm/sales-dashboard" label="💼 Sales Dashboard" />
+                  </div>
+                </div>
+              )}
+
+              {/* ENGINEER DASHBOARD */}
+              {user.role === "engineer" && (
+                <Link to="/engineer/dashboard" className="hover:text-green-200 transition">
+                  🔧 My Tasks
+                </Link>
+              )}
+
+              {/* TEAM MEMBER DASHBOARD */}
+              {(user.role === "engineer" || user.role === "sales" || user.role === "support") && (
+                <Link to="/team/my-leads" className="hover:text-green-200 transition">
+                  📋 My Leads
+                </Link>
+              )}
+
               {/* NOTIFICATIONS BELL */}
               <NotificationBell />
 
@@ -82,6 +109,24 @@ export default function Navbar() {
                   />
 
                   <NavItem
+                    to="/admin/roles"
+                    label="👥 Role Management"
+                    admin
+                  />
+
+                  <NavItem
+                    to="/admin/projects"
+                    label="🔧 Installation Tracking"
+                    admin
+                  />
+
+                  <NavItem
+                    to="/admin/tickets"
+                    label="🎫 Ticket Management"
+                    admin
+                  />
+
+                  <NavItem
                     to="/admin"
                     label="⚙️ Admin Dashboard"
                     admin
@@ -98,6 +143,12 @@ export default function Navbar() {
             </div>
           </div>
         </>
+      )}
+
+      {user && (
+        <Link to="/support" className="hover:text-green-200 transition">
+          Support
+        </Link>
       )}
 
       <Link to="/contact" className="hover:text-green-200 transition">
@@ -144,6 +195,14 @@ export default function Navbar() {
               <MobileItem to="/apply-subsidy" label="💰 Apply for Subsidy" />
               <MobileItem to="/subsidy-status" label="📈 Subsidy Status" />
 
+              {user.role === "admin" && (
+                <>
+                  <p className="text-xs uppercase text-green-200 mt-3">📱 CRM</p>
+                  <MobileItem to="/crm/dashboard" label="📊 CRM Dashboard" />
+                  <MobileItem to="/crm/sales-dashboard" label="💼 Sales Dashboard" />
+                </>
+              )}
+
               <p className="text-xs uppercase text-green-200 mt-3">👤 Account</p>
               <MobileItem to="/profile" label="My Profile" />
 
@@ -151,6 +210,8 @@ export default function Navbar() {
                 <>
                   <MobileItem to="/admin/customers" label="🧑‍💼 Manage Customers" />
                   <MobileItem to="/admin/subsidy-applications" label="📋 Subsidy Applications" />
+                  <MobileItem to="/admin/roles" label="👥 Role Management" />
+                  <MobileItem to="/admin/projects" label="🔧 Installation Tracking" />
                   <MobileItem to="/admin" label="⚙️ Admin Dashboard" />
                 </>
               )}

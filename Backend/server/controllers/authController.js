@@ -9,11 +9,23 @@ const { sendPasswordResetEmail } = require("../services/emailService");
 ========================= */
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, location, connectionType } = req.body;
+    console.log('=== REGISTER REQUEST ===');
+    console.log('req.body:', req.body);
+    
+    const { name, firstName, lastName, email, password, location, connectionType, phone, role } = req.body;
+
+    // Build full name from firstName/lastName or use name field
+    const fullName = name || `${firstName} ${lastName}`.trim();
+    
+    console.log('Processed fullName:', fullName);
+    console.log('Email:', email);
+    console.log('Password exists:', !!password);
+    console.log('ConnectionType:', connectionType);
 
     // Validation
-    if (!name || !email || !password || !connectionType) {
-      return res.status(400).json({ message: "All required fields missing" });
+    if (!fullName || !email || !password) {
+      console.log('Validation failed - missing required fields');
+      return res.status(400).json({ message: "Name, email and password are required" });
     }
 
     // Check existing user
@@ -27,12 +39,18 @@ exports.register = async (req, res) => {
 
     // Create user
     const user = await User.create({
-      name,
+      firstName: firstName || fullName.split(' ')[0],
+      lastName: lastName || fullName.split(' ').slice(1).join(' '),
+      name: fullName,
       email,
       password: hashedPassword,
       location,
-      connectionType,
+      connectionType: connectionType || 'Residential',
+      phone,
+      role: role || 'user',
     });
+
+    console.log('User created successfully:', user.email);
 
     res.status(201).json({
       token: generateToken(user._id, user.role, user.email),

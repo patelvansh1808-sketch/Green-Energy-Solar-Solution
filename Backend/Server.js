@@ -56,6 +56,17 @@ app.use("/api/messages", require("./server/routes/messageRoutes"));
 app.use("/api/admin", require("./server/routes/adminRoutes"));
 app.use("/api/customers", require("./server/routes/customerRoutes"));
 
+// Role & User Management
+app.use("/api/roles", require("./server/routes/roleRoutes"));
+
+// Project & Installation Tracking
+app.use("/api/projects", require("./server/routes/projectRoutes"));
+
+// Lead Management
+app.use("/api/leads", require("./server/routes/leadRoutes"));
+
+// Support & Ticketing
+app.use("/api/tickets", require("./server/routes/ticketRoutes"));
 
 // -------------------- DEFAULT ROUTE --------------------
 

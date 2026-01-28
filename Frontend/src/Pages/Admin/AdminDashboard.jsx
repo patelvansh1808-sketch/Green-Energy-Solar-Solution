@@ -7,6 +7,17 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAddTeamMember, setShowAddTeamMember] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [showManageTeam, setShowManageTeam] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    phone: '',
+    role: 'engineer'
+  });
 
   const fetchStats = useCallback(async () => {
     try {
@@ -20,6 +31,41 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   }, []);
+
+  const fetchTeamMembers = async () => {
+    try {
+      const res = await api.get("/users/team-members");
+      setTeamMembers(res.data.data || []);
+    } catch (err) {
+      console.error("Error fetching team members:", err);
+    }
+  };
+
+  const handleAddTeamMember = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post("/auth/register", {
+        ...formData,
+        connectionType: 'Commercial'
+      });
+      
+      alert(`Team member added successfully!\n\nLogin credentials:\nEmail: ${formData.email}\nPassword: ${formData.password}\n\nPlease save these credentials!`);
+      
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        phone: '',
+        role: 'engineer'
+      });
+      setShowAddTeamMember(false);
+      fetchTeamMembers();
+    } catch (err) {
+      console.error("Error adding team member:", err);
+      alert(err.response?.data?.message || "Failed to add team member");
+    }
+  };
 
   useEffect(() => {
     fetchStats();
@@ -159,6 +205,23 @@ export default function AdminDashboard() {
             >
               <span className="text-2xl mr-2">🔔</span> Notifications
             </button>
+
+            <button
+              onClick={() => setShowAddTeamMember(true)}
+              className="flex items-center justify-center p-4 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition text-indigo-700 font-medium"
+            >
+              <span className="text-2xl mr-2">👤</span> Add Team Member
+            </button>
+
+            <button
+              onClick={() => {
+                fetchTeamMembers();
+                setShowManageTeam(true);
+              }}
+              className="flex items-center justify-center p-4 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition text-teal-700 font-medium"
+            >
+              <span className="text-2xl mr-2">👥</span> Manage Team
+            </button>
           </div>
         </div>
 
@@ -237,6 +300,148 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Add Team Member Modal */}
+      {showAddTeamMember && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div className="p-6 border-b flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">Add Team Member</h2>
+              <button
+                onClick={() => setShowAddTeamMember(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleAddTeamMember} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                  <input
+                    type="text"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                  <input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                >
+                  <option value="engineer">Sales Engineer</option>
+                  <option value="sales">Sales Manager</option>
+                  <option value="support">Support Staff</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition"
+                >
+                  Add Team Member
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddTeamMember(false)}
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg font-medium transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Team Modal */}
+      {showManageTeam && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white">
+              <h2 className="text-xl font-bold text-gray-900">Manage Team Members</h2>
+              <button
+                onClick={() => setShowManageTeam(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              {teamMembers.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No team members found</p>
+              ) : (
+                <div className="space-y-3">
+                  {teamMembers.map((member) => (
+                    <div key={member._id} className="bg-gray-50 p-4 rounded-lg flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {member.firstName} {member.lastName}
+                        </p>
+                        <p className="text-sm text-gray-600">{member.email}</p>
+                        <p className="text-xs text-gray-500">{member.phone || 'No phone'}</p>
+                      </div>
+                      <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                        {member.role || 'Engineer'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "../../Context/AuthContext";
 import ticketService from "../../services/ticketService";
 import api from "../../services/api";
 
 export default function TicketManagement() {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -14,23 +16,33 @@ export default function TicketManagement() {
   const [stats, setStats] = useState(null);
   const [supportUsers, setSupportUsers] = useState([]);
 
-  const [filters, setFilters] = useState({
-    status: "",
-    category: "",
-    priority: "",
-    assignedTo: "",
+  // Auto-filter to show only support staff's assigned tickets
+  const [filters, setFilters] = useState(() => {
+    if (user?.role === "support") {
+      return {
+        status: "",
+        category: "",
+        priority: "",
+        assignedTo: user._id || "",
+      };
+    }
+    return {
+      status: "",
+      category: "",
+      priority: "",
+      assignedTo: "",
+    };
   });
 
   const fetchTickets = useCallback(async () => {
     try {
-      setLoading(true);
       const data = await ticketService.getAllTickets(filters);
       setTickets(data);
       setError("");
     } catch (err) {
+      console.error("Fetch tickets error:", err);
       setError(err.response?.data?.message || "Failed to load tickets");
-    } finally {
-      setLoading(false);
+      setTickets([]); // Set empty array on failure
     }
   }, [filters]);
 
@@ -40,6 +52,7 @@ export default function TicketManagement() {
       setStats(data);
     } catch (err) {
       console.error("Failed to fetch stats:", err);
+      setError("Failed to load statistics");
     }
   };
 
@@ -54,13 +67,27 @@ export default function TicketManagement() {
       console.log("Support users loaded:", supportStaff);
     } catch (err) {
       console.error("Failed to fetch support users:", err);
+      setError("Failed to load support staff");
+      setSupportUsers([]); // Set empty array on failure
     }
   };
 
   useEffect(() => {
-    fetchTickets();
-    fetchStats();
-    fetchSupportUsers();
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchTickets(),
+          fetchStats(),
+          fetchSupportUsers()
+        ]);
+      } catch (err) {
+        console.error("Error loading ticket data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, [filters, fetchTickets]);
 
   const handleAssign = async (ticketId, assignedTo) => {
@@ -170,8 +197,14 @@ export default function TicketManagement() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">🎫 Ticket Management</h1>
-          <p className="text-gray-600 mt-1">Manage customer support tickets</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            🎫 {user?.role === "support" ? "My Assigned Tickets" : "Ticket Management"}
+          </h1>
+          <p className="text-gray-600 mt-1">
+            {user?.role === "support" 
+              ? `Showing tickets assigned to you • ${user?.firstName} ${user?.lastName}`
+              : "Manage customer support tickets"}
+          </p>
         </div>
 
         {/* Alerts */}
@@ -286,7 +319,10 @@ export default function TicketManagement() {
               <select
                 value={filters.assignedTo}
                 onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                disabled={user?.role === "support"}
+                className={`w-full border border-gray-300 rounded-lg px-4 py-2 ${
+                  user?.role === "support" ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
               >
                 <option value="">All</option>
                 {supportUsers.map((u) => (
@@ -296,6 +332,16 @@ export default function TicketManagement() {
                 ))}
               </select>
             </div>
+            {user?.role === "admin" && (
+              <div className="flex items-end">
+                <button
+                  onClick={() => setFilters({ status: "", category: "", priority: "", assignedTo: "" })}
+                  className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -332,9 +378,11 @@ export default function TicketManagement() {
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                      Assigned To
-                    </th>
+                    {user?.role === "admin" && (
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                        Assigned To
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                       Actions
                     </th>
@@ -380,20 +428,22 @@ export default function TicketManagement() {
                           {ticket.status.replace("_", " ").toUpperCase()}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <select
-                          value={ticket.assignedTo?._id || ""}
-                          onChange={(e) => handleAssign(ticket._id, e.target.value)}
-                          className="w-full border border-gray-300 rounded px-3 py-1 text-sm"
-                        >
-                          <option value="">Unassigned</option>
-                          {supportUsers.map((u) => (
-                            <option key={u._id} value={u._id}>
-                              {u.firstName} {u.lastName}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
+                      {user?.role === "admin" && (
+                        <td className="px-6 py-4">
+                          <select
+                            value={ticket.assignedTo?._id || ""}
+                            onChange={(e) => handleAssign(ticket._id, e.target.value)}
+                            className="w-full border border-gray-300 rounded px-3 py-1 text-sm"
+                          >
+                            <option value="">Unassigned</option>
+                            {supportUsers.map((u) => (
+                              <option key={u._id} value={u._id}>
+                                {u.firstName} {u.lastName}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      )}
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           <button
@@ -405,12 +455,14 @@ export default function TicketManagement() {
                           >
                             Manage
                           </button>
-                          <button
-                            onClick={() => handleDeleteTicket(ticket._id)}
-                            className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded text-sm font-semibold transition"
-                          >
-                            Delete
-                          </button>
+                          {user?.role === "admin" && (
+                            <button
+                              onClick={() => handleDeleteTicket(ticket._id)}
+                              className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded text-sm font-semibold transition"
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -450,7 +502,7 @@ export default function TicketManagement() {
                 </div>
 
                 {/* Status & Assignment */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className={`grid ${user?.role === "admin" ? "grid-cols-3" : "grid-cols-2"} gap-4`}>
                   <div>
                     <p className="text-sm text-gray-600 mb-2">Status</p>
                     <select
@@ -475,21 +527,23 @@ export default function TicketManagement() {
                       {selectedTicket.priority.toUpperCase()}
                     </span>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">Assign To</p>
-                    <select
-                      value={selectedTicket.assignedTo?._id || ""}
-                      onChange={(e) => handleAssign(selectedTicket._id, e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                    >
-                      <option value="">Unassigned</option>
-                      {supportUsers.map((u) => (
-                        <option key={u._id} value={u._id}>
-                          {u.firstName} {u.lastName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {user?.role === "admin" && (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">Assign To</p>
+                      <select
+                        value={selectedTicket.assignedTo?._id || ""}
+                        onChange={(e) => handleAssign(selectedTicket._id, e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                      >
+                        <option value="">Unassigned</option>
+                        {supportUsers.map((u) => (
+                          <option key={u._id} value={u._id}>
+                            {u.firstName} {u.lastName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 {/* Description */}

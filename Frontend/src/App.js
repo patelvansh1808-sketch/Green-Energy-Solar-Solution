@@ -281,7 +281,7 @@ function AnimatedRoutes() {
         <Route
           path="/admin/tickets"
           element={
-            <ProtectedRoute role="admin">
+            <ProtectedRoute role={["admin", "support"]}>
               <TicketManagement />
             </ProtectedRoute>
           }

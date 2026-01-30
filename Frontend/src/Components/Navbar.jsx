@@ -121,17 +121,19 @@ export default function Navbar() {
                   />
 
                   <NavItem
-                    to="/admin/tickets"
-                    label="🎫 Ticket Management"
-                    admin
-                  />
-
-                  <NavItem
                     to="/admin"
                     label="⚙️ Admin Dashboard"
                     admin
                   />
                 </>
+              )}
+
+              {(user.role === "admin" || user.role === "support") && (
+                <NavItem
+                  to="/admin/tickets"
+                  label="🎫 Ticket Management"
+                  admin
+                />
               )}
 
               <button

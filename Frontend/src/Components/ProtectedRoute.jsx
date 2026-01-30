@@ -11,9 +11,13 @@ export default function ProtectedRoute({ children, role }) {
     return <Navigate to="/" replace />;
   }
 
-  // 🔐 Role-based admin protection
-  if (role && user.role !== role) {
-    return <Navigate to="/" replace />;
+  // 🔐 Role-based protection
+  if (role) {
+    // Support both single role (string) and multiple roles (array)
+    const allowedRoles = Array.isArray(role) ? role : [role];
+    if (!allowedRoles.includes(user.role)) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return children;

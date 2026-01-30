@@ -86,7 +86,7 @@ export default function Booking() {
     setLoading(true);
 
     try {
-      const quotationData = await bookingService.generateQuotation({
+      const response = await bookingService.generateQuotation({
         systemType: formData.systemType,
         capacity: parseFloat(formData.capacity),
         state: formData.state,
@@ -94,7 +94,9 @@ export default function Booking() {
         roofArea: formData.roofArea ? parseFloat(formData.roofArea) : null,
       });
 
-      setQuotation(quotationData);
+      // Backend returns { quotation: {...}, systemType, capacity }
+      // Extract the quotation object from the response
+      setQuotation(response.quotation || response);
     } catch (err) {
       setError(err.message || "Failed to generate quotation");
       setActiveStep(1);
@@ -172,7 +174,8 @@ export default function Booking() {
   };
 
   const getROI = (finalCost) => {
-    const annualSavings = (formData.capacity || 1) * 80000;
+    const annualSavings = (formData.capacity || 0) * 80000;
+    if (annualSavings === 0 || finalCost === 0) return 'N/A';
     return Math.round((finalCost / annualSavings) * 10) / 10;
   };
 
@@ -518,29 +521,29 @@ export default function Booking() {
                 <div className="space-y-3 bg-gray-50 p-6 rounded-lg">
                   <div className="flex justify-between items-center pb-3 border-b">
                     <p className="text-gray-700 font-semibold">Equipment Cost</p>
-                    <p className="text-lg font-bold">₹{quotation.equipmentCost?.toLocaleString() || "0"}</p>
+                    <p className="text-lg font-bold">₹{(quotation?.equipmentCost || 0).toLocaleString()}</p>
                   </div>
 
                   <div className="flex justify-between items-center pb-3 border-b">
                     <p className="text-gray-700 font-semibold">Installation & Labor</p>
-                    <p className="text-lg font-bold">₹{quotation.installationCost?.toLocaleString() || "0"}</p>
+                    <p className="text-lg font-bold">₹{(quotation?.installationCost || 0).toLocaleString()}</p>
                   </div>
 
                   <div className="flex justify-between items-center pb-3 border-b-2 border-gray-300 py-2">
                     <p className="text-gray-800 font-bold">Subtotal</p>
-                    <p className="text-xl font-bold text-gray-800">₹{quotation.totalCost?.toLocaleString() || "0"}</p>
+                    <p className="text-xl font-bold text-gray-800">₹{(quotation?.totalCost || 0).toLocaleString()}</p>
                   </div>
 
-                  {quotation.subsidyAmount > 0 && (
+                  {(quotation?.subsidyAmount || 0) > 0 && (
                     <div className="flex justify-between items-center bg-gray-700 p-3 rounded border border-gray-600 my-3">
                       <p className="text-gray-100 font-bold">Government Subsidy (MNRE)</p>
-                      <p className="text-lg font-bold text-blue-400">-₹{quotation.subsidyAmount.toLocaleString()}</p>
+                      <p className="text-lg font-bold text-blue-400">-₹{(quotation?.subsidyAmount || 0).toLocaleString()}</p>
                     </div>
                   )}
 
                   <div className="flex justify-between items-center bg-blue-600 p-4 rounded-lg my-4">
                     <p className="text-white font-bold text-lg">Final Cost to Pay</p>
-                    <p className="text-3xl font-bold text-white">₹{(quotation.totalCost - quotation.subsidyAmount).toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-white">₹{((quotation?.totalCost || 0) - (quotation?.subsidyAmount || 0)).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -549,19 +552,19 @@ export default function Booking() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
                   <p className="text-gray-600 text-sm font-semibold">Payback Period</p>
-                  <p className="text-2xl font-bold text-yellow-700">{getROI(quotation.totalCost - quotation.subsidyAmount)} years</p>
+                  <p className="text-2xl font-bold text-yellow-700">{quotation?.roiYears || getROI((quotation?.totalCost || 0) - (quotation?.subsidyAmount || 0))} years</p>
                   <p className="text-xs text-gray-500 mt-1">Time to recover investment</p>
                 </div>
 
                 <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-blue-400">
                   <p className="text-gray-400 text-sm font-semibold">Annual Savings</p>
-                  <p className="text-2xl font-bold text-blue-300">₹{((formData.capacity || 1) * 80000).toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-blue-300">₹{((formData.capacity || 0) * 80000).toLocaleString()}</p>
                   <p className="text-xs text-gray-500 mt-1">Approximate yearly benefit</p>
                 </div>
 
                 <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
                   <p className="text-gray-600 text-sm font-semibold">25-Year Benefit</p>
-                  <p className="text-2xl font-bold text-blue-700">₹{((formData.capacity || 1) * 80000 * 25).toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-blue-700">₹{((formData.capacity || 0) * 80000 * 25).toLocaleString()}</p>
                   <p className="text-xs text-gray-500 mt-1">Lifetime value generation</p>
                 </div>
               </div>

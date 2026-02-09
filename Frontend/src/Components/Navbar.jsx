@@ -121,6 +121,18 @@ export default function Navbar() {
                   />
 
                   <NavItem
+                    to="/admin/finance"
+                    label="💼 Financial Analytics"
+                    admin
+                  />
+
+                  <NavItem
+                    to="/admin/inventory"
+                    label="📦 Inventory Management"
+                    admin
+                  />
+
+                  <NavItem
                     to="/admin"
                     label="⚙️ Admin Dashboard"
                     admin
@@ -214,6 +226,8 @@ export default function Navbar() {
                   <MobileItem to="/admin/subsidy-applications" label="📋 Subsidy Applications" />
                   <MobileItem to="/admin/roles" label="👥 Role Management" />
                   <MobileItem to="/admin/projects" label="🔧 Installation Tracking" />
+                  <MobileItem to="/admin/finance" label="💼 Financial Analytics" />
+                  <MobileItem to="/admin/inventory" label="📦 Inventory Management" />
                   <MobileItem to="/admin" label="⚙️ Admin Dashboard" />
                 </>
               )}

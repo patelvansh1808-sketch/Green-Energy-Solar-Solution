@@ -41,7 +41,17 @@ const bookingSchema = new mongoose.Schema(
 
     roofType: {
       type: String,
-      enum: ["", "Concrete", "Metal", "Tiled", "Other"],
+      enum: [
+        "",
+        "Concrete",
+        "Metal",
+        "Tile",
+        "Tiled",
+        "RCC",
+        "Asbestos",
+        "Ground Mount",
+        "Other",
+      ],
       default: "",
     },
 
@@ -73,6 +83,38 @@ const bookingSchema = new mongoose.Schema(
       },
       roiYears: {
         type: Number,
+      },
+    },
+
+    // Cost Breakdown (Actuals for profit analytics)
+    costBreakdown: {
+      equipment: {
+        type: Number,
+        default: 0,
+      },
+      labor: {
+        type: Number,
+        default: 0,
+      },
+      logistics: {
+        type: Number,
+        default: 0,
+      },
+      permits: {
+        type: Number,
+        default: 0,
+      },
+      overhead: {
+        type: Number,
+        default: 0,
+      },
+      other: {
+        type: Number,
+        default: 0,
+      },
+      totalCost: {
+        type: Number,
+        default: 0,
       },
     },
 

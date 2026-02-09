@@ -38,6 +38,8 @@ import EditCustomer from "./Pages/Admin/EditCustomer";
 import RoleManagement from "./Pages/Admin/RoleManagement";
 import ProjectTracking from "./Pages/Admin/ProjectTracking";
 import TicketManagement from "./Pages/Admin/TicketManagement";
+import FinancialAnalytics from "./Pages/Admin/FinancialAnalytics";
+import InventoryManagement from "./Pages/Admin/InventoryManagement";
 
 /* ===== CRM PAGES ===== */
 import LeadManagement from "./Pages/LeadManagement";
@@ -258,6 +260,24 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute role="admin">
               <SystemAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/finance"
+          element={
+            <ProtectedRoute role="admin">
+              <FinancialAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/inventory"
+          element={
+            <ProtectedRoute role="admin">
+              <InventoryManagement />
             </ProtectedRoute>
           }
         />

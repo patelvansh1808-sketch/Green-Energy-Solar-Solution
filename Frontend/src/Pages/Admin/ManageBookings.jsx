@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import bookingService from "../../services/bookingService";
+import financeService from "../../services/financeService";
 
 export default function ManageBookings() {
   const [bookings, setBookings] = useState([]);
@@ -14,10 +15,31 @@ export default function ManageBookings() {
     technician: "",
     notes: "",
   });
+  const [costData, setCostData] = useState({
+    equipment: 0,
+    labor: 0,
+    logistics: 0,
+    permits: 0,
+    overhead: 0,
+    other: 0,
+  });
 
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  useEffect(() => {
+    if (!selectedBooking) return;
+    const breakdown = selectedBooking.costBreakdown || {};
+    setCostData({
+      equipment: breakdown.equipment || 0,
+      labor: breakdown.labor || 0,
+      logistics: breakdown.logistics || 0,
+      permits: breakdown.permits || 0,
+      overhead: breakdown.overhead || 0,
+      other: breakdown.other || 0,
+    });
+  }, [selectedBooking]);
 
   const fetchBookings = async () => {
     try {
@@ -40,6 +62,19 @@ export default function ManageBookings() {
       setUpdateData({ status: "", installationDate: "", technician: "", notes: "" });
     } catch (err) {
       setError(err.message || "Failed to update booking");
+    }
+  };
+
+  const handleSaveCostBreakdown = async (bookingId) => {
+    try {
+      const res = await financeService.updateBookingCosts(bookingId, costData);
+      setBookings(
+        bookings.map((b) =>
+          b._id === bookingId ? { ...b, costBreakdown: res.booking?.costBreakdown } : b
+        )
+      );
+    } catch (err) {
+      setError(err.message || "Failed to update cost breakdown");
     }
   };
 
@@ -202,8 +237,12 @@ export default function ManageBookings() {
                       <td className="px-6 py-4 font-mono text-sm text-blue-600">#{booking._id?.slice(-8)}</td>
                       <td className="px-6 py-4">
                         <div>
-                          <p className="font-semibold text-gray-800">{booking.contactPerson}</p>
-                          <p className="text-sm text-gray-500">{booking.contactPhone}</p>
+                          <p className="font-semibold text-gray-800">
+                            {booking.customer?.fullName || booking.user?.name || "—"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {booking.customer?.phone || booking.user?.phone || "—"}
+                          </p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -211,9 +250,13 @@ export default function ManageBookings() {
                         <p className="text-sm text-gray-500">{booking.capacity} kW</p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-bold text-lg text-gray-800">₹{booking.estimatedCost?.toLocaleString()}</p>
-                        {booking.subsidyAmount > 0 && (
-                          <p className="text-sm text-green-600">-₹{booking.subsidyAmount.toLocaleString()}</p>
+                        <p className="font-bold text-lg text-gray-800">
+                          ₹{(booking.quotation?.totalCost || booking.finalCost || 0).toLocaleString()}
+                        </p>
+                        {(booking.quotation?.subsidyAmount || booking.subsidyAmount || 0) > 0 && (
+                          <p className="text-sm text-green-600">
+                            -₹{(booking.quotation?.subsidyAmount || booking.subsidyAmount || 0).toLocaleString()}
+                          </p>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -256,15 +299,28 @@ export default function ManageBookings() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-600">Name</p>
-                      <p className="font-semibold text-gray-800">{selectedBooking.contactPerson}</p>
+                      <p className="font-semibold text-gray-800">
+                        {selectedBooking.customer?.fullName || selectedBooking.user?.name || "—"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Phone</p>
-                      <p className="font-semibold text-gray-800">{selectedBooking.contactPhone}</p>
+                      <p className="font-semibold text-gray-800">
+                        {selectedBooking.customer?.phone || selectedBooking.user?.phone || "—"}
+                      </p>
                     </div>
                     <div className="col-span-2">
                       <p className="text-sm text-gray-600">Address</p>
-                      <p className="font-semibold text-gray-800">{selectedBooking.installationAddress}, {selectedBooking.pincode}</p>
+                      <p className="font-semibold text-gray-800">
+                        {[
+                          selectedBooking.installationAddress?.address || selectedBooking.customer?.address,
+                          selectedBooking.installationAddress?.district || selectedBooking.customer?.district,
+                          selectedBooking.installationAddress?.state || selectedBooking.customer?.state,
+                          selectedBooking.installationAddress?.pincode || selectedBooking.customer?.pincode,
+                        ]
+                          .filter(Boolean)
+                          .join(", ") || "—"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -298,18 +354,95 @@ export default function ManageBookings() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <p className="text-gray-700">Estimated Cost:</p>
-                      <p className="font-bold">₹{selectedBooking.estimatedCost?.toLocaleString()}</p>
+                      <p className="font-bold">
+                        ₹{(
+                          selectedBooking.quotation?.totalCost ||
+                          selectedBooking.finalCost ||
+                          selectedBooking.baseCost ||
+                          0
+                        ).toLocaleString()}
+                      </p>
                     </div>
-                    {selectedBooking.subsidyAmount > 0 && (
+                    {(selectedBooking.quotation?.subsidyAmount || selectedBooking.subsidyAmount || 0) > 0 && (
                       <div className="flex justify-between text-green-700">
                         <p>Government Subsidy:</p>
-                        <p className="font-bold">-₹{selectedBooking.subsidyAmount.toLocaleString()}</p>
+                        <p className="font-bold">
+                          -₹{(
+                            selectedBooking.quotation?.subsidyAmount ||
+                            selectedBooking.subsidyAmount ||
+                            0
+                          ).toLocaleString()}
+                        </p>
                       </div>
                     )}
                     <div className="flex justify-between text-lg border-t pt-2">
                       <p className="font-bold">Final Cost:</p>
-                      <p className="font-bold text-blue-600">₹{(selectedBooking.estimatedCost - selectedBooking.subsidyAmount).toLocaleString()}</p>
+                      <p className="font-bold text-blue-600">
+                        ₹{(
+                          (selectedBooking.quotation?.netCost ||
+                            (selectedBooking.quotation?.totalCost || 0) -
+                              (selectedBooking.quotation?.subsidyAmount || 0) ||
+                            selectedBooking.finalCost ||
+                            0)
+                        ).toLocaleString()}
+                      </p>
                     </div>
+                  </div>
+                </div>
+
+                {/* Actual Cost Breakdown */}
+                <div className="bg-white p-6 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-800">🧾 Actual Cost Breakdown</h3>
+                    <span className="text-xs text-gray-500">Used for profit analytics</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { key: "equipment", label: "Equipment" },
+                      { key: "labor", label: "Labor" },
+                      { key: "logistics", label: "Logistics" },
+                      { key: "permits", label: "Permits" },
+                      { key: "overhead", label: "Overhead" },
+                      { key: "other", label: "Other" },
+                    ].map((field) => (
+                      <div key={field.key}>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          {field.label}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={costData[field.key]}
+                          onChange={(e) =>
+                            setCostData({
+                              ...costData,
+                              [field.key]: Number(e.target.value),
+                            })
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm text-gray-600">
+                      Total Cost: <span className="font-semibold">₹{(
+                        (costData.equipment || 0) +
+                        (costData.labor || 0) +
+                        (costData.logistics || 0) +
+                        (costData.permits || 0) +
+                        (costData.overhead || 0) +
+                        (costData.other || 0)
+                      ).toLocaleString()}</span>
+                    </p>
+                    <button
+                      onClick={() => handleSaveCostBreakdown(selectedBooking._id)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                    >
+                      💾 Save Cost Breakdown
+                    </button>
                   </div>
                 </div>
 

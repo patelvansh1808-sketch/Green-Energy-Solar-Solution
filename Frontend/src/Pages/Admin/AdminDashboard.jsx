@@ -200,6 +200,20 @@ export default function AdminDashboard() {
             </button>
 
             <button
+              onClick={() => navigate("/admin/inventory")}
+              className="flex items-center justify-center p-4 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition text-orange-700 font-medium"
+            >
+              <span className="text-2xl mr-2">📦</span> Inventory
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/finance")}
+              className="flex items-center justify-center p-4 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition text-emerald-700 font-medium"
+            >
+              <span className="text-2xl mr-2">💼</span> Financial Analytics
+            </button>
+
+            <button
               onClick={() => navigate("/admin/notifications")}
               className="flex items-center justify-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition text-yellow-700 font-medium"
             >

@@ -68,6 +68,12 @@ app.use("/api/leads", require("./server/routes/leadRoutes"));
 // Support & Ticketing
 app.use("/api/tickets", require("./server/routes/ticketRoutes"));
 
+// Financial Analytics
+app.use("/api/finance", require("./server/routes/financeRoutes"));
+
+// Inventory & Asset Management
+app.use("/api/inventory", require("./server/routes/inventoryRoutes"));
+
 // -------------------- DEFAULT ROUTE --------------------
 
 app.get("/", (req, res) => {

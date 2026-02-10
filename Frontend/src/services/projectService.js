@@ -67,6 +67,12 @@ const projectService = {
     return res.data;
   },
 
+  // Update inventory selection
+  updateInventorySelection: async (id, data) => {
+    const res = await api.patch(`/projects/${id}/inventory`, data);
+    return res.data;
+  },
+
   // Update testing & commissioning
   updateTesting: async (id, data) => {
     const res = await api.patch(`/projects/${id}/testing`, data);

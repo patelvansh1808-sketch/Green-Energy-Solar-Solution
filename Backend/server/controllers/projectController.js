@@ -1,6 +1,149 @@
 const mongoose = require("mongoose");
 const Project = require("../models/Project");
 const User = require("../models/User");
+const InventoryItem = require("../models/InventoryItem");
+const InventoryMovement = require("../models/InventoryMovement");
+
+const getAvailableStock = (item) => {
+  return Math.max(0, (item.stockOnHand || 0) - (item.reservedStock || 0));
+};
+
+const issueInventoryForProject = async (project, userId) => {
+  const manualSelection = Array.isArray(project.inventorySelection)
+    ? project.inventorySelection.filter((s) => s.itemId && s.quantity > 0)
+    : [];
+
+  let deductions = [];
+
+  if (manualSelection.length > 0) {
+    for (const sel of manualSelection) {
+      const item = await InventoryItem.findById(sel.itemId);
+      if (!item || item.status !== "active") {
+        return { ok: false, message: "Selected inventory item not available" };
+      }
+      if (getAvailableStock(item) < sel.quantity) {
+        return {
+          ok: false,
+          message: `Insufficient stock for ${item.name || item.sku}`,
+        };
+      }
+      deductions.push({ item, qty: sel.quantity });
+    }
+  } else {
+    const capacity = Number(project.systemCapacity || 0);
+    const requirements = [
+      { category: "panel", qty: Math.ceil(capacity * 2) },
+      { category: "inverter", qty: 1 },
+      { category: "meter", qty: 1 },
+      { category: "spare", qty: 1 },
+    ];
+
+    for (const req of requirements) {
+      if (!req.qty || req.qty <= 0) continue;
+
+      const items = await InventoryItem.find({
+        category: req.category,
+        status: "active",
+      }).sort({ stockOnHand: -1 });
+
+      const item = items.find((i) => getAvailableStock(i) >= req.qty);
+      if (!item) {
+        return {
+          ok: false,
+          message: `Insufficient stock for ${req.category}`,
+        };
+      }
+
+      deductions.push({ item, qty: req.qty });
+    }
+  }
+
+  for (const { item, qty } of deductions) {
+    const beforeStock = item.stockOnHand || 0;
+    item.stockOnHand = Math.max(0, beforeStock - qty);
+    await item.save();
+
+    await InventoryMovement.create({
+      item: item._id,
+      type: "out",
+      quantity: qty,
+      reason: "Installation consumption",
+      performedBy: userId,
+      referenceType: "project",
+      referenceId: project._id,
+      beforeStock,
+      afterStock: item.stockOnHand,
+    });
+  }
+
+  return { ok: true };
+};
+
+/* =====================================================
+   UPDATE INVENTORY SELECTION
+   PATCH /api/projects/:id/inventory
+===================================================== */
+exports.updateInventorySelection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { selections, issueNow } = req.body;
+
+    const project = await Project.findById(id);
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    if (
+      req.user?.role === "engineer" &&
+      project.engineerAssignment?.engineerId?.toString() !== req.user.id
+    ) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (project.inventoryIssued) {
+      return res.status(400).json({
+        message: "Inventory already issued for this project",
+      });
+    }
+
+    const cleanSelections = [];
+    for (const sel of selections || []) {
+      if (!sel.itemId || !sel.quantity) continue;
+      const item = await InventoryItem.findById(sel.itemId);
+      if (!item) {
+        return res.status(400).json({ message: "Invalid inventory item" });
+      }
+      cleanSelections.push({
+        itemId: item._id,
+        name: item.name,
+        sku: item.sku,
+        category: item.category,
+        quantity: Number(sel.quantity),
+      });
+    }
+
+    project.inventorySelection = cleanSelections;
+
+    if (req.user?.role === "engineer" || issueNow) {
+      const issueResult = await issueInventoryForProject(project, req.user?.id);
+      if (!issueResult.ok) {
+        return res.status(400).json({ message: issueResult.message });
+      }
+      project.inventoryIssued = true;
+      project.inventoryIssuedAt = new Date();
+    }
+
+    await project.save();
+
+    res.json(project);
+  } catch (error) {
+    console.error("UPDATE INVENTORY SELECTION ERROR:", error);
+    res.status(500).json({
+      message: "Failed to update inventory selection",
+      error: error.message,
+    });
+  }
+};
 
 /* =====================================================
    GET ALL PROJECTS WITH FILTERING
@@ -240,11 +383,22 @@ exports.updateInstallation = async (req, res) => {
       updateFields.status = "on_hold";
     }
 
-    const project = await Project.findByIdAndUpdate(
-      id,
-      { $set: updateFields },
-      { new: true, runValidators: true }
-    );
+    const project = await Project.findById(id);
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    if (status === "in_progress" && !project.inventoryIssued) {
+      const issueResult = await issueInventoryForProject(project, req.user?.id);
+      if (!issueResult.ok) {
+        return res.status(400).json({ message: issueResult.message });
+      }
+      project.inventoryIssued = true;
+      project.inventoryIssuedAt = new Date();
+    }
+
+    project.set(updateFields);
+    await project.save();
 
     res.json(project);
   } catch (error) {

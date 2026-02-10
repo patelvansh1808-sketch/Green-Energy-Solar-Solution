@@ -10,6 +10,7 @@ const {
   updateSiteSurvey,
   assignEngineer,
   updateInstallation,
+  updateInventorySelection,
   updateTesting,
   goLiveConfirmation,
   completeProject,
@@ -54,6 +55,9 @@ router.patch("/:id/assign-engineer", role(["admin", "sales"]), assignEngineer);
 
 // Update installation (admin, engineer only)
 router.patch("/:id/installation", role(["admin", "engineer"]), updateInstallation);
+
+// Update inventory selection (admin or assigned engineer)
+router.patch("/:id/inventory", role(["admin", "engineer"]), updateInventorySelection);
 
 // Testing & commissioning (admin, engineer only)
 router.patch("/:id/testing", role(["admin", "engineer"]), updateTesting);

@@ -5,17 +5,18 @@ const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const inventoryController = require("../controllers/inventoryController");
 
-router.use(authMiddleware, roleMiddleware("admin"));
+router.use(authMiddleware);
 
-router.get("/stats", inventoryController.getInventoryStats);
-router.get("/movements", inventoryController.getMovements);
+// Admin-only routes (static paths before :id)
+router.get("/stats", roleMiddleware("admin"), inventoryController.getInventoryStats);
+router.get("/movements", roleMiddleware("admin"), inventoryController.getMovements);
 
-router.post("/", inventoryController.createItem);
-router.get("/", inventoryController.getItems);
-router.get("/:id", inventoryController.getItemById);
-router.patch("/:id", inventoryController.updateItem);
-router.delete("/:id", inventoryController.deleteItem);
-
-router.post("/:id/adjust", inventoryController.adjustStock);
+// Read access for admin and engineer
+router.get("/", roleMiddleware(["admin", "engineer"]), inventoryController.getItems);
+router.get("/:id", roleMiddleware(["admin", "engineer"]), inventoryController.getItemById);
+router.post("/", roleMiddleware("admin"), inventoryController.createItem);
+router.patch("/:id", roleMiddleware("admin"), inventoryController.updateItem);
+router.delete("/:id", roleMiddleware("admin"), inventoryController.deleteItem);
+router.post("/:id/adjust", roleMiddleware("admin"), inventoryController.adjustStock);
 
 module.exports = router;

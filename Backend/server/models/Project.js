@@ -271,6 +271,31 @@ const projectSchema = new mongoose.Schema(
       enum: ["low", "normal", "high", "urgent"],
       default: "normal",
     },
+    inventorySelection: [
+      {
+        itemId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "InventoryItem",
+        },
+        name: String,
+        sku: String,
+        category: {
+          type: String,
+          enum: ["panel", "inverter", "meter", "spare"],
+        },
+        quantity: {
+          type: Number,
+          default: 0,
+        },
+      },
+    ],
+    inventoryIssued: {
+      type: Boolean,
+      default: false,
+    },
+    inventoryIssuedAt: {
+      type: Date,
+    },
     tags: [String],
     isArchived: {
       type: Boolean,

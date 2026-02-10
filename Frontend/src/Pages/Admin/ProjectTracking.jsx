@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import projectService from "../../services/projectService";
 import roleService from "../../services/roleService";
+import inventoryService from "../../services/inventoryService";
 
 export default function ProjectTracking() {
   const [projects, setProjects] = useState([]);
@@ -59,6 +60,20 @@ export default function ProjectTracking() {
 
   const [engineerForm, setEngineerForm] = useState({
     engineerId: "",
+  });
+
+  const [showInventoryModal, setShowInventoryModal] = useState(false);
+  const [inventoryOptions, setInventoryOptions] = useState({
+    panel: [],
+    inverter: [],
+    meter: [],
+    spare: [],
+  });
+  const [inventorySelection, setInventorySelection] = useState({
+    panel: { itemId: "", quantity: 0 },
+    inverter: { itemId: "", quantity: 0 },
+    meter: { itemId: "", quantity: 0 },
+    spare: { itemId: "", quantity: 0 },
   });
 
   const fetchProjects = useCallback(async () => {
@@ -132,6 +147,82 @@ export default function ProjectTracking() {
     const emptyFilters = { startDate: "", endDate: "", searchTerm: "" };
     setBookingFilters(emptyFilters);
     fetchAvailableBookings();
+  };
+
+  const loadInventoryOptions = async () => {
+    const items = await inventoryService.getItems({ status: "active" });
+    const grouped = { panel: [], inverter: [], meter: [], spare: [] };
+    items.forEach((item) => {
+      if (grouped[item.category]) grouped[item.category].push(item);
+    });
+    setInventoryOptions(grouped);
+  };
+
+  const applyAutoFillSelection = (project) => {
+    const capacity = Number(project?.systemCapacity || 0);
+    setInventorySelection((prev) => ({
+      panel: { ...prev.panel, quantity: Math.ceil(capacity * 2) },
+      inverter: { ...prev.inverter, quantity: 1 },
+      meter: { ...prev.meter, quantity: 1 },
+      spare: { ...prev.spare, quantity: 1 },
+    }));
+  };
+
+  const openInventoryModal = async (project) => {
+    setSelectedProject(project);
+    await loadInventoryOptions();
+
+    const initial = {
+      panel: { itemId: "", quantity: 0 },
+      inverter: { itemId: "", quantity: 0 },
+      meter: { itemId: "", quantity: 0 },
+      spare: { itemId: "", quantity: 0 },
+    };
+
+    const hasSavedSelection =
+      Array.isArray(project.inventorySelection) && project.inventorySelection.length > 0;
+
+    if (hasSavedSelection) {
+      project.inventorySelection.forEach((sel) => {
+        if (initial[sel.category]) {
+          initial[sel.category] = {
+            itemId: sel.itemId || "",
+            quantity: sel.quantity || 0,
+          };
+        }
+      });
+    }
+
+    setInventorySelection(initial);
+    if (!hasSavedSelection) {
+      applyAutoFillSelection(project);
+    }
+    setShowInventoryModal(true);
+  };
+
+  const handleSaveInventorySelection = async () => {
+    if (!selectedProject) return;
+    try {
+      const selections = Object.entries(inventorySelection)
+        .map(([category, val]) => ({
+          category,
+          itemId: val.itemId,
+          quantity: Number(val.quantity || 0),
+        }))
+        .filter((s) => s.itemId && s.quantity > 0);
+
+      const updated = await projectService.updateInventorySelection(
+        selectedProject._id,
+        { selections }
+      );
+      setSelectedProject(updated);
+      setShowInventoryModal(false);
+      setSuccess("Inventory selection saved");
+      setTimeout(() => setSuccess(""), 3000);
+      await fetchProjects();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to save inventory selection");
+    }
   };
 
   const handleSelectBooking = async (booking) => {
@@ -1021,6 +1112,35 @@ export default function ProjectTracking() {
                   </div>
                 </div>
               )}
+
+              {/* Inventory Allocation */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900">Inventory Allocation</h3>
+                  <button
+                    onClick={() => openInventoryModal(selectedProject)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg text-sm font-semibold"
+                  >
+                    Select Inventory
+                  </button>
+                </div>
+                {Array.isArray(selectedProject.inventorySelection) && selectedProject.inventorySelection.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {selectedProject.inventorySelection.map((sel) => (
+                      <div key={`${sel.category}-${sel.itemId}`} className="bg-gray-50 p-3 rounded-lg border">
+                        <p className="text-sm font-semibold text-gray-800">
+                          {sel.name || sel.sku || sel.category}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {sel.category} • Qty: {sel.quantity}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No inventory selected yet.</p>
+                )}
+              </div>
             </div>
 
             {/* Action Buttons */}
@@ -1052,6 +1172,101 @@ export default function ProjectTracking() {
                 className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-50 transition"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* INVENTORY SELECTION MODAL */}
+      {showInventoryModal && selectedProject && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Select Inventory</h2>
+                <p className="text-gray-600 mt-1">Choose items and quantities for installation</p>
+              </div>
+              <button onClick={() => setShowInventoryModal(false)} className="text-2xl text-gray-500 hover:text-gray-700">
+                ×
+              </button>
+            </div>
+
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-sm text-gray-600">Auto-fill based on capacity</p>
+              <button
+                onClick={() => applyAutoFillSelection(selectedProject)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm font-semibold"
+              >
+                Auto-fill Qty
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                { key: "panel", label: "Solar Panels" },
+                { key: "inverter", label: "Inverters" },
+                { key: "meter", label: "Net Meters" },
+                { key: "spare", label: "Spare Parts" },
+              ].map((row) => (
+                <div key={row.key} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">{row.label}</label>
+                    <select
+                      value={inventorySelection[row.key].itemId}
+                      onChange={(e) =>
+                        setInventorySelection({
+                          ...inventorySelection,
+                          [row.key]: {
+                            ...inventorySelection[row.key],
+                            itemId: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    >
+                      <option value="">Select item...</option>
+                      {inventoryOptions[row.key].map((item) => (
+                        <option key={item._id} value={item._id}>
+                          {item.name} (SKU: {item.sku}) — Available: {item.availableStock}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Quantity</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={inventorySelection[row.key].quantity}
+                      onChange={(e) =>
+                        setInventorySelection({
+                          ...inventorySelection,
+                          [row.key]: {
+                            ...inventorySelection[row.key],
+                            quantity: Number(e.target.value),
+                          },
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3 pt-6">
+              <button
+                onClick={() => setShowInventoryModal(false)}
+                className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveInventorySelection}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+              >
+                Save Selection
               </button>
             </div>
           </div>

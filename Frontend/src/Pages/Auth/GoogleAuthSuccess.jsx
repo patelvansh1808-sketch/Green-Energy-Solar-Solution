@@ -21,7 +21,16 @@ export default function GoogleAuthSuccess() {
         .then((res) => {
           console.log("User profile fetched:", res.data);
           login(token, res.data);
-          navigate("/");
+          const role = res.data?.role;
+          if (role === "admin") {
+            navigate("/admin");
+          } else if (role === "support") {
+            navigate("/admin/tickets");
+          } else if (role === "engineer") {
+            navigate("/engineer/dashboard");
+          } else {
+            navigate("/");
+          }
         })
         .catch((error) => {
           console.error("Error fetching user profile:", error.response?.data || error.message);
@@ -33,7 +42,15 @@ export default function GoogleAuthSuccess() {
             
             const user = { _id: payload.userId, role: payload.role };
             login(token, user);
-            navigate("/");
+            if (user.role === "admin") {
+              navigate("/admin");
+            } else if (user.role === "support") {
+              navigate("/admin/tickets");
+            } else if (user.role === "engineer") {
+              navigate("/engineer/dashboard");
+            } else {
+              navigate("/");
+            }
           } catch (err) {
             console.error("Token decode failed:", err);
             navigate("/login?error=authentication_failed");

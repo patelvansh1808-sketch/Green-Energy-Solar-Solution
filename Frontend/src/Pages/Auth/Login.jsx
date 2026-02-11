@@ -24,7 +24,16 @@ export default function Login() {
       // ✅ Pass both token and user data
       login(res.data.token, res.data.user);
 
-      navigate("/");
+      const role = res.data.user?.role;
+      if (role === "admin") {
+        navigate("/admin");
+      } else if (role === "support") {
+        navigate("/admin/tickets");
+      } else if (role === "engineer") {
+        navigate("/engineer/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     } finally {

@@ -31,7 +31,6 @@ import ManageUsers from "./Pages/Admin/ManageUsers";
 import ManageBookings from "./Pages/Admin/ManageBookings";
 import ManageSubsidyApplications from "./Pages/Admin/ManageSubsidyApplications";
 import SubsidyRules from "./Pages/Admin/SubsidyRules";
-import SystemAnalytics from "./Pages/Admin/SystemAnalytics";
 import ManageCustomers from "./Pages/Admin/ManageCustomers";
 import CreateCustomer from "./Pages/Admin/CreateCustomer";
 import EditCustomer from "./Pages/Admin/EditCustomer";
@@ -40,10 +39,9 @@ import ProjectTracking from "./Pages/Admin/ProjectTracking";
 import TicketManagement from "./Pages/Admin/TicketManagement";
 import FinancialAnalytics from "./Pages/Admin/FinancialAnalytics";
 import InventoryManagement from "./Pages/Admin/InventoryManagement";
+import AdminProfile from "./Pages/Admin/AdminProfile";
 
 /* ===== CRM PAGES ===== */
-import LeadManagement from "./Pages/LeadManagement";
-import LeadAnalytics from "./Pages/LeadAnalytics";
 import CRMDashboard from "./Pages/CRMDashboard";
 import SalesDashboard from "./Pages/SalesDashboard";
 import TeamMemberDashboard from "./Pages/TeamMemberDashboard";
@@ -56,6 +54,7 @@ import Navbar from "./Components/Navbar";
 import Footer from "./Components/Footer";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import LoadingScreen from "./Components/LoadingScreen";
+import AdminLayout from "./Layouts/AdminLayout";
 
 /* ===== PAGE TRANSITION WRAPPER ===== */
 function AnimatedRoutes() {
@@ -64,7 +63,6 @@ function AnimatedRoutes() {
   return (
     <div key={location.pathname} className="animate-fade animate-slideUp">
       <Routes location={location}>
-
         {/* ===== PUBLIC ROUTES ===== */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
@@ -83,7 +81,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/booking"
           element={
@@ -92,7 +89,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/booking-status"
           element={
@@ -101,7 +97,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/subsidy"
           element={
@@ -110,7 +105,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/apply-subsidy"
           element={
@@ -119,7 +113,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/subsidy-status"
           element={
@@ -128,7 +121,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/recommendations"
           element={
@@ -137,7 +129,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/dashboard/alerts"
           element={
@@ -146,7 +137,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/profile"
           element={
@@ -155,7 +145,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/notifications"
           element={
@@ -164,7 +153,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/messages"
           element={
@@ -187,125 +175,25 @@ function AnimatedRoutes() {
           path="/admin"
           element={
             <ProtectedRoute role="admin">
-              <AdminDashboard />
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
-
-        <Route
-          path="/admin/users"
-          element={
-            <ProtectedRoute role="admin">
-              <ManageUsers />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/bookings"
-          element={
-            <ProtectedRoute role="admin">
-              <ManageBookings />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/subsidy-applications"
-          element={
-            <ProtectedRoute role="admin">
-              <ManageSubsidyApplications />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/customers"
-          element={
-            <ProtectedRoute role="admin">
-              <ManageCustomers />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/create-customer"
-          element={
-            <ProtectedRoute role="admin">
-              <CreateCustomer />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/customers/edit/:id"
-          element={
-            <ProtectedRoute role="admin">
-              <EditCustomer />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/subsidy"
-          element={
-            <ProtectedRoute role="admin">
-              <SubsidyRules />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/analytics"
-          element={
-            <ProtectedRoute role="admin">
-              <SystemAnalytics />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/finance"
-          element={
-            <ProtectedRoute role="admin">
-              <FinancialAnalytics />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/inventory"
-          element={
-            <ProtectedRoute role="admin">
-              <InventoryManagement />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/roles"
-          element={
-            <ProtectedRoute role="admin">
-              <RoleManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/projects"
-          element={
-            <ProtectedRoute role="admin">
-              <ProjectTracking />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/tickets"
-          element={
-            <ProtectedRoute role={["admin", "support"]}>
-              <TicketManagement />
-            </ProtectedRoute>
-          }
-        />
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="profile" element={<AdminProfile />} />
+          <Route path="users" element={<ManageUsers />} />
+          <Route path="bookings" element={<ManageBookings />} />
+          <Route path="subsidy-applications" element={<ManageSubsidyApplications />} />
+          <Route path="customers" element={<ManageCustomers />} />
+          <Route path="create-customer" element={<CreateCustomer />} />
+          <Route path="customers/edit/:id" element={<EditCustomer />} />
+          <Route path="subsidy" element={<SubsidyRules />} />
+          <Route path="finance" element={<FinancialAnalytics />} />
+          <Route path="inventory" element={<InventoryManagement />} />
+          <Route path="roles" element={<RoleManagement />} />
+          <Route path="projects" element={<ProjectTracking />} />
+          <Route path="tickets" element={<TicketManagement />} />
+        </Route>
         <Route
           path="/engineer/dashboard"
           element={
@@ -314,41 +202,18 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+        {/* ===== CRM ROUTES ===== */}
         <Route
-          path="/crm/dashboard"
+          path="/crm"
           element={
             <ProtectedRoute role="admin">
-              <CRMDashboard />
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
-
-        <Route
-          path="/crm/sales-dashboard"
-          element={
-            <ProtectedRoute role="admin">
-              <SalesDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/crm/leads"
-          element={
-            <ProtectedRoute role="admin">
-              <LeadManagement />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/crm/analytics"
-          element={
-            <ProtectedRoute role="admin">
-              <LeadAnalytics />
-            </ProtectedRoute>
-          }
-        />
+        >
+          <Route path="dashboard" element={<CRMDashboard />} />
+          <Route path="sales-dashboard" element={<SalesDashboard />} />
+        </Route>
 
         <Route
           path="/team/my-leads"
@@ -377,10 +242,23 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Navbar />
-        <AnimatedRoutes />
-        <Footer />
+        <AppShell />
       </BrowserRouter>
     </AuthProvider>
+  );
+}
+
+function AppShell() {
+  const location = useLocation();
+  const isAdminRoute =
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/crm");
+
+  return (
+    <>
+      {!isAdminRoute && <Navbar />}
+      <AnimatedRoutes />
+      {!isAdminRoute && <Footer />}
+    </>
   );
 }

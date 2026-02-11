@@ -33,6 +33,9 @@ const userSchema = new mongoose.Schema({
   // Password reset
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
+
+  // Refresh token for JWT refresh logic
+  refreshToken: { type: String },
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

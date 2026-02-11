@@ -3,21 +3,21 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 
 const navItems = [
-  { to: "/admin", label: "Dashboard", icon: "📊" },
-  { to: "/admin/users", label: "Manage Users", icon: "👥" },
-  { to: "/admin/customers", label: "Customers", icon: "🧑‍💼" },
-  { to: "/admin/bookings", label: "Bookings", icon: "📅" },
-  { to: "/admin/projects", label: "Projects", icon: "🛠️" },
-  { to: "/admin/subsidy-applications", label: "Subsidy Applications", icon: "📋" },
-  { to: "/admin/finance", label: "Financial Analytics", icon: "💰" },
-  { to: "/admin/inventory", label: "Inventory", icon: "📦" },
-  { to: "/admin/tickets", label: "Tickets", icon: "🎫" },
-  { to: "/admin/roles", label: "Role Management", icon: "🔐" },
+  { to: "/admin", label: "Dashboard" },
+  { to: "/admin/users", label: "Manage Users" },
+  { to: "/admin/customers", label: "Customers" },
+  { to: "/admin/bookings", label: "Bookings" },
+  { to: "/admin/projects", label: "Projects" },
+  { to: "/admin/subsidy-applications", label: "Subsidy Applications" },
+  { to: "/admin/finance", label: "Financial Analytics" },
+  { to: "/admin/inventory", label: "Inventory" },
+  { to: "/admin/tickets", label: "Tickets" },
+  { to: "/admin/roles", label: "Role Management" },
 ];
 
 const crmItems = [
-  { to: "/crm/dashboard", label: "CRM Dashboard", icon: "📌" },
-  { to: "/crm/sales-dashboard", label: "Sales Pipeline", icon: "💼" },
+  { to: "/crm/dashboard", label: "CRM Dashboard" },
+  { to: "/crm/sales-dashboard", label: "Sales Pipeline" },
 ];
 
 export default function AdminLayout() {
@@ -47,8 +47,8 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <div className="h-screen bg-gray-100 flex overflow-hidden">
+      <aside className="fixed left-0 top-0 w-64 h-screen bg-white border-r border-gray-200 flex flex-col overflow-y-auto">
         <div className="px-6 py-5 border-b border-gray-200 flex items-center gap-2">
           <span className="text-xl">☀️</span>
           <span className="text-lg font-bold text-gray-900">Solar CRM</span>
@@ -68,7 +68,6 @@ export default function AdminLayout() {
                 }`
               }
             >
-              <span>{item.icon}</span>
               <span>{item.label}</span>
             </NavLink>
           ))}
@@ -89,7 +88,6 @@ export default function AdminLayout() {
                   }`
                 }
               >
-                <span>{item.icon}</span>
                 <span>{item.label}</span>
               </NavLink>
             ))}
@@ -106,8 +104,8 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 min-w-0">
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <main className="ml-64 flex-1 overflow-y-auto h-screen flex flex-col">
+        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
           <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
           <div className="flex items-center gap-4">
             <div className="text-sm text-gray-600">{new Date().toLocaleDateString()}</div>

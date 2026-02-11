@@ -25,6 +25,20 @@ const authMiddleware = (req, res, next) => {
 
     next();
   } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      console.error("JWT ERROR: jwt expired");
+      return res.status(401).json({ 
+        message: "Token expired", 
+        code: "TOKEN_EXPIRED"
+      });
+    }
+    if (error.name === "JsonWebTokenError") {
+      console.error("JWT ERROR: jwt malformed - Token:", token?.substring(0, 20) + "...");
+      return res.status(401).json({ 
+        message: "Invalid token format", 
+        code: "INVALID_TOKEN"
+      });
+    }
     console.error("JWT ERROR:", error.message);
     return res.status(401).json({ message: "Token invalid" });
   }

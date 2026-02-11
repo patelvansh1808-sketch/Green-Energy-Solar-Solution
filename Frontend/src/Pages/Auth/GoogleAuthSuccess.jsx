@@ -9,17 +9,30 @@ export default function GoogleAuthSuccess() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    // Get tokens from URL (new way with accessToken and refreshToken)
+    const accessToken = searchParams.get("accessToken");
+    const refreshToken = searchParams.get("refreshToken");
+    
+    // Fallback for legacy token format
+    const legacyToken = searchParams.get("token");
+    const token = accessToken || legacyToken;
     
     if (token) {
-      // Store token first
+      // Store both tokens
+      localStorage.setItem("accessToken", token);
       localStorage.setItem("token", token);
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+      }
+      
+      console.log("✅ Tokens stored successfully");
+      console.log("Access Token:", token.substring(0, 20) + "...");
       
       // Fetch user profile using the api instance (which includes auth header)
       api
         .get("/users/profile")
         .then((res) => {
-          console.log("User profile fetched:", res.data);
+          console.log("✅ User profile fetched:", res.data);
           login(token, res.data);
           const role = res.data?.role;
           if (role === "admin") {
@@ -33,14 +46,14 @@ export default function GoogleAuthSuccess() {
           }
         })
         .catch((error) => {
-          console.error("Error fetching user profile:", error.response?.data || error.message);
+          console.error("❌ Error fetching user profile:", error.response?.data || error.message);
           // Try decoding token if profile fetch fails
           try {
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const payload = JSON.parse(window.atob(base64));
             
-            const user = { _id: payload.userId, role: payload.role };
+            const user = { _id: payload.id, role: payload.role };
             login(token, user);
             if (user.role === "admin") {
               navigate("/admin");
@@ -52,11 +65,12 @@ export default function GoogleAuthSuccess() {
               navigate("/");
             }
           } catch (err) {
-            console.error("Token decode failed:", err);
+            console.error("❌ Token decode failed:", err);
             navigate("/login?error=authentication_failed");
           }
         });
     } else {
+      console.error("❌ No token found in URL");
       navigate("/login?error=no_token");
     }
   }, [searchParams, login, navigate]);

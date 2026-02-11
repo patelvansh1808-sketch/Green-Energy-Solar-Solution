@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
-const generateToken = require("../config/jwt");
+const { generateToken, generateAccessToken, generateRefreshToken, verifyRefreshToken } = require("../config/jwt");
 const { sendPasswordResetEmail } = require("../services/emailService");
 
 /* =========================
@@ -52,8 +52,17 @@ exports.register = async (req, res) => {
 
     console.log('User created successfully:', user.email);
 
+    // Generate tokens
+    const accessToken = generateAccessToken(user._id, user.role, user.email);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // Save refresh token to database
+    user.refreshToken = refreshToken;
+    await user.save();
+
     res.status(201).json({
-      token: generateToken(user._id, user.role, user.email),
+      accessToken,
+      refreshToken,
       user,
     });
   } catch (err) {
@@ -84,8 +93,17 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    // Generate tokens
+    const accessToken = generateAccessToken(user._id, user.role, user.email);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // Save refresh token to database
+    user.refreshToken = refreshToken;
+    await user.save();
+
     res.json({
-      token: generateToken(user._id, user.role, user.email),
+      accessToken,
+      refreshToken,
       user,
     });
   } catch (err) {
@@ -165,6 +183,41 @@ exports.resetPassword = async (req, res) => {
     res.json({ message: "Password has been reset successfully" });
   } catch (err) {
     console.error("RESET PASSWORD ERROR:", err.message);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* =========================
+   REFRESH TOKEN
+========================= */
+exports.refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token is required" });
+    }
+
+    // Verify refresh token
+    const decoded = verifyRefreshToken(refreshToken);
+    if (!decoded) {
+      return res.status(401).json({ message: "Invalid or expired refresh token" });
+    }
+
+    // Find user and verify stored refresh token
+    const user = await User.findById(decoded.id);
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(401).json({ message: "Invalid or expired refresh token" });
+    }
+
+    // Generate new access token
+    const newAccessToken = generateAccessToken(user._id, user.role, user.email);
+
+    res.json({
+      accessToken: newAccessToken,
+    });
+  } catch (err) {
+    console.error("REFRESH TOKEN ERROR:", err.message);
     res.status(500).json({ message: err.message });
   }
 };

@@ -33,7 +33,7 @@ export default function GoogleAuthSuccess() {
         .get("/users/profile")
         .then((res) => {
           console.log("✅ User profile fetched:", res.data);
-          login(token, res.data);
+          login(token, res.data, refreshToken);
           const role = res.data?.role;
           if (role === "admin") {
             navigate("/admin");
@@ -54,7 +54,7 @@ export default function GoogleAuthSuccess() {
             const payload = JSON.parse(window.atob(base64));
             
             const user = { _id: payload.id, role: payload.role };
-            login(token, user);
+            login(token, user, refreshToken);
             if (user.role === "admin") {
               navigate("/admin");
             } else if (user.role === "support") {

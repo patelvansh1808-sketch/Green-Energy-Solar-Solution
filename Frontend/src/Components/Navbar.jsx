@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import NotificationBell from "./NotificationBell";
 
@@ -7,6 +7,12 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, logout, hasCustomerProfile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAuthRoute =
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname === "/reset-password";
 
   const handleLogout = () => {
     logout();
@@ -31,7 +37,7 @@ export default function Navbar() {
             Home
           </Link>
 
-          {user && (
+          {user && !isAuthRoute && (
             <>
               {hasCustomerProfile && (
                 <Link to="/dashboard" className="hover:text-green-200 transition">
@@ -159,7 +165,7 @@ export default function Navbar() {
         </>
       )}
 
-      {user && (
+      {user && !isAuthRoute && (
         <Link to="/support" className="hover:text-green-200 transition">
           Support
         </Link>
@@ -195,7 +201,7 @@ export default function Navbar() {
         <div className="md:hidden bg-green-600 px-4 py-4 space-y-2 text-sm">
           <Link to="/" onClick={() => setOpen(false)}>Home</Link>
 
-          {user && (
+          {user && !isAuthRoute && (
             <>
               {hasCustomerProfile && (
                 <Link to="/dashboard" onClick={() => setOpen(false)}>
@@ -238,6 +244,14 @@ export default function Navbar() {
               >
                 🚪 Logout
               </button>
+            </>
+          )}
+
+          {!user && (
+            <>
+              <Link to="/contact" onClick={() => setOpen(false)}>Contact</Link>
+              <Link to="/login" onClick={() => setOpen(false)}>Login</Link>
+              <Link to="/register" onClick={() => setOpen(false)}>Register</Link>
             </>
           )}
         </div>

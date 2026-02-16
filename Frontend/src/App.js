@@ -27,7 +27,6 @@ import Support from "./Pages/User/Support";
 
 /* ===== ADMIN PAGES ===== */
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
-import ManageUsers from "./Pages/Admin/ManageUsers";
 import ManageBookings from "./Pages/Admin/ManageBookings";
 import ManageSubsidyApplications from "./Pages/Admin/ManageSubsidyApplications";
 import SubsidyRules from "./Pages/Admin/SubsidyRules";
@@ -55,6 +54,7 @@ import Footer from "./Components/Footer";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import LoadingScreen from "./Components/LoadingScreen";
 import AdminLayout from "./Layouts/AdminLayout";
+import ChatWidget from "./Components/ChatWidget";
 
 /* ===== PAGE TRANSITION WRAPPER ===== */
 function AnimatedRoutes() {
@@ -181,7 +181,6 @@ function AnimatedRoutes() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfile />} />
-          <Route path="users" element={<ManageUsers />} />
           <Route path="bookings" element={<ManageBookings />} />
           <Route path="subsidy-applications" element={<ManageSubsidyApplications />} />
           <Route path="customers" element={<ManageCustomers />} />
@@ -258,6 +257,7 @@ function AppShell() {
     <>
       {!isAdminRoute && <Navbar />}
       <AnimatedRoutes />
+      {!isAdminRoute && <ChatWidget />}
       {!isAdminRoute && <Footer />}
     </>
   );

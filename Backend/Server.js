@@ -74,6 +74,9 @@ app.use("/api/finance", require("./server/routes/financeRoutes"));
 // Inventory & Asset Management
 app.use("/api/inventory", require("./server/routes/inventoryRoutes"));
 
+// AI Chat Assistant
+app.use("/api/ai", require("./server/routes/aiRoutes"));
+
 // -------------------- DEFAULT ROUTE --------------------
 
 app.get("/", (req, res) => {

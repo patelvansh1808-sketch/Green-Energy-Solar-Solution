@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../Context/AuthContext";
 import ticketService from "../../services/ticketService";
+import ChatBoard from "../../Components/ChatBoard";
 
 export default function Support() {
   const { customerProfile } = useAuth();
@@ -8,10 +9,13 @@ export default function Support() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [responseMessage, setResponseMessage] = useState("");
+  
+  // Chat support state
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [chatTicketData, setChatTicketData] = useState(null);
 
   const [newTicket, setNewTicket] = useState({
     subject: "",
@@ -40,28 +44,6 @@ export default function Support() {
       fetchTickets();
     }
   }, [customerProfile?._id, fetchTickets]);
-
-  const handleCreateTicket = async (e) => {
-    e.preventDefault();
-    try {
-      await ticketService.createTicket({
-        customerId: customerProfile._id,
-        ...newTicket,
-      });
-      setSuccess("Ticket created successfully!");
-      setShowCreateModal(false);
-      setNewTicket({
-        subject: "",
-        category: "general",
-        priority: "medium",
-        description: "",
-      });
-      await fetchTickets();
-      setTimeout(() => setSuccess(""), 3000);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to create ticket");
-    }
-  };
 
   const handleAddResponse = async () => {
     if (!responseMessage.trim()) return;
@@ -115,7 +97,7 @@ export default function Support() {
               </p>
             </div>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowChatModal(true)}
               className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
             >
               ➕ New Ticket
@@ -235,102 +217,186 @@ export default function Support() {
           )}
         </div>
 
-        {/* Create Ticket Modal */}
-        {showCreateModal && (
+        {/* Chat Support Modal */}
+        {showChatModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-screen overflow-y-auto">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Ticket</h2>
-              <form onSubmit={handleCreateTicket} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Subject *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newTicket.subject}
-                    onChange={(e) =>
-                      setNewTicket({ ...newTicket, subject: e.target.value })
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                    placeholder="Brief description of your issue"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Category
-                    </label>
-                    <select
-                      value={newTicket.category}
-                      onChange={(e) =>
-                        setNewTicket({ ...newTicket, category: e.target.value })
-                      }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-hidden flex flex-col">
+              {!chatTicketData ? (
+                // Chat with form to create ticket
+                <div className="flex flex-col h-full">
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-6 flex justify-between items-center">
+                    <div>
+                      <h2 className="text-2xl font-bold">💬 Chat Support</h2>
+                      <p className="text-green-100 text-sm">
+                        Describe your issue and our team will help
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowChatModal(false);
+                        setChatTicketData(null);
+                      }}
+                      className="text-white hover:bg-green-700 px-4 py-2 rounded-lg font-semibold transition"
                     >
-                      <option value="general">General</option>
-                      <option value="technical">Technical Issue</option>
-                      <option value="billing">Billing</option>
-                      <option value="installation">Installation</option>
-                      <option value="maintenance">Maintenance</option>
-                      <option value="warranty">Warranty</option>
-                      <option value="complaint">Complaint</option>
-                      <option value="feedback">Feedback</option>
-                    </select>
+                      ×
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Priority
-                    </label>
-                    <select
-                      value={newTicket.priority}
-                      onChange={(e) =>
-                        setNewTicket({ ...newTicket, priority: e.target.value })
-                      }
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  {/* Form */}
+                  <div className="flex-grow overflow-y-auto p-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Category *
+                        </label>
+                        <select
+                          value={newTicket.category}
+                          onChange={(e) =>
+                            setNewTicket({ ...newTicket, category: e.target.value })
+                          }
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        >
+                          <option value="general">General Question</option>
+                          <option value="technical">Technical Issue</option>
+                          <option value="installation">Installation Problem</option>
+                          <option value="maintenance">Maintenance Question</option>
+                          <option value="billing">Billing Issue</option>
+                          <option value="warranty">Warranty Question</option>
+                          <option value="complaint">Complaint</option>
+                          <option value="feedback">Feedback</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+
+                      {newTicket.category === "other" && (
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Subject *
+                          </label>
+                          <input
+                            type="text"
+                            value={newTicket.subject}
+                            onChange={(e) =>
+                              setNewTicket({ ...newTicket, subject: e.target.value })
+                            }
+                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            placeholder="Brief description of your issue"
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Priority
+                        </label>
+                        <select
+                          value={newTicket.priority}
+                          onChange={(e) =>
+                            setNewTicket({ ...newTicket, priority: e.target.value })
+                          }
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Describe Your Issue *
+                        </label>
+                        <textarea
+                          value={newTicket.description}
+                          onChange={(e) =>
+                            setNewTicket({ ...newTicket, description: e.target.value })
+                          }
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                          rows="5"
+                          placeholder="Please provide as much detail as possible about your issue..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="border-t border-gray-200 p-6 bg-gray-50 flex gap-3">
+                    <button
+                      onClick={async () => {
+                        // Validate subject only when category is "other"
+                        if (newTicket.category === "other" && !newTicket.subject.trim()) {
+                          setError("Please fill in all required fields");
+                          return;
+                        }
+                        // Always validate description
+                        if (!newTicket.description.trim()) {
+                          setError("Please fill in all required fields");
+                          return;
+                        }
+                        try {
+                          // Generate default subject based on category if not provided
+                          const categoryLabels = {
+                            general: "General Question",
+                            technical: "Technical Issue",
+                            installation: "Installation Problem",
+                            maintenance: "Maintenance Question",
+                            billing: "Billing Issue",
+                            warranty: "Warranty Question",
+                            complaint: "Complaint",
+                            feedback: "Feedback",
+                          };
+                          
+                          const ticketToSubmit = {
+                            customerId: customerProfile._id,
+                            ...newTicket,
+                            subject: newTicket.subject || categoryLabels[newTicket.category] || newTicket.category,
+                          };
+                          
+                          await ticketService.createTicket(ticketToSubmit);
+                          setNewTicket({
+                            subject: "",
+                            category: "general",
+                            priority: "medium",
+                            description: "",
+                          });
+                          setSuccess("Ticket created successfully!");
+                          setShowChatModal(false);
+                          fetchTickets(); // Refresh tickets list
+                          setTimeout(() => setSuccess(""), 3000);
+                        } catch (err) {
+                          setError(err.response?.data?.message || "Failed to create ticket");
+                        }
+                      }}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
                     >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
-                    </select>
+                      Submit Ticket
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowChatModal(false);
+                        setChatTicketData(null);
+                      }}
+                      className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Description *
-                  </label>
-                  <textarea
-                    required
-                    value={newTicket.description}
-                    onChange={(e) =>
-                      setNewTicket({ ...newTicket, description: e.target.value })
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                    rows="5"
-                    placeholder="Please provide detailed information about your issue..."
-                  />
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-                  >
-                    Create Ticket
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+              ) : (
+                // Chat interface
+                <ChatBoard
+                  ticketId={chatTicketData._id}
+                  ticketData={chatTicketData}
+                  customerProfile={customerProfile}
+                  onBack={() => {
+                    setShowChatModal(false);
+                    setChatTicketData(null);
+                    fetchTickets();
+                  }}
+                />
+              )}
             </div>
           </div>
         )}

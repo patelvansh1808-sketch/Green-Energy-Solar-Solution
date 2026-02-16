@@ -1,4 +1,5 @@
 const Message = require("../models/Message");
+const { sendContactFormEmail } = require("../services/emailService");
 
 /**
  * ================================
@@ -167,6 +168,56 @@ exports.updateMessageStatus = async (req, res) => {
     console.error("UPDATE STATUS ERROR:", error);
     res.status(500).json({
       message: "Failed to update status",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * ================================
+ * PUBLIC CONTACT FORM SUBMISSION
+ * POST /api/messages/contact/submit
+ * ================================
+ */
+exports.contactFormSubmission = async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !message) {
+      return res.status(400).json({
+        message: "Name, email, and message are required",
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        message: "Please provide a valid email address",
+      });
+    }
+
+    // Send email to admin
+    const emailSent = await sendContactFormEmail({
+      name,
+      email,
+      message,
+    });
+
+    if (!emailSent) {
+      return res.status(500).json({
+        message: "Failed to send your message. Please try again later.",
+      });
+    }
+
+    res.status(200).json({
+      message: "Your message has been sent successfully! We'll get back to you soon.",
+    });
+  } catch (error) {
+    console.error("CONTACT FORM SUBMISSION ERROR:", error);
+    res.status(500).json({
+      message: "Failed to submit contact form",
       error: error.message,
     });
   }

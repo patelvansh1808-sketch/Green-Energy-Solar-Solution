@@ -7,9 +7,13 @@ const {
   getMessage,
   addReply,
   updateMessageStatus,
+  contactFormSubmission,
 } = require("../controllers/messageController");
 
 const authMiddleware = require("../middleware/authMiddleware");
+
+// Public contact form submission (no auth required)
+router.post("/contact/submit", contactFormSubmission);
 
 // Create message/ticket
 router.post("/", authMiddleware, createMessage);

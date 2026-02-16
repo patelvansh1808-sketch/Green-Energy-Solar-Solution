@@ -28,7 +28,7 @@ const ticketSchema = new mongoose.Schema(
     },
     subject: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
     category: {
@@ -42,6 +42,7 @@ const ticketSchema = new mongoose.Schema(
         "general",
         "complaint",
         "feedback",
+        "other",
       ],
       default: "general",
     },

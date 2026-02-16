@@ -1,6 +1,7 @@
 const Ticket = require("../models/Ticket");
 const Customer = require("../models/Customer");
 const User = require("../models/User");
+const emailService = require("../services/emailService");
 
 /* =====================================================
    CREATE NEW TICKET
@@ -42,6 +43,28 @@ exports.createTicket = async (req, res) => {
     });
 
     await newTicket.save();
+
+    // Send email notification for all tickets
+    try {
+      console.log(`📧 Sending ticket notification email for category: ${category}...`);
+      await emailService.sendTicketNotificationEmail({
+        ticketId: newTicket._id,
+        customerName: customer.fullName,
+        customerEmail: userEmail,
+        category: category,
+        subject: subject || newTicket.subject,
+        description: description,
+        priority: priority || "medium",
+      });
+      console.log("✅ Ticket notification email sent successfully");
+    } catch (emailError) {
+      console.error("❌ Failed to send ticket notification email:", emailError);
+      console.error("Error details:", emailError.message);
+      // Don't fail the ticket creation if email fails
+    }
+
+    console.log(`✅ Ticket created: ${newTicket._id} | Category: ${category} | Customer: ${customer.fullName}`);
+
     res.status(201).json({
       message: "Ticket created successfully!",
       ticket: newTicket,

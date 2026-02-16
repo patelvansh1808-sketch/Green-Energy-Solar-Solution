@@ -4,7 +4,6 @@ import { useAuth } from "../Context/AuthContext";
 
 const navItems = [
   { to: "/admin", label: "Dashboard" },
-  { to: "/admin/users", label: "Manage Users" },
   { to: "/admin/customers", label: "Customers" },
   { to: "/admin/bookings", label: "Bookings" },
   { to: "/admin/projects", label: "Projects" },
@@ -25,6 +24,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
   const menuRef = useRef(null);
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {

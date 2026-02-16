@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import ticketService from "../../services/ticketService";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ export default function AdminDashboard() {
   const [showAddTeamMember, setShowAddTeamMember] = useState(false);
   const [teamMembers, setTeamMembers] = useState([]);
   const [showManageTeam, setShowManageTeam] = useState(false);
+  const [newTicketsCount, setNewTicketsCount] = useState(0);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -41,6 +43,15 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchNewTicketsCount = useCallback(async () => {
+    try {
+      const tickets = await ticketService.getAllTickets({ status: "open" });
+      setNewTicketsCount(tickets.length);
+    } catch (err) {
+      console.error("Failed to fetch new tickets count:", err);
+    }
+  }, []);
+
   const handleAddTeamMember = async (e) => {
     e.preventDefault();
     try {
@@ -69,7 +80,15 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+    fetchNewTicketsCount();
+    
+    // Auto-refresh tickets count every 30 seconds
+    const interval = setInterval(() => {
+      fetchNewTicketsCount();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [fetchStats, fetchNewTicketsCount]);
 
   if (loading) {
     return (
@@ -235,6 +254,18 @@ export default function AdminDashboard() {
               className="flex items-center justify-center p-4 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition text-teal-700 font-medium"
             >
               <span className="text-2xl mr-2">👥</span> Manage Team
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/tickets")}
+              className="flex items-center justify-center p-4 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition text-red-700 font-medium relative"
+            >
+              <span className="text-2xl mr-2">🎫</span> Support Tickets
+              {newTicketsCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full min-w-[28px] text-center shadow-lg">
+                  {newTicketsCount > 99 ? '99+' : newTicketsCount}
+                </span>
+              )}
             </button>
           </div>
         </div>

@@ -18,35 +18,47 @@ ChartJS.register(
   Legend
 );
 
-export default function LineChart({ labels, data, breakEven }) {
+export default function LineChart({ labels, data, breakEven, datasets }) {
+  const chartDatasets = Array.isArray(datasets)
+    ? datasets
+    : [
+        {
+          label: "Cumulative Savings (₹)",
+          data,
+          borderColor: "#15803d",
+          backgroundColor: "rgba(21,128,61,0.2)",
+          tension: 0.3,
+        },
+        {
+          label: "Break-Even Point",
+          data: (data || []).map((_, i) => (i + 1 === breakEven ? data[i] : null)),
+          borderColor: "red",
+          pointRadius: 6,
+          pointBackgroundColor: "red",
+          showLine: false,
+        },
+      ];
+
   return (
     <Line
       data={{
         labels,
-        datasets: [
-          {
-            label: "Cumulative Savings (₹)",
-            data,
-            borderColor: "#15803d",
-            backgroundColor: "rgba(21,128,61,0.2)",
-            tension: 0.3,
-          },
-          {
-            label: "Break-Even Point",
-            data: data.map((_, i) =>
-              i + 1 === breakEven ? data[i] : null
-            ),
-            borderColor: "red",
-            pointRadius: 6,
-            pointBackgroundColor: "red",
-            showLine: false,
-          },
-        ],
+        datasets: chartDatasets,
       }}
       options={{
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           legend: { position: "bottom" },
+        },
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: (value) => value.toLocaleString("en-IN"),
+            },
+          },
         },
       }}
     />

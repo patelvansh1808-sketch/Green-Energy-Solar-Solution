@@ -8,6 +8,7 @@ const {
   getAllUsers,
   getAllBookings,
   getAdminStats,
+  updateBookingStatus,
 } = require("../controllers/adminController");
 
 const {
@@ -17,6 +18,7 @@ const {
 router.get("/stats", auth, role("admin"), getAdminStats);
 router.get("/users", auth, role("admin"), getAllUsers);
 router.get("/bookings", auth, role("admin"), getAllBookings);
+router.patch("/bookings/:bookingId", auth, role("admin"), updateBookingStatus);
 
 router.post(
   "/create-customer",

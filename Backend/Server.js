@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 // Load environment variables FIRST
 require("./server/config/env");
@@ -20,6 +21,9 @@ app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
 
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // -------------------- ROUTES --------------------
 
 // Auth
@@ -39,6 +43,7 @@ app.use("/api/bookings", require("./server/routes/bookingRoutes"));
 
 // Subsidy
 app.use("/api/subsidy", require("./server/routes/subsidyRoutes"));
+app.use("/api/subsidy-applications", require("./server/routes/subsidyApplicationRoutes"));
 
 // Smart Recommendations (AI-assisted)
 app.use("/api/recommendations", require("./server/routes/recommendationRoutes"));
@@ -51,6 +56,23 @@ app.use("/api/messages", require("./server/routes/messageRoutes"));
 app.use("/api/admin", require("./server/routes/adminRoutes"));
 app.use("/api/customers", require("./server/routes/customerRoutes"));
 
+// Role & User Management
+app.use("/api/roles", require("./server/routes/roleRoutes"));
+
+// Project & Installation Tracking
+app.use("/api/projects", require("./server/routes/projectRoutes"));
+
+// Lead Management
+app.use("/api/leads", require("./server/routes/leadRoutes"));
+
+// Support & Ticketing
+app.use("/api/tickets", require("./server/routes/ticketRoutes"));
+
+// Financial Analytics
+app.use("/api/finance", require("./server/routes/financeRoutes"));
+
+// Inventory & Asset Management
+app.use("/api/inventory", require("./server/routes/inventoryRoutes"));
 
 // -------------------- DEFAULT ROUTE --------------------
 

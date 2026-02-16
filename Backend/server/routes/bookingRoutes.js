@@ -11,10 +11,11 @@ const bookingController = require("../controllers/bookingController");
    USER BOOKING ROUTES
 ================================ */
 
-// 🔴 SAFETY CHECK (TEMP – REMOVE LATER)
-console.log("authMiddleware:", typeof authMiddleware);
-console.log("createBooking:", typeof bookingController.createBooking);
-console.log("getBookings:", typeof bookingController.getBookings);
+// GENERATE QUOTATION (No auth required for instant quote)
+router.post(
+  "/quotation",
+  bookingController.generateQuotation
+);
 
 // CREATE BOOKING
 router.post(
@@ -28,6 +29,27 @@ router.get(
   "/my",
   authMiddleware,
   bookingController.getBookings
+);
+
+// GET BOOKING BY ID
+router.get(
+  "/:id",
+  authMiddleware,
+  bookingController.getBookingById
+);
+
+// CANCEL BOOKING
+router.patch(
+  "/:id/cancel",
+  authMiddleware,
+  bookingController.cancelBooking
+);
+
+// DELETE BOOKING
+router.delete(
+  "/:id",
+  authMiddleware,
+  bookingController.deleteBooking
 );
 
 module.exports = router;

@@ -68,7 +68,19 @@ export default function Dashboard() {
     return <div className="text-center py-8">No dashboard data available</div>;
   }
 
-  const { user: userData, customer, energy, savings, roi, subsidy, alerts, system } = dashboardData;
+  const {
+    user: userData = {},
+    customer = {},
+    energy = {},
+    savings = {},
+    roi = {},
+    subsidy = null,
+    alerts = { unresolvedCount: 0, recent: [] },
+    system = {},
+  } = dashboardData;
+
+  const fmtNum = (n) => Number(n ?? 0).toLocaleString("en-IN");
+  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : "—");
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -88,7 +100,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Total Energy Generated</p>
-                <p className="text-3xl font-bold text-green-600">{energy.totalGenerated}</p>
+                <p className="text-3xl font-bold text-green-600">{fmtNum(energy.totalGenerated)}</p>
                 <p className="text-xs text-gray-400 mt-1">kWh (Last 30 days)</p>
               </div>
               <span className="text-4xl">⚡</span>
@@ -100,7 +112,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Total Savings</p>
-                <p className="text-3xl font-bold text-blue-600">₹{savings.total}</p>
+                <p className="text-3xl font-bold text-blue-600">₹{fmtNum(savings.total)}</p>
                 <p className="text-xs text-gray-400 mt-1">Cost saved</p>
               </div>
               <span className="text-4xl">💰</span>
@@ -112,8 +124,8 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">ROI</p>
-                <p className="text-3xl font-bold text-purple-600">{roi.percentage}%</p>
-                <p className="text-xs text-gray-400 mt-1">Payback in {roi.paybackYears} years</p>
+                <p className="text-3xl font-bold text-purple-600">{roi.percentage ?? 0}%</p>
+                <p className="text-xs text-gray-400 mt-1">Payback in {roi.paybackYears ?? "—"} years</p>
               </div>
               <span className="text-4xl">📈</span>
             </div>
@@ -125,9 +137,9 @@ export default function Dashboard() {
               <div>
                 <p className="text-gray-500 text-sm">System Status</p>
                 <p className={`text-3xl font-bold ${system.status === "Online" ? "text-green-600" : "text-yellow-600"}`}>
-                  {system.status}
+                  {system.status ?? "—"}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">{system.onlinePercentage}% online</p>
+                <p className="text-xs text-gray-400 mt-1">{system.onlinePercentage ?? 0}% online</p>
               </div>
               <span className="text-4xl">{system.status === "Online" ? "✅" : "⚠️"}</span>
             </div>
@@ -144,22 +156,22 @@ export default function Dashboard() {
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div>
                   <p className="text-gray-500 text-sm">Average Daily</p>
-                  <p className="text-2xl font-bold text-green-600">{energy.averageDaily} kWh</p>
+                  <p className="text-2xl font-bold text-green-600">{fmtNum(energy.averageDaily)} kWh</p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Peak Generation</p>
-                  <p className="text-2xl font-bold text-blue-600">{energy.maxDaily} kWh</p>
+                  <p className="text-2xl font-bold text-blue-600">{fmtNum(energy.maxDaily)} kWh</p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Data Points</p>
-                  <p className="text-2xl font-bold text-purple-600">{energy.unitCount} days</p>
+                  <p className="text-2xl font-bold text-purple-600">{fmtNum(energy.unitCount)} days</p>
                 </div>
               </div>
               <div className="bg-gray-100 rounded p-4">
                 <p className="text-sm text-gray-600">
-                  Your system has generated a total of <strong>{energy.totalGenerated} kWh</strong> in the last 30 days.
+                  Your system has generated a total of <strong>{fmtNum(energy.totalGenerated)} kWh</strong> in the last 30 days.
                   This is equivalent to the annual electricity consumption of approximately{" "}
-                  <strong>{(energy.totalGenerated / 5).toFixed(1)} households</strong>.
+                  <strong>{((energy.totalGenerated ?? 0) / 5).toFixed(1)} households</strong>.
                 </p>
               </div>
             </div>
@@ -170,19 +182,19 @@ export default function Dashboard() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-3 border-b">
                   <span className="text-gray-600">Energy Generated</span>
-                  <span className="font-bold">{energy.totalGenerated} kWh</span>
+                  <span className="font-bold">{fmtNum(energy.totalGenerated)} kWh</span>
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b">
                   <span className="text-gray-600">Cost per Unit</span>
-                  <span className="font-bold">₹{savings.costPerUnit}</span>
+                  <span className="font-bold">₹{fmtNum(savings.costPerUnit)}</span>
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b bg-green-50 p-3 rounded">
                   <span className="font-semibold">Total Savings</span>
-                  <span className="text-2xl font-bold text-green-600">₹{savings.total}</span>
+                  <span className="text-2xl font-bold text-green-600">₹{fmtNum(savings.total)}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-gray-600">Monthly Average</span>
-                  <span className="font-bold">₹{savings.monthlyAverage}/month</span>
+                  <span className="font-bold">₹{fmtNum(savings.monthlyAverage)}/month</span>
                 </div>
               </div>
             </div>
@@ -193,16 +205,16 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-blue-50 p-4 rounded">
                   <p className="text-gray-600 text-sm">System Cost</p>
-                  <p className="text-2xl font-bold text-blue-600">₹{roi.systemCost.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-blue-600">₹{fmtNum(roi.systemCost)}</p>
                 </div>
                 <div className="bg-purple-50 p-4 rounded">
                   <p className="text-gray-600 text-sm">Current ROI</p>
-                  <p className="text-2xl font-bold text-purple-600">{roi.percentage}%</p>
+                  <p className="text-2xl font-bold text-purple-600">{roi.percentage ?? 0}%</p>
                 </div>
               </div>
               <div className="mt-4 bg-gray-50 p-4 rounded">
                 <p className="text-sm text-gray-600">
-                  Your system will pay for itself in approximately <strong>{roi.paybackYears} years</strong> at the current savings rate.
+                  Your system will pay for itself in approximately <strong>{roi.paybackYears ?? "—"} years</strong> at the current savings rate.
                 </p>
               </div>
             </div>
@@ -216,17 +228,15 @@ export default function Dashboard() {
               <div className="space-y-3">
                 <div>
                   <p className="text-gray-500 text-sm">System Capacity</p>
-                  <p className="font-bold">{customer.systemCapacity} kW</p>
+                  <p className="font-bold">{customer.systemCapacity ?? "—"} kW</p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Location</p>
-                  <p className="font-bold">{customer.location}</p>
+                  <p className="font-bold">{customer.location ?? "—"}</p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Installation Date</p>
-                  <p className="font-bold">
-                    {new Date(customer.installationDate).toLocaleDateString()}
-                  </p>
+                  <p className="font-bold">{fmtDate(customer.installationDate)}</p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm">Status</p>
@@ -237,7 +247,7 @@ export default function Dashboard() {
                         : "bg-red-100 text-red-700"
                     }`}
                   >
-                    {customer.status}
+                    {customer.status ?? "—"}
                   </span>
                 </div>
               </div>
@@ -250,15 +260,15 @@ export default function Dashboard() {
                 <div className="space-y-3">
                   <div>
                     <p className="text-gray-500 text-sm">State</p>
-                    <p className="font-bold">{subsidy.state}</p>
+                    <p className="font-bold">{subsidy.state ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-sm">Eligibility</p>
-                    <p className="font-bold">{subsidy.eligibilityPercentage}%</p>
+                    <p className="font-bold">{subsidy.eligibilityPercentage ?? 0}%</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-sm">Applied Amount</p>
-                    <p className="font-bold">₹{subsidy.appliedAmount.toLocaleString()}</p>
+                    <p className="font-bold">₹{fmtNum(subsidy.appliedAmount)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-sm">Status</p>
@@ -271,14 +281,14 @@ export default function Dashboard() {
                           : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {subsidy.status}
+                      {subsidy.status ?? "—"}
                     </span>
                   </div>
-                  {subsidy.approvedAmount && (
+                  {subsidy?.approvedAmount && (
                     <div className="bg-green-50 p-3 rounded">
                       <p className="text-gray-600 text-sm">Approved Amount</p>
                       <p className="text-xl font-bold text-green-600">
-                        ₹{subsidy.approvedAmount.toLocaleString()}
+                        ₹{fmtNum(subsidy.approvedAmount)}
                       </p>
                     </div>
                   )}
@@ -289,15 +299,15 @@ export default function Dashboard() {
             {/* ALERTS */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-bold mb-4">
-                ⚠️ Recent Alerts ({alerts.unresolvedCount})
+                ⚠️ Recent Alerts ({alerts.unresolvedCount ?? 0})
               </h3>
-              {alerts.recent.length === 0 ? (
+              {alerts.recent?.length === 0 ? (
                 <div className="text-center py-6">
                   <p className="text-gray-500">No alerts</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {alerts.recent.map((alert) => (
+                  {alerts.recent?.map((alert) => (
                     <div
                       key={alert._id}
                       className={`p-3 rounded border-l-4 ${
@@ -313,7 +323,7 @@ export default function Dashboard() {
                       <p className="font-semibold text-sm">{alert.title}</p>
                       <p className="text-xs text-gray-600 mt-1">{alert.message}</p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {new Date(alert.createdAt).toLocaleDateString()}
+                        {fmtDate(alert.createdAt)}
                       </p>
                     </div>
                   ))}

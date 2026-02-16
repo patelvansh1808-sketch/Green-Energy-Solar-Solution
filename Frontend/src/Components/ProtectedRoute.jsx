@@ -6,14 +6,18 @@ export default function ProtectedRoute({ children, role }) {
 
   if (loading) return null;
 
-  // 🔐 Not logged in → go to HOME
+  // 🔐 Not logged in → go to LOGIN
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  // 🔐 Role-based admin protection
-  if (role && user.role !== role) {
-    return <Navigate to="/" replace />;
+  // 🔐 Role-based protection
+  if (role) {
+    // Support both single role (string) and multiple roles (array)
+    const allowedRoles = Array.isArray(role) ? role : [role];
+    if (!allowedRoles.includes(user.role)) {
+      return <Navigate to="/login" replace />;
+    }
   }
 
   return children;

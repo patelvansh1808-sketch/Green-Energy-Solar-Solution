@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import NotificationBell from "./NotificationBell";
 
@@ -7,6 +7,12 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, logout, hasCustomerProfile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAuthRoute =
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname === "/reset-password";
 
   const handleLogout = () => {
     logout();
@@ -31,7 +37,7 @@ export default function Navbar() {
             Home
           </Link>
 
-          {user && (
+          {user && !isAuthRoute && (
             <>
               {hasCustomerProfile && (
                 <Link to="/dashboard" className="hover:text-green-200 transition">
@@ -46,9 +52,38 @@ export default function Navbar() {
                 </button>
                 <div className="absolute left-0 top-full pt-2 hidden group-hover:block bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2">
                   <NavItem to="/booking" label="📅 Booking" />
-                  <NavItem to="/subsidy" label="💰 Subsidy" />
+                  <NavItem to="/booking-status" label="📊 Booking Status" />
+                  <NavItem to="/apply-subsidy" label="💰 Apply for Subsidy" />
+                  <NavItem to="/subsidy-status" label="📈 Subsidy Status" />
                 </div>
               </div>
+
+              {/* CRM */}
+              {user.role === "admin" && (
+                <div className="relative group">
+                  <button className="hover:text-green-200 transition">
+                    CRM ▾
+                  </button>
+                  <div className="absolute left-0 top-full pt-2 hidden group-hover:block bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2">
+                    <NavItem to="/crm/dashboard" label="📊 CRM Dashboard" highlight />
+                    <NavItem to="/crm/sales-dashboard" label="💼 Sales Dashboard" />
+                  </div>
+                </div>
+              )}
+
+              {/* ENGINEER DASHBOARD */}
+              {user.role === "engineer" && (
+                <Link to="/engineer/dashboard" className="hover:text-green-200 transition">
+                  🔧 My Tasks
+                </Link>
+              )}
+
+              {/* TEAM MEMBER DASHBOARD */}
+              {(user.role === "engineer" || user.role === "sales" || user.role === "support") && (
+                <Link to="/team/my-leads" className="hover:text-green-200 transition">
+                  📋 My Leads
+                </Link>
+              )}
 
               {/* NOTIFICATIONS BELL */}
               <NotificationBell />
@@ -74,27 +109,71 @@ export default function Navbar() {
                       />
 
                       <NavItem
-                        to="/admin"
-                        label="⚙️ Admin Dashboard"
-                        admin
-                      />
-                    </>
-                  )}
+                    to="/admin/subsidy-applications"
+                    label="📋 Subsidy Applications"
+                    admin
+                  />
 
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
-                  >
-                    🚪 Logout
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
+                  <NavItem
+                    to="/admin/roles"
+                    label="👥 Role Management"
+                    admin
+                  />
 
-          <Link to="/contact" className="hover:text-green-200 transition">
-            Contact
-          </Link>
+                  <NavItem
+                    to="/admin/projects"
+                    label="🔧 Installation Tracking"
+                    admin
+                  />
+
+                  <NavItem
+                    to="/admin/finance"
+                    label="💼 Financial Analytics"
+                    admin
+                  />
+
+                  <NavItem
+                    to="/admin/inventory"
+                    label="📦 Inventory Management"
+                    admin
+                  />
+
+                  <NavItem
+                    to="/admin"
+                    label="⚙️ Admin Dashboard"
+                    admin
+                  />
+                </>
+              )}
+
+              {(user.role === "admin" || user.role === "support") && (
+                <NavItem
+                  to="/admin/tickets"
+                  label="🎫 Ticket Management"
+                  admin
+                />
+              )}
+
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
+              >
+                🚪 Logout
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {user && !isAuthRoute && (
+        <Link to="/support" className="hover:text-green-200 transition">
+          Support
+        </Link>
+      )}
+
+      <Link to="/contact" className="hover:text-green-200 transition">
+        Contact
+      </Link>
 
           {!user && (
             <>
@@ -122,7 +201,7 @@ export default function Navbar() {
         <div className="md:hidden bg-green-600 px-4 py-4 space-y-2 text-sm">
           <Link to="/" onClick={() => setOpen(false)}>Home</Link>
 
-          {user && (
+          {user && !isAuthRoute && (
             <>
               {hasCustomerProfile && (
                 <Link to="/dashboard" onClick={() => setOpen(false)}>
@@ -132,7 +211,17 @@ export default function Navbar() {
 
               <p className="text-xs uppercase text-green-200 mt-3">⚡ Features</p>
               <MobileItem to="/booking" label="📅 Booking" />
-              <MobileItem to="/subsidy" label="💰 Subsidy" />
+              <MobileItem to="/booking-status" label="📊 Booking Status" />
+              <MobileItem to="/apply-subsidy" label="💰 Apply for Subsidy" />
+              <MobileItem to="/subsidy-status" label="📈 Subsidy Status" />
+
+              {user.role === "admin" && (
+                <>
+                  <p className="text-xs uppercase text-green-200 mt-3">📱 CRM</p>
+                  <MobileItem to="/crm/dashboard" label="📊 CRM Dashboard" />
+                  <MobileItem to="/crm/sales-dashboard" label="💼 Sales Dashboard" />
+                </>
+              )}
 
               <p className="text-xs uppercase text-green-200 mt-3">👤 Account</p>
               <MobileItem to="/profile" label="My Profile" />
@@ -140,6 +229,11 @@ export default function Navbar() {
               {user.role === "admin" && (
                 <>
                   <MobileItem to="/admin/customers" label="🧑‍💼 Manage Customers" />
+                  <MobileItem to="/admin/subsidy-applications" label="📋 Subsidy Applications" />
+                  <MobileItem to="/admin/roles" label="👥 Role Management" />
+                  <MobileItem to="/admin/projects" label="🔧 Installation Tracking" />
+                  <MobileItem to="/admin/finance" label="💼 Financial Analytics" />
+                  <MobileItem to="/admin/inventory" label="📦 Inventory Management" />
                   <MobileItem to="/admin" label="⚙️ Admin Dashboard" />
                 </>
               )}
@@ -150,6 +244,14 @@ export default function Navbar() {
               >
                 🚪 Logout
               </button>
+            </>
+          )}
+
+          {!user && (
+            <>
+              <Link to="/contact" onClick={() => setOpen(false)}>Contact</Link>
+              <Link to="/login" onClick={() => setOpen(false)}>Login</Link>
+              <Link to="/register" onClick={() => setOpen(false)}>Register</Link>
             </>
           )}
         </div>

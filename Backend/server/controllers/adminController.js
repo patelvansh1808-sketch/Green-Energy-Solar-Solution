@@ -80,6 +80,7 @@ exports.getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find()
       .populate("user", "name email connectionType location")
+      .populate("customer", "fullName phone address city state district pincode")
       .sort({ createdAt: -1 });
 
     res.json(bookings);

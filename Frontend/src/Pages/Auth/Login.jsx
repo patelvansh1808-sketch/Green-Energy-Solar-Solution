@@ -21,10 +21,21 @@ export default function Login() {
         password,
       });
 
-      // ✅ Pass both token and user data
-      login(res.data.token, res.data.user);
+      // ✅ Pass token, user data, and refreshToken if available
+      const token = res.data.accessToken || res.data.token;
+      const refreshToken = res.data.refreshToken;
+      login(token, res.data.user, refreshToken);
 
-      navigate("/");
+      const role = res.data.user?.role;
+      if (role === "admin") {
+        navigate("/admin");
+      } else if (role === "support") {
+        navigate("/admin/tickets");
+      } else if (role === "engineer") {
+        navigate("/engineer/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     } finally {

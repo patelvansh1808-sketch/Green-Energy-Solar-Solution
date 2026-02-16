@@ -2,15 +2,27 @@ const mongoose = require("mongoose");
 
 const bookingSchema = new mongoose.Schema(
   {
+    bookingId: {
+      type: String,
+      unique: true,
+    },
+
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer",
+    },
+
+    // System Details
     systemType: {
       type: String,
       required: true,
+      enum: ["Residential", "Commercial", "Industrial"],
     },
 
     capacity: {
@@ -18,9 +30,98 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
 
+    // Installation Location Details
+    installationAddress: {
+      address: String,
+      city: String,
+      state: String,
+      district: String,
+      pincode: String,
+    },
+
+    roofType: {
+      type: String,
+      enum: [
+        "",
+        "Concrete",
+        "Metal",
+        "Tile",
+        "Tiled",
+        "RCC",
+        "Asbestos",
+        "Ground Mount",
+        "Other",
+      ],
+      default: "",
+    },
+
+    roofArea: {
+      type: Number, // in sq ft
+    },
+
+    // Quotation Details
+    quotation: {
+      equipmentCost: {
+        type: Number,
+        default: 0,
+      },
+      installationCost: {
+        type: Number,
+        default: 0,
+      },
+      totalCost: {
+        type: Number,
+        default: 0,
+      },
+      subsidyAmount: {
+        type: Number,
+        default: 0,
+      },
+      netCost: {
+        type: Number,
+        default: 0,
+      },
+      roiYears: {
+        type: Number,
+      },
+    },
+
+    // Cost Breakdown (Actuals for profit analytics)
+    costBreakdown: {
+      equipment: {
+        type: Number,
+        default: 0,
+      },
+      labor: {
+        type: Number,
+        default: 0,
+      },
+      logistics: {
+        type: Number,
+        default: 0,
+      },
+      permits: {
+        type: Number,
+        default: 0,
+      },
+      overhead: {
+        type: Number,
+        default: 0,
+      },
+      other: {
+        type: Number,
+        default: 0,
+      },
+      totalCost: {
+        type: Number,
+        default: 0,
+      },
+    },
+
+    // Legacy fields (keeping for backward compatibility)
     baseCost: {
       type: Number,
-      required: true,
+      default: 0,
     },
 
     subsidyApplied: {
@@ -35,9 +136,74 @@ const bookingSchema = new mongoose.Schema(
 
     finalCost: {
       type: Number,
-      required: true,
+      default: 0,
     },
 
+    // Status Management
+    status: {
+      type: String,
+      enum: [
+        "Pending",
+        "Under Review",
+        "Approved",
+        "Rejected",
+        "Scheduled",
+        "In Progress",
+        "Completed",
+        "Cancelled",
+      ],
+      default: "Pending",
+    },
+
+    // Dates
+    bookingDate: {
+      type: Date,
+      default: Date.now,
+    },
+
+    expectedInstallationDate: {
+      type: Date,
+    },
+
+    actualInstallationDate: {
+      type: Date,
+    },
+
+    siteInspectionDate: {
+      type: Date,
+    },
+
+    // Payment Tracking
+    payment: {
+      advanceAmount: {
+        type: Number,
+        default: 0,
+      },
+      advancePaid: {
+        type: Boolean,
+        default: false,
+      },
+      advancePaidDate: {
+        type: Date,
+      },
+      finalAmount: {
+        type: Number,
+        default: 0,
+      },
+      finalPaid: {
+        type: Boolean,
+        default: false,
+      },
+      finalPaidDate: {
+        type: Date,
+      },
+      paymentMethod: {
+        type: String,
+        enum: ["Cash", "Card", "UPI", "Bank Transfer", "Cheque", "Other"],
+      },
+    },
+
+    // EMI Details
     emiEnabled: {
       type: Boolean,
       default: false,
@@ -50,8 +216,61 @@ const bookingSchema = new mongoose.Schema(
     monthlyEmi: {
       type: Number,
     },
+
+    // Assignment
+    assignedEngineer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    // Documents & Photos
+    documents: {
+      quotationPDF: String,
+      agreementPDF: String,
+      installationPhotos: [String],
+      completionCertificate: String,
+    },
+
+    // Notes
+    customerRemarks: {
+      type: String,
+    },
+
+    adminNotes: {
+      type: String,
+    },
+
+    rejectionReason: {
+      type: String,
+    },
+
+    // Activity Log
+    activityLog: [
+      {
+        action: String,
+        performedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+        notes: String,
+      },
+    ],
   },
   { timestamps: true }
 );
+
+// Auto-generate booking ID before saving
+bookingSchema.pre("save", async function (next) {
+  if (!this.bookingId) {
+    const year = new Date().getFullYear();
+    const count = await mongoose.model("Booking").countDocuments();
+    this.bookingId = `BK-${year}-${String(count + 1).padStart(4, "0")}`;
+  }
+  next();
+});
 
 module.exports = mongoose.model("Booking", bookingSchema);

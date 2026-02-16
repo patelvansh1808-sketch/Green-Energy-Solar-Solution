@@ -233,7 +233,7 @@ export default function LandingPage() {
           </div>
           <div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Email Us</h3>
-            <p className="text-green-700 text-lg font-semibold">info@greenergysolar.in</p>
+            <p className="text-green-700 text-lg font-semibold">teamsuryaurjaa@gmail.com</p>
           </div>
           <div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Office Hours</h3>

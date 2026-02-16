@@ -17,14 +17,14 @@ ChartJS.register(
   Legend
 );
 
-export default function BarChart({ labels, data }) {
+export default function BarChart({ labels, data, label = "Value" }) {
   return (
     <Bar
       data={{
         labels,
         datasets: [
           {
-            label: "Units",
+            label,
             data,
             backgroundColor: "#16a34a",
           },
@@ -33,6 +33,14 @@ export default function BarChart({ labels, data }) {
       options={{
         responsive: true,
         maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: (value) => value.toLocaleString("en-IN"),
+            },
+          },
+        },
       }}
     />
   );

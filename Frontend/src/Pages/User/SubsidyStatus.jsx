@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useI18n } from "../../Context/I18nContext";
 import subsidyApplicationService from "../../services/subsidyApplicationService";
 
 export default function SubsidyStatus() {
+  const { t } = useI18n();
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -48,7 +50,7 @@ export default function SubsidyStatus() {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-6">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your application status...</p>
+          <p className="text-gray-600">{t("subsidy.loading")}</p>
         </div>
       </div>
     );
@@ -61,14 +63,14 @@ export default function SubsidyStatus() {
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <div className="text-6xl mb-4">📋</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              No Application Found
+              {t("subsidy.noApplication")}
             </h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <a
               href="/user/apply-subsidy"
               className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
             >
-              Apply Now
+              {t("subsidy.applyNow")}
             </a>
           </div>
         </div>
@@ -82,10 +84,10 @@ export default function SubsidyStatus() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            📊 Your Subsidy Application Status
+            📊 {t("subsidy.statusTitle")}
           </h1>
           <p className="text-gray-600">
-            Track your solar subsidy application progress
+            {t("subsidy.trackProgress")}
           </p>
         </div>
 
@@ -97,7 +99,7 @@ export default function SubsidyStatus() {
         >
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p className="text-gray-600 text-lg mb-2">Current Status</p>
+              <p className="text-gray-600 text-lg mb-2">{t("subsidy.currentStatus")}</p>
               <h2 className="text-4xl font-bold text-gray-800">
                 {statusIcons[application.status]} {application.status}
               </h2>
@@ -114,7 +116,7 @@ export default function SubsidyStatus() {
 
         {/* Timeline */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">📅 Timeline</h3>
+          <h3 className="text-2xl font-bold text-gray-800 mb-6">📅 {t("subsidy.statusTimeline")}</h3>
 
           <div className="space-y-4">
             {/* Applied Date */}
@@ -123,7 +125,7 @@ export default function SubsidyStatus() {
                 1
               </div>
               <div className="ml-4 pt-1">
-                <p className="text-gray-600 font-semibold">Application Submitted</p>
+                <p className="text-gray-600 font-semibold">{t("subsidy.submitted")}</p>
                 <p className="text-gray-500">
                   {new Date(application.appliedDate).toLocaleDateString("en-IN", {
                     year: "numeric",
@@ -141,7 +143,7 @@ export default function SubsidyStatus() {
                   2
                 </div>
                 <div className="ml-4 pt-1">
-                  <p className="text-gray-600 font-semibold">Under Review</p>
+                  <p className="text-gray-600 font-semibold">{t("subsidy.underReview")}</p>
                   <p className="text-gray-500">
                     {new Date(application.reviewedDate).toLocaleDateString(
                       "en-IN",
@@ -159,7 +161,7 @@ export default function SubsidyStatus() {
                   3
                 </div>
                 <div className="ml-4 pt-1">
-                  <p className="text-gray-600 font-semibold">Approved</p>
+                  <p className="text-gray-600 font-semibold">{t("subsidy.approved")}</p>
                   <p className="text-gray-500">
                     {new Date(application.approvalDate).toLocaleDateString(
                       "en-IN",
@@ -176,7 +178,7 @@ export default function SubsidyStatus() {
           {/* Application Details */}
           <div className="bg-white rounded-lg shadow-lg p-8">
             <h3 className="text-2xl font-bold text-gray-800 mb-6">
-              📋 Application Details
+              📋 {t("subsidy.applicationDetails")}
             </h3>
 
             <div className="space-y-4">

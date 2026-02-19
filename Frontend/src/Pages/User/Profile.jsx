@@ -2,9 +2,11 @@ import { useAuth } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getMyCustomer } from "../../services/customerService";
+import { useI18n } from "../../Context/I18nContext";
 
 export default function Profile() {
   const { user, logout } = useAuth();
+  const { language, setLanguage, t } = useI18n();
   const navigate = useNavigate();
 
   const [customer, setCustomer] = useState(null);
@@ -41,7 +43,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-600">
-        Loading profile...
+        {t("common.loading")}
       </div>
     );
   }
@@ -52,76 +54,83 @@ export default function Profile() {
 
         {/* HEADER */}
         <h2 className="text-2xl font-bold text-green-700 mb-6">
-          Customer Profile
+          {t("profile.title")}
         </h2>
 
         {/* ACCOUNT DETAILS */}
         <section className="mb-8">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Account Details
+            {t("profile.accountDetails")}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <Info label="Email" value={user?.email} />
-            <Info label="Role" value={user?.role} />
+            <Info label={t("profile.email")} value={user?.email} />
+            <Info label={t("profile.role")} value={user?.role} />
             <Info
-              label="Connection Type"
-              value={user?.connectionType || "Residential"}
+              label={t("profile.connectionType")}
+              value={user?.connectionType || t("auth.residential")}
             />
+            <div className="p-3 rounded border bg-gray-50">
+              <p className="text-gray-500 text-xs mb-1">{t("profile.language")}</p>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="w-full border rounded px-2 py-1 bg-white text-gray-800"
+              >
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="gu">Gujarati</option>
+              </select>
+            </div>
           </div>
         </section>
 
         {/* CUSTOMER DETAILS */}
         <section className="mb-8">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Solar System Details
+            {t("profile.solarDetails")}
           </h3>
 
           {customer ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
-                <Info label="Customer Name" value={customer.fullName} />
-                <Info label="Phone" value={customer.phone} />
-                <Info label="System Capacity" value={`${customer.systemCapacityKW} kW`} />
+                <Info label={t("profile.customerName")} value={customer.fullName} />
+                <Info label={t("profile.phone")} value={customer.phone} />
+                <Info label={t("profile.systemCapacity")} value={`${customer.systemCapacityKW} kW`} />
                 <Info
-                  label="Installation Date"
+                  label={t("profile.installationDate")}
                   value={
                     customer.installationDate
                       ? customer.installationDate.slice(0, 10)
                       : "—"
                   }
                 />
-                <StatusBadge status={customer.status} />
+                <StatusBadge status={customer.status} label={t("profile.systemStatus")} />
               </div>
 
               {/* SITE DETAILS */}
               <div className="border-t pt-6">
                 <h4 className="text-md font-semibold text-gray-700 mb-3">
-                  Site Location Details
+                  {t("profile.siteLocation")}
                 </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <Info label="City" value={customer.city} />
-                  <Info label="State" value={customer.state} />
-                  <Info label="Pincode" value={customer.pincode} />
+                  <Info label={t("profile.city")} value={customer.city} />
+                  <Info label={t("profile.state")} value={customer.state} />
+                  <Info label={t("profile.pincode")} value={customer.pincode} />
                 </div>
               </div>
 
               {/* INACTIVE WARNING */}
               {customer.status === "Inactive" && (
                 <div className="mt-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded">
-                  ⚠️ Your solar system is currently inactive.  
-                  Booking and energy monitoring may be restricted.
-                  <br />
-                  Please contact support for assistance.
+                  ⚠️ {t("profile.inactiveWarning")}
                 </div>
               )}
             </>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded">
-              Customer profile not created yet.
-              <br />
-              Please contact support to complete installation details.
+              {t("profile.profileMissing")}
             </div>
           )}
 
@@ -138,7 +147,7 @@ export default function Profile() {
             onClick={handleLogout}
             className="bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-lg font-semibold transition"
           >
-            Logout
+            {t("common.logout")}
           </button>
         </div>
       </div>
@@ -157,7 +166,7 @@ function Info({ label, value }) {
   );
 }
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, label }) {
   const color =
     status === "Active"
       ? "bg-green-100 text-green-700 border-green-200"
@@ -165,7 +174,7 @@ function StatusBadge({ status }) {
 
   return (
     <div className={`p-3 rounded border ${color}`}>
-      <p className="text-xs mb-1">System Status</p>
+      <p className="text-xs mb-1">{label}</p>
       <p className="font-semibold">{status}</p>
     </div>
   );

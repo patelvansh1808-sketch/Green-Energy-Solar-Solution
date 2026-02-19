@@ -1,12 +1,15 @@
+import { useI18n } from "../../Context/I18nContext";
+
 export default function SubsidyEligibility() {
+  const { t } = useI18n();
   return (
     <div className="p-6 card">
-      <h1 className="title">Subsidy Eligibility</h1>
+      <h1 className="title">{t("subsidy.eligibilityTitle")}</h1>
 
-      <p>Status: ✅ Eligible</p>
-      <p>Subsidy: <b>40%</b></p>
-      <p>Subsidy Amount: <b>₹72,000</b></p>
-      <p>Final Cost: <b>₹1,08,000</b></p>
+      <p>{t("subsidy.status")}: {t("subsidy.eligible")}</p>
+      <p>{t("subsidy.subsidyPercentage")}: <b>40%</b></p>
+      <p>{t("subsidy.subsidyAmount")}: <b>₹72,000</b></p>
+      <p>{t("subsidy.finalCost")}: <b>₹1,08,000</b></p>
     </div>
   );
 }

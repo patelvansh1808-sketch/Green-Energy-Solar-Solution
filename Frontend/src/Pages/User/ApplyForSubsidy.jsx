@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useI18n } from "../../Context/I18nContext";
 import subsidyApplicationService from "../../services/subsidyApplicationService";
 
 export default function ApplyForSubsidy() {
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     bankDetails: {
       accountHolder: "",
@@ -61,14 +63,14 @@ export default function ApplyForSubsidy() {
       !formData.bankDetails.ifscCode ||
       !formData.bankDetails.bankName
     ) {
-      setError("Bank details are required");
+      setError(t("subsidy.bankDetailsRequired"));
       return;
     }
 
     // Check if all documents are uploaded
     const allDocsUploaded = Object.values(documents).every((doc) => doc !== null);
     if (!allDocsUploaded) {
-      setError("Please upload all required documents");
+      setError(t("subsidy.allDocsRequired"));
       return;
     }
 
@@ -89,7 +91,7 @@ export default function ApplyForSubsidy() {
 
       await subsidyApplicationService.createSubsidyApplication(submitFormData);
 
-      alert("✅ Subsidy application submitted successfully!");
+      alert(t("subsidy.applicationSubmitted"));
 
       // Reset form
       setFormData({
@@ -143,10 +145,10 @@ export default function ApplyForSubsidy() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Apply for Subsidy
+            {t("subsidy.applyTitle")}
           </h1>
           <p className="text-gray-600">
-            Submit your application with required documents. The subsidy amount will be determined by the government guidelines.
+            {t("subsidy.applySubtitle")}
           </p>
         </div>
 
@@ -175,7 +177,7 @@ export default function ApplyForSubsidy() {
           {/* Required Documents */}
           <div>
             <h2 className="text-xl font-semibold text-gray-700 mb-1 flex items-center">
-              <span className="mr-2">📄</span> Required Documents <span className="text-red-500 ml-1">*</span>
+              <span className="mr-2">📄</span> {t("subsidy.documents")} <span className="text-red-500 ml-1">*</span>
             </h2>
             <p className="text-gray-600 text-sm mb-4">Please upload clear copies of the following documents:</p>
 
@@ -228,14 +230,14 @@ export default function ApplyForSubsidy() {
           {/* Bank Account Details */}
           <div className="bg-blue-50 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-gray-700 mb-1 flex items-center">
-              <span className="mr-2">💳</span> Bank Account Details
+              <span className="mr-2">💳</span> {t("subsidy.bankDetails")}
             </h2>
             <p className="text-gray-600 text-sm mb-4">For transferring the approved subsidy amount</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Account Holder Name <span className="text-red-500">*</span>
+                  {t("subsidy.accountHolder")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -249,7 +251,7 @@ export default function ApplyForSubsidy() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Account Number <span className="text-red-500">*</span>
+                  {t("subsidy.accountNumber")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -263,7 +265,7 @@ export default function ApplyForSubsidy() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  IFSC Code <span className="text-red-500">*</span>
+                  {t("subsidy.ifscCode")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -277,7 +279,7 @@ export default function ApplyForSubsidy() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bank Name <span className="text-red-500">*</span>
+                  {t("subsidy.bankName")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -312,7 +314,7 @@ export default function ApplyForSubsidy() {
               disabled={loading}
               className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Submitting..." : "Submit Application"}
+              {loading ? t("subsidy.submitting") : t("subsidy.submitApplication")}
             </button>
           </div>
         </form>

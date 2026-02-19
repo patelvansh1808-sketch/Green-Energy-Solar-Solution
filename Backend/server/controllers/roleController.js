@@ -13,14 +13,14 @@ exports.getAllUsers = async (req, res) => {
     // Filter by role
     if (role && role !== "all") {
       if (role === "staff") {
-        // Staff includes: admin, sales, engineer, support (NOT user/customer)
-        query.role = { $in: ["admin", "sales", "engineer", "support"] };
+        // Staff includes: admin, sales, engineer, technician, support (NOT user/customer)
+        query.role = { $in: ["admin", "sales", "engineer", "technician", "support"] };
       } else {
         query.role = role;
       }
     } else {
       // Default: show only staff, not regular users
-      query.role = { $in: ["admin", "sales", "engineer", "support"] };
+      query.role = { $in: ["admin", "sales", "engineer", "technician", "support"] };
     }
     
     // Filter by active status
@@ -59,7 +59,7 @@ exports.updateUserRole = async (req, res) => {
     const { role, department, isActive } = req.body;
     
     // Validate role
-    const validRoles = ["user", "admin", "sales", "engineer", "support"];
+    const validRoles = ["user", "admin", "sales", "engineer", "technician", "support"];
     if (role && !validRoles.includes(role)) {
       return res.status(400).json({ message: "Invalid role specified" });
     }
@@ -119,10 +119,10 @@ exports.createStaffUser = async (req, res) => {
     }
     
     // Validate role (staff only)
-    const staffRoles = ["admin", "sales", "engineer", "support"];
+    const staffRoles = ["admin", "sales", "engineer", "technician", "support"];
     if (!staffRoles.includes(role)) {
       return res.status(400).json({ 
-        message: "Invalid staff role. Must be admin, sales, engineer, or support" 
+        message: "Invalid staff role. Must be admin, sales, engineer, technician, or support" 
       });
     }
     

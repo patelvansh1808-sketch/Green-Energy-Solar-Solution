@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./Context/AuthContext";
+import { I18nProvider } from "./Context/I18nContext";
 import { useEffect, useState } from "react";
 
 /* ===== PUBLIC PAGES ===== */
@@ -16,6 +17,7 @@ import Dashboard from "./Pages/User/Dashboard";
 import Alerts from "./Pages/User/Alerts";
 import Booking from "./Pages/User/Booking";
 import BookingStatus from "./Pages/User/BookingStatus";
+import Maintenance from "./Pages/User/Maintenance";
 import SubsidyEligibility from "./Pages/User/SubsidyEligibility";
 import ApplyForSubsidy from "./Pages/User/ApplyForSubsidy";
 import SubsidyStatus from "./Pages/User/SubsidyStatus";
@@ -39,6 +41,7 @@ import TicketManagement from "./Pages/Admin/TicketManagement";
 import FinancialAnalytics from "./Pages/Admin/FinancialAnalytics";
 import InventoryManagement from "./Pages/Admin/InventoryManagement";
 import AdminProfile from "./Pages/Admin/AdminProfile";
+import MaintenanceOverview from "./Pages/Admin/MaintenanceOverview";
 
 /* ===== CRM PAGES ===== */
 import CRMDashboard from "./Pages/CRMDashboard";
@@ -94,6 +97,14 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <BookingStatus />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/maintenance"
+          element={
+            <ProtectedRoute>
+              <Maintenance />
             </ProtectedRoute>
           }
         />
@@ -189,6 +200,7 @@ function AnimatedRoutes() {
           <Route path="subsidy" element={<SubsidyRules />} />
           <Route path="finance" element={<FinancialAnalytics />} />
           <Route path="inventory" element={<InventoryManagement />} />
+          <Route path="maintenance" element={<MaintenanceOverview />} />
           <Route path="roles" element={<RoleManagement />} />
           <Route path="projects" element={<ProjectTracking />} />
           <Route path="tickets" element={<TicketManagement />} />
@@ -196,7 +208,7 @@ function AnimatedRoutes() {
         <Route
           path="/engineer/dashboard"
           element={
-            <ProtectedRoute role="engineer">
+            <ProtectedRoute role={["engineer", "technician"]}>
               <EngineerDashboard />
             </ProtectedRoute>
           }
@@ -239,11 +251,13 @@ export default function App() {
   if (loading) return <LoadingScreen />;
 
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppShell />
-      </BrowserRouter>
-    </AuthProvider>
+    <I18nProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppShell />
+        </BrowserRouter>
+      </AuthProvider>
+    </I18nProvider>
   );
 }
 

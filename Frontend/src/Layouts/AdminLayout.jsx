@@ -10,6 +10,7 @@ const navItems = [
   { to: "/admin/subsidy-applications", label: "Subsidy Applications" },
   { to: "/admin/finance", label: "Financial Analytics" },
   { to: "/admin/inventory", label: "Inventory" },
+  { to: "/admin/maintenance", label: "Maintenance" },
   { to: "/admin/tickets", label: "Tickets" },
   { to: "/admin/roles", label: "Role Management" },
 ];

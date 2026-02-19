@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useI18n } from "../../Context/I18nContext";
 
 function Feature({ title, desc, icon, to }) {
   return (
@@ -76,26 +77,27 @@ function FAQItem({ question, answer }) {
 }
 
 export default function LandingPage() {
+  const { t } = useI18n();
   return (
     <div className="bg-white min-h-screen">
       {/* HERO SECTION */}
       <section className="bg-gradient-to-br from-green-50 to-blue-50 py-20">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
           <div>
-            <p className="text-green-700 font-semibold uppercase tracking-wide mb-2">Welcome to Our Platform</p>
+            <p className="text-green-700 font-semibold uppercase tracking-wide mb-2">{t("landing.welcome")}</p>
             <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
-              Smart Solar Energy <br />
-              <span className="text-green-700">Management System</span>
+              {t("landing.heroTitle")} <br />
+              <span className="text-green-700">{t("landing.heroHighlight")}</span>
             </h1>
             <p className="text-gray-700 text-lg mb-8 leading-relaxed">
-              Greenergy Solar Solution offers trusted, end-to-end solar management with premium analytics, AI power prediction, and government subsidy support. Maximize your savings and sustainability.
+              {t("landing.heroBody")}
             </p>
             <div className="flex flex-wrap gap-4">
               <Link to="/dashboard" className="bg-green-700 hover:bg-green-800 text-white px-8 py-3 rounded-lg font-semibold transition shadow-md">
-                View Dashboard
+                {t("landing.viewDashboard")}
               </Link>
               <Link to="/booking" className="border-2 border-green-700 text-green-700 hover:bg-green-50 px-8 py-3 rounded-lg font-semibold transition">
-                Book Solar Panel
+                {t("landing.bookSolar")}
               </Link>
             </div>
           </div>
@@ -113,12 +115,12 @@ export default function LandingPage() {
       {/* BENEFITS SECTION */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">Benefits to Save Energy</h2>
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">{t("landing.benefitsTitle")}</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <BenefitCard icon="✓" title="MNRE-APPROVED & GUVNL REGISTERED" desc="All systems comply with government norms and are eligible for subsidies and net metering." link="Read More" />
-            <BenefitCard icon="⭐" title="PREMIUM QUALITY COMPONENTS" desc="We use tier-1 solar panels, inverters, and mounting structures for optimal performance." link="Read More" />
-            <BenefitCard icon="🤝" title="TRUST, TRANSPARENCY & COMMITMENT" desc="No hidden costs. No false promises. Just reliable, affordable solar energy solutions." link="Read More" />
-            <BenefitCard icon="🛠" title="DEDICATED AFTER-SALES SUPPORT" desc="Our relationship doesn't end after installation. Reliable service and performance monitoring." link="Read More" />
+            <BenefitCard icon="✓" title="MNRE-APPROVED & GUVNL REGISTERED" desc="All systems comply with government norms and are eligible for subsidies and net metering." link={t("landing.readMore")} />
+            <BenefitCard icon="⭐" title="PREMIUM QUALITY COMPONENTS" desc="We use tier-1 solar panels, inverters, and mounting structures for optimal performance." link={t("landing.readMore")} />
+            <BenefitCard icon="🤝" title="TRUST, TRANSPARENCY & COMMITMENT" desc="No hidden costs. No false promises. Just reliable, affordable solar energy solutions." link={t("landing.readMore")} />
+            <BenefitCard icon="🛠" title="DEDICATED AFTER-SALES SUPPORT" desc="Our relationship doesn't end after installation. Reliable service and performance monitoring." link={t("landing.readMore")} />
           </div>
         </div>
       </section>
@@ -126,7 +128,7 @@ export default function LandingPage() {
       {/* KEY PLATFORM FEATURES */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">Key Platform Features</h2>
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">{t("landing.keyFeatures")}</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <Feature title="Solar Analytics" desc="Track daily, monthly, and yearly energy generation with visual charts." icon="📊" />
             <Feature title="AI Power Prediction" desc="Predict future solar output using machine learning algorithms." icon="🤖" />
@@ -145,13 +147,13 @@ export default function LandingPage() {
       {/* SERVICES SECTION */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <p className="text-green-700 font-semibold uppercase tracking-wide mb-2 text-center">OUR SOLAR SERVICES</p>
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">Produce Your Own Clean, Save The Environment</h2>
+          <p className="text-green-700 font-semibold uppercase tracking-wide mb-2 text-center">{t("landing.servicesLabel")}</p>
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">{t("landing.servicesTitle")}</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <ServiceCard icon="🏠" title="Residential Solutions" desc="Power your home with solar energy and reduce monthly electricity bills efficiently." link="Read More" />
-            <ServiceCard icon="🏭" title="Industrial Solutions" desc="Save big with high-capacity solar systems for businesses, factories, and institutions." link="Read More" />
-            <ServiceCard icon="🏫" title="Solar for Institutions" desc="Solar installations for public buildings, schools, and hospitals under government norms." link="Read More" />
-            <ServiceCard icon="🔌" title="Off-Grid Systems" desc="Power remote areas with independent solar energy—no grid needed." link="Read More" />
+            <ServiceCard icon="🏠" title="Residential Solutions" desc="Power your home with solar energy and reduce monthly electricity bills efficiently." link={t("landing.readMore")} />
+            <ServiceCard icon="🏭" title="Industrial Solutions" desc="Save big with high-capacity solar systems for businesses, factories, and institutions." link={t("landing.readMore")} />
+            <ServiceCard icon="🏫" title="Solar for Institutions" desc="Solar installations for public buildings, schools, and hospitals under government norms." link={t("landing.readMore")} />
+            <ServiceCard icon="🔌" title="Off-Grid Systems" desc="Power remote areas with independent solar energy—no grid needed." link={t("landing.readMore")} />
           </div>
         </div>
       </section>
@@ -161,18 +163,18 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 text-center">
           <div>
             <h2 className="text-5xl font-bold mb-2">2000+</h2>
-            <p className="text-lg opacity-90">Happy Customers</p>
-            <p className="text-sm opacity-75">Happy customers trust us for their solar energy needs</p>
+            <p className="text-lg opacity-90">{t("landing.statsHappyCustomers")}</p>
+            <p className="text-sm opacity-75">{t("landing.statsHappyCustomersDesc")}</p>
           </div>
           <div>
             <h2 className="text-5xl font-bold mb-2">1500+</h2>
-            <p className="text-lg opacity-90">Solar Solutions</p>
-            <p className="text-sm opacity-75">Empowered homes, businesses, and farms across India</p>
+            <p className="text-lg opacity-90">{t("landing.statsSolarSolutions")}</p>
+            <p className="text-sm opacity-75">{t("landing.statsSolarSolutionsDesc")}</p>
           </div>
           <div>
             <h2 className="text-5xl font-bold mb-2">4.9/5</h2>
-            <p className="text-lg opacity-90">Trust Score</p>
-            <p className="text-sm opacity-75">Rated by 100+ customers on Google Reviews</p>
+            <p className="text-lg opacity-90">{t("landing.statsTrust")}</p>
+            <p className="text-sm opacity-75">{t("landing.statsTrustDesc")}</p>
           </div>
         </div>
       </section>
@@ -180,10 +182,10 @@ export default function LandingPage() {
       {/* TESTIMONIALS SECTION */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <p className="text-green-700 font-semibold uppercase tracking-wide mb-2 text-center">CUSTOMER FEEDBACKS</p>
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">Highest Rated Company</h2>
+          <p className="text-green-700 font-semibold uppercase tracking-wide mb-2 text-center">{t("landing.feedbackLabel")}</p>
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">{t("landing.feedbackTitle")}</h2>
           <div className="text-center mb-16">
-            <p className="text-gray-700 text-lg mb-4">Proud to be the highest-rated solar company on Google with 5-star customer satisfaction.</p>
+            <p className="text-gray-700 text-lg mb-4">{t("landing.feedbackSubtitle")}</p>
             <div className="text-5xl font-bold text-green-700 mb-2">4.9/5</div>
             <p className="text-gray-600">Rated by over 100+ customers</p>
           </div>
@@ -198,12 +200,12 @@ export default function LandingPage() {
       {/* FAQ SECTION */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-3xl mx-auto px-6">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">Some General Questions?</h2>
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-16">{t("landing.faqTitle")}</h2>
           <div className="space-y-6">
-            <FAQItem question="What is a solar rooftop system?" answer="A solar rooftop system uses solar panels to convert sunlight into electricity for homes or businesses. It includes panels, inverters, mounting structures, and monitoring systems." />
-            <FAQItem question="Is solar power reliable during cloudy days?" answer="Yes, solar panels generate power even on cloudy days. While output is reduced, modern systems are designed to work efficiently across various weather conditions." />
-            <FAQItem question="Do I need to clean the panels regularly?" answer="Solar panels require minimal maintenance. Occasional cleaning (every 6 months) helps maintain optimal efficiency, especially in dusty areas." />
-            <FAQItem question="What if there is a technical issue later?" answer="We provide dedicated after-sales support with regular performance monitoring and quick resolution of any technical issues." />
+            <FAQItem question={t("landing.faq1Q")} answer={t("landing.faq1A")} />
+            <FAQItem question={t("landing.faq2Q")} answer={t("landing.faq2A")} />
+            <FAQItem question={t("landing.faq3Q")} answer={t("landing.faq3A")} />
+            <FAQItem question={t("landing.faq4Q")} answer={t("landing.faq4A")} />
           </div>
         </div>
       </section>
@@ -211,14 +213,14 @@ export default function LandingPage() {
       {/* CTA SECTION */}
       <section className="bg-green-700 text-white py-16">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold mb-6">Go Solar. Save Money. Save Earth.</h2>
-          <p className="text-lg mb-8 opacity-90">Start your solar journey today with smart analytics, AI prediction, and government subsidy support.</p>
+          <h2 className="text-4xl font-bold mb-6">{t("landing.ctaTitle")}</h2>
+          <p className="text-lg mb-8 opacity-90">{t("landing.ctaSubtitle")}</p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link to="/register" className="bg-white text-green-700 hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold transition">
-              Get Started
+              {t("landing.getStarted")}
             </Link>
             <Link to="/booking" className="border-2 border-white text-white hover:bg-green-800 px-8 py-3 rounded-lg font-semibold transition">
-              Book Solar Panel
+              {t("landing.bookSolar")}
             </Link>
           </div>
         </div>
@@ -228,17 +230,17 @@ export default function LandingPage() {
       <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 text-center">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Call Us</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("landing.callUs")}</h3>
             <p className="text-green-700 text-lg font-semibold">+91 8511365712</p>
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Email Us</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("landing.emailUs")}</h3>
             <p className="text-green-700 text-lg font-semibold">teamsuryaurjaa@gmail.com</p>
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Office Hours</h3>
-            <p className="text-gray-700">Mon - Fri: 8:00 - 18:00</p>
-            <p className="text-gray-700">Sunday: 8:00 - 14:00</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("landing.officeHours")}</h3>
+            <p className="text-gray-700">{t("landing.officeWeek")}</p>
+            <p className="text-gray-700">{t("landing.officeSunday")}</p>
           </div>
         </div>
       </section>
@@ -255,15 +257,15 @@ export default function LandingPage() {
               <p className="text-sm leading-relaxed text-slate-300">Trusted solar energy solutions with premium components and expert execution.</p>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-4">Useful Links</h4>
+              <h4 className="text-white font-bold mb-4">{t("landing.usefulLinks")}</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link to="/" className="hover:text-cyan-300 transition">Home</Link></li>
-                <li><Link to="/about" className="hover:text-cyan-300 transition">About Us</Link></li>
-                <li><Link to="/contact" className="hover:text-cyan-300 transition">Contact Us</Link></li>
+                <li><Link to="/" className="hover:text-cyan-300 transition">{t("nav.home")}</Link></li>
+                <li><Link to="/about" className="hover:text-cyan-300 transition">{t("landing.aboutUs")}</Link></li>
+                <li><Link to="/contact" className="hover:text-cyan-300 transition">{t("landing.contactUs")}</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-4">Services</h4>
+              <h4 className="text-white font-bold mb-4">{t("landing.services")}</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link to="/booking" className="hover:text-cyan-300 transition">Residential Solutions</Link></li>
                 <li><Link to="/booking" className="hover:text-cyan-300 transition">Commercial Solutions</Link></li>
@@ -271,7 +273,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-4">Follow Us</h4>
+              <h4 className="text-white font-bold mb-4">{t("landing.followUs")}</h4>
               <ul className="space-y-2 text-sm">
                 <li><a href="https://facebook.com" className="hover:text-cyan-300 transition" target="_blank" rel="noreferrer">Facebook</a></li>
                 <li><a href="https://youtube.com" className="hover:text-cyan-300 transition" target="_blank" rel="noreferrer">YouTube</a></li>
@@ -280,8 +282,8 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-[#0f2742] pt-8 text-center text-sm text-slate-300">
-            <p>&copy; 2025 Greenergy Solar Solution. All Rights Reserved.</p>
-            <p className="text-xs mt-2">Developed with <span className="text-cyan-300">❤</span> by Tech Team</p>
+            <p>{t("landing.rights")}</p>
+            <p className="text-xs mt-2">{t("landing.developedBy")}</p>
           </div>
         </div>
       </footer>

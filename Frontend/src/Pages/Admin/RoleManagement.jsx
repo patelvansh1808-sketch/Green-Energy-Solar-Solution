@@ -149,6 +149,7 @@ export default function RoleManagement() {
       admin: "bg-purple-100 text-purple-800 border-purple-300",
       sales: "bg-blue-100 text-blue-800 border-blue-300",
       engineer: "bg-green-100 text-green-800 border-green-300",
+      technician: "bg-cyan-100 text-cyan-800 border-cyan-300",
       support: "bg-yellow-100 text-yellow-800 border-yellow-300",
       user: "bg-gray-100 text-gray-800 border-gray-300",
     };
@@ -156,6 +157,7 @@ export default function RoleManagement() {
       admin: "👑",
       sales: "💼",
       engineer: "🔧",
+      technician: "🛠️",
       support: "🎧",
       user: "👤",
     };
@@ -231,7 +233,7 @@ export default function RoleManagement() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-blue-700">
                 {statistics.byRole
-                  .filter((r) => ["sales", "engineer", "support"].includes(r._id))
+                  .filter((r) => ["sales", "engineer", "technician", "support"].includes(r._id))
                   .reduce((sum, r) => sum + r.count, 0)}
               </div>
               <div className="text-sm text-blue-600">Staff</div>
@@ -263,6 +265,7 @@ export default function RoleManagement() {
                 <option value="admin">Admin</option>
                 <option value="sales">Sales</option>
                 <option value="engineer">Engineer</option>
+                <option value="technician">Technician</option>
                 <option value="support">Support</option>
               </select>
             </div>
@@ -449,6 +452,7 @@ export default function RoleManagement() {
                   >
                     <option value="sales">Sales</option>
                     <option value="engineer">Engineer</option>
+                    <option value="technician">Technician</option>
                     <option value="support">Support</option>
                     <option value="admin">Admin</option>
                   </select>
@@ -525,6 +529,7 @@ export default function RoleManagement() {
                   <option value="user">User</option>
                   <option value="sales">Sales</option>
                   <option value="engineer">Engineer</option>
+                  <option value="technician">Technician</option>
                   <option value="support">Support</option>
                   <option value="admin">Admin</option>
                 </select>

@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../Context/AuthContext";
+import { useI18n } from "../../Context/I18nContext";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useI18n();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +33,7 @@ export default function Login() {
         navigate("/admin");
       } else if (role === "support") {
         navigate("/admin/tickets");
-      } else if (role === "engineer") {
+      } else if (role === "engineer" || role === "technician") {
         navigate("/engineer/dashboard");
       } else {
         navigate("/");
@@ -51,13 +53,13 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white">
       <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-8 animate-slideUp">
         <h2 className="text-2xl font-bold text-green-700 text-center mb-6">
-          Login to Your Account
+          {t("auth.loginTitle")}
         </h2>
 
         <form className="space-y-4" onSubmit={submitHandler}>
           <input
             type="email"
-            placeholder="Email address"
+            placeholder={t("auth.email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -66,7 +68,7 @@ export default function Login() {
 
           <input
             type="password"
-            placeholder="Password"
+            placeholder={t("auth.password")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -78,7 +80,7 @@ export default function Login() {
             disabled={loading}
             className="w-full bg-green-700 hover:bg-green-800 text-white py-2 rounded-lg font-semibold transition"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? t("auth.loggingIn") : t("common.login")}
           </button>
         </form>
 
@@ -88,7 +90,7 @@ export default function Login() {
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white text-gray-500">Or continue with</span>
+            <span className="px-4 bg-white text-gray-500">{t("auth.continueWith")}</span>
           </div>
         </div>
 
@@ -116,7 +118,7 @@ export default function Login() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          Sign in with Google
+          {t("auth.google")}
         </button>
 
         <div className="text-sm text-center mt-4">
@@ -124,14 +126,14 @@ export default function Login() {
             to="/forgot-password"
             className="text-green-700 hover:underline"
           >
-            Forgot password?
+            {t("auth.forgotPassword")}
           </Link>
         </div>
 
         <p className="text-sm text-center mt-6">
-          Don’t have an account?{" "}
+          {t("auth.noAccount")}{" "}
           <Link to="/register" className="text-green-700 font-semibold">
-            Register
+            {t("auth.register")}
           </Link>
         </p>
       </div>

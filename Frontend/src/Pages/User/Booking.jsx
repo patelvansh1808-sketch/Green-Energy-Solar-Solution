@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import bookingService from "../../services/bookingService";
 import { LocationService } from "../../services/locationService";
 import { useAuth } from "../../Context/AuthContext";
+import { useI18n } from "../../Context/I18nContext";
 
 export default function Booking() {
   const { user } = useAuth();
+  const { t } = useI18n();
 
   // Form State
   const [formData, setFormData] = useState({
@@ -59,17 +61,17 @@ export default function Booking() {
     const missing = required.filter((field) => !formData[field]);
 
     if (missing.length > 0) {
-      setError(`Missing required fields: ${missing.join(", ")}`);
+      setError(t("booking.missingRequired", "Missing required fields"));
       return false;
     }
 
     if (formData.pincode.length !== 6) {
-      setError("Pincode must be 6 digits");
+      setError(t("booking.pincodeLength", "Pincode must be 6 digits"));
       return false;
     }
 
     if (formData.contactPhone.length !== 10) {
-      setError("Phone number must be 10 digits");
+      setError(t("booking.phoneLength", "Phone number must be 10 digits"));
       return false;
     }
 
@@ -181,17 +183,17 @@ export default function Booking() {
 
   const systemInfo = {
     Residential: {
-      desc: "For homes and apartments (1-10 kW)",
+      desc: t("booking.residentialDesc", "For homes and apartments (1-10 kW)"),
       pricePerKW: 50000,
       icon: "🏠",
     },
     Commercial: {
-      desc: "For small businesses and offices (10-50 kW)",
+      desc: t("booking.commercialDesc", "For small businesses and offices (10-50 kW)"),
       pricePerKW: 40000,
       icon: "🏢",
     },
     Industrial: {
-      desc: "For factories and large facilities (50+ kW)",
+      desc: t("booking.industrialDesc", "For factories and large facilities (50+ kW)"),
       pricePerKW: 35000,
       icon: "🏭",
     },
@@ -203,9 +205,9 @@ export default function Booking() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
-            ☀️ Solar Installation Booking System
+            ☀️ {t("booking.title", "Solar Installation Booking")}
           </h1>
-          <p className="text-gray-600">Professional CRM + Operations Management</p>
+          <p className="text-gray-600">{t("booking.subtitle", "Professional CRM + Operations Management")}</p>
         </div>
 
         {/* Alerts */}
@@ -253,14 +255,14 @@ export default function Booking() {
         {/* STEP 1: Project Details */}
         {activeStep === 1 && (
           <div className="bg-white rounded-lg shadow-2xl p-8 mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Step 1: Project Details</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">{t("booking.stepProjectDetails")}</h2>
 
             <form onSubmit={generateQuotation} className="space-y-6">
               {/* Row 1: System Type & Capacity */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    System Type <span className="text-red-500">*</span>
+                    {t("booking.systemType")} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="systemType"
@@ -277,7 +279,7 @@ export default function Booking() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    System Capacity (kW) <span className="text-red-500">*</span>
+                    {t("booking.capacity")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -297,7 +299,7 @@ export default function Booking() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Roof Type
+                    {t("booking.roofType")}
                   </label>
                   <select
                     name="roofType"
@@ -305,18 +307,18 @@ export default function Booking() {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition"
                   >
-                    <option value="Concrete">Concrete</option>
-                    <option value="Metal">Metal</option>
-                    <option value="Tile">Tile</option>
-                    <option value="RCC">RCC</option>
-                    <option value="Asbestos">Asbestos</option>
-                    <option value="Ground Mount">Ground Mount</option>
+                    <option value="Concrete">{t("booking.concrete")}</option>
+                    <option value="Metal">{t("booking.metal")}</option>
+                    <option value="Tile">{t("booking.tile")}</option>
+                    <option value="RCC">{t("booking.rcc")}</option>
+                    <option value="Asbestos">{t("booking.asbestos")}</option>
+                    <option value="Ground Mount">{t("booking.groundMount")}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Roof Area (sq.m) - Optional
+                    {t("booking.roofArea")}
                   </label>
                   <input
                     type="number"
@@ -334,14 +336,14 @@ export default function Booking() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    State <span className="text-red-500">*</span>
+                    {t("booking.state")} <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.state}
                     onChange={(e) => handleStateChange(e.target.value)}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition"
                   >
-                    <option value="">Select State</option>
+                    <option value="">{t("booking.selectState")}</option>
                     {states.map((state) => (
                       <option key={state} value={state}>
                         {state}
@@ -352,7 +354,7 @@ export default function Booking() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    District
+                    {t("booking.district")}
                   </label>
                   <select
                     value={formData.district}
@@ -365,7 +367,7 @@ export default function Booking() {
                     disabled={!formData.state}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition disabled:bg-gray-100"
                   >
-                    <option value="">Select District</option>
+                    <option value="">{t("booking.selectDistrict")}</option>
                     {districts.map((district) => (
                       <option key={district} value={district}>
                         {district}
@@ -379,7 +381,7 @@ export default function Booking() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Contact Person <span className="text-red-500">*</span>
+                    {t("booking.contactPerson")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -393,7 +395,7 @@ export default function Booking() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Phone Number <span className="text-red-500">*</span>
+                    {t("booking.contactPhone")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -410,7 +412,7 @@ export default function Booking() {
               {/* Row 5: Installation Address */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Installation Address <span className="text-red-500">*</span>
+                  {t("booking.address")} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   name="address"
@@ -426,7 +428,7 @@ export default function Booking() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Pincode <span className="text-red-500">*</span>
+                    {t("booking.pincode")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -441,7 +443,7 @@ export default function Booking() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Financing Option
+                    {t("booking.financingOption")}
                   </label>
                   <select
                     name="financingOption"
@@ -449,11 +451,11 @@ export default function Booking() {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition"
                   >
-                    <option value="Full Payment">Full Payment</option>
-                    <option value="3-Year EMI">3-Year EMI</option>
-                    <option value="5-Year EMI">5-Year EMI</option>
-                    <option value="7-Year EMI">7-Year EMI</option>
-                    <option value="MNRE Subsidy">MNRE Subsidy</option>
+                    <option value="Full Payment">{t("booking.fullPayment")}</option>
+                    <option value="3-Year EMI">{t("booking.threeYearEMI")}</option>
+                    <option value="5-Year EMI">{t("booking.fiveYearEMI")}</option>
+                    <option value="7-Year EMI">{t("booking.sevenYearEMI")}</option>
+                    <option value="MNRE Subsidy">{t("booking.mnreSubsidy")}</option>
                   </select>
                 </div>
               </div>
@@ -461,7 +463,7 @@ export default function Booking() {
               {/* Remarks */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Special Requirements / Remarks (Optional)
+                  {t("booking.remarks")}
                 </label>
                 <textarea
                   name="remarks"
@@ -479,7 +481,7 @@ export default function Booking() {
                 disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
-                {loading ? "⏳ Generating Quotation..." : "📋 Generate Quotation"}
+                {loading ? "⏳ " + t("booking.loading") : "📋 " + t("booking.generateQuotation")}
               </button>
             </form>
           </div>
@@ -490,25 +492,25 @@ export default function Booking() {
           <div className="space-y-6">
             {/* Quotation Card */}
             <div className="bg-white rounded-lg shadow-2xl p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-8">Step 2: Review Quotation</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-8">{t("booking.stepReviewQuotation")}</h2>
 
               {/* System Summary */}
               <div className="bg-gray-800 p-6 rounded-lg mb-8 border border-gray-700">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <p className="text-gray-400 text-sm font-semibold">System Type</p>
+                    <p className="text-gray-400 text-sm font-semibold">{t("booking.systemType")}</p>
                     <p className="text-xl font-bold text-gray-100">{systemInfo[formData.systemType].icon} {formData.systemType}</p>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-sm font-semibold">Capacity</p>
+                    <p className="text-gray-400 text-sm font-semibold">{t("booking.capacity")}</p>
                     <p className="text-xl font-bold text-gray-100">{formData.capacity} kW</p>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-sm font-semibold">Location</p>
+                    <p className="text-gray-400 text-sm font-semibold">{t("booking.state")}</p>
                     <p className="text-xl font-bold text-gray-100">{formData.state || "Not selected"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-sm font-semibold">Roof Type</p>
+                    <p className="text-gray-400 text-sm font-semibold">{t("booking.roofType")}</p>
                     <p className="text-xl font-bold text-gray-100">{formData.roofType}</p>
                   </div>
                 </div>
@@ -516,33 +518,33 @@ export default function Booking() {
 
               {/* Cost Breakdown */}
               <div className="mb-8">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">💰 Cost Breakdown</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-4">💰 {t("booking.costBreakdown")}</h3>
 
                 <div className="space-y-3 bg-gray-50 p-6 rounded-lg">
                   <div className="flex justify-between items-center pb-3 border-b">
-                    <p className="text-gray-700 font-semibold">Equipment Cost</p>
+                    <p className="text-gray-700 font-semibold">{t("booking.equipmentCost")}</p>
                     <p className="text-lg font-bold">₹{(quotation?.equipmentCost || 0).toLocaleString()}</p>
                   </div>
 
                   <div className="flex justify-between items-center pb-3 border-b">
-                    <p className="text-gray-700 font-semibold">Installation & Labor</p>
+                    <p className="text-gray-700 font-semibold">{t("booking.installationCost")}</p>
                     <p className="text-lg font-bold">₹{(quotation?.installationCost || 0).toLocaleString()}</p>
                   </div>
 
                   <div className="flex justify-between items-center pb-3 border-b-2 border-gray-300 py-2">
-                    <p className="text-gray-800 font-bold">Subtotal</p>
+                    <p className="text-gray-800 font-bold">{t("booking.subtotal")}</p>
                     <p className="text-xl font-bold text-gray-800">₹{(quotation?.totalCost || 0).toLocaleString()}</p>
                   </div>
 
                   {(quotation?.subsidyAmount || 0) > 0 && (
                     <div className="flex justify-between items-center bg-gray-700 p-3 rounded border border-gray-600 my-3">
-                      <p className="text-gray-100 font-bold">Government Subsidy (MNRE)</p>
+                      <p className="text-gray-100 font-bold">{t("booking.governmentSubsidy")}</p>
                       <p className="text-lg font-bold text-blue-400">-₹{(quotation?.subsidyAmount || 0).toLocaleString()}</p>
                     </div>
                   )}
 
                   <div className="flex justify-between items-center bg-blue-600 p-4 rounded-lg my-4">
-                    <p className="text-white font-bold text-lg">Final Cost to Pay</p>
+                    <p className="text-white font-bold text-lg">{t("booking.finalCostToPay")}</p>
                     <p className="text-3xl font-bold text-white">₹{((quotation?.totalCost || 0) - (quotation?.subsidyAmount || 0)).toLocaleString()}</p>
                   </div>
                 </div>

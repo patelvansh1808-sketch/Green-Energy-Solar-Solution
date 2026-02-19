@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useI18n } from "../../Context/I18nContext";
 import bookingService from "../../services/bookingService";
 
 const BookingStatus = () => {
+  const { t } = useI18n();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -252,7 +254,7 @@ const BookingStatus = () => {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-xl text-gray-600">Loading your bookings...</p>
+            <p className="text-xl text-gray-600">{t("bookingStatus.loading")}</p>
           </div>
         </div>
       </div>
@@ -266,34 +268,34 @@ const BookingStatus = () => {
         <div className="mb-10">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-800 mb-3">
-              Booking Status Tracker
+              {t("bookingStatus.title")}
             </h1>
-            <p className="text-gray-600 text-lg">Monitor your solar installation progress in real-time</p>
+            <p className="text-gray-600 text-lg">{t("bookingStatus.subtitle")}</p>
           </div>
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-blue-600">{bookings.length}</p>
-              <p className="text-gray-600 text-sm mt-1">Total Bookings</p>
+              <p className="text-gray-600 text-sm mt-1">{t("bookingStatus.total")}</p>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-green-600">
                 {bookings.filter((b) => b.status === "Completed").length}
               </p>
-              <p className="text-gray-600 text-sm mt-1">Completed</p>
+              <p className="text-gray-600 text-sm mt-1">{t("bookingStatus.completed")}</p>
             </div>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-yellow-600">
                 {bookings.filter((b) => b.status === "In Progress").length}
               </p>
-              <p className="text-gray-600 text-sm mt-1">In Progress</p>
+              <p className="text-gray-600 text-sm mt-1">{t("bookingStatus.inProgress")}</p>
             </div>
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-purple-600">
                 {bookings.filter((b) => ["Pending", "Approved"].includes(b.status)).length}
               </p>
-              <p className="text-gray-600 text-sm mt-1">Pending Review</p>
+              <p className="text-gray-600 text-sm mt-1">{t("bookingStatus.pendingReview")}</p>
             </div>
           </div>
         </div>
@@ -301,7 +303,7 @@ const BookingStatus = () => {
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
-            <p className="font-semibold">Error:</p>
+            <p className="font-semibold">{t("bookingStatus.error")}:</p>
             <p>{error}</p>
           </div>
         )}
@@ -310,13 +312,13 @@ const BookingStatus = () => {
         {bookings.length === 0 && !error && (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-16 text-center">
             <p className="text-5xl mb-4">☀️</p>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">No Bookings Yet</h2>
-            <p className="text-gray-600 mb-6">Start your solar journey by creating a new booking</p>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">{t("bookingStatus.noBookingsYet")}</h2>
+            <p className="text-gray-600 mb-6">{t("bookingStatus.startBooking")}</p>
             <a
               href="/booking"
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition"
             >
-              Create New Booking
+              {t("bookingStatus.createNewBooking")}
             </a>
           </div>
         )}

@@ -53,26 +53,36 @@ api.interceptors.response.use(
       try {
         // Try to refresh the token
         const refreshToken = localStorage.getItem("refreshToken");
-        if (refreshToken) {
-          const res = await axios.post("http://localhost:5000/api/auth/refresh-token", {
-            refreshToken,
-          });
-
-          // Update the access token
-          localStorage.setItem("accessToken", res.data.accessToken);
-          localStorage.setItem("token", res.data.accessToken);
-
-          // Retry the original request with the new token
-          originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`;
-          return api(originalRequest);
+        if (!refreshToken) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          if (window.location.pathname !== "/login") {
+            window.location.href = "/login";
+          }
+          return Promise.reject(error);
         }
+
+        const res = await axios.post("http://localhost:5000/api/auth/refresh-token", {
+          refreshToken,
+        });
+
+        // Update the access token
+        localStorage.setItem("accessToken", res.data.accessToken);
+        localStorage.setItem("token", res.data.accessToken);
+
+        // Retry the original request with the new token
+        originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`;
+        return api(originalRequest);
       } catch (refreshError) {
         // Refresh failed, redirect to login
         console.error("Token refresh failed:", refreshError);
         localStorage.removeItem("token");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
       }
     }
 

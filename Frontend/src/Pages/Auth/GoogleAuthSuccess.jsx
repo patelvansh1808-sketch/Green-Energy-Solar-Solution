@@ -39,7 +39,7 @@ export default function GoogleAuthSuccess() {
             navigate("/admin");
           } else if (role === "support") {
             navigate("/admin/tickets");
-          } else if (role === "engineer") {
+          } else if (role === "engineer" || role === "technician") {
             navigate("/engineer/dashboard");
           } else {
             navigate("/");
@@ -59,7 +59,7 @@ export default function GoogleAuthSuccess() {
               navigate("/admin");
             } else if (user.role === "support") {
               navigate("/admin/tickets");
-            } else if (user.role === "engineer") {
+            } else if (user.role === "engineer" || user.role === "technician") {
               navigate("/engineer/dashboard");
             } else {
               navigate("/");

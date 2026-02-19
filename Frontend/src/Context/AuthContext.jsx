@@ -82,6 +82,40 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  useEffect(() => {
+    const handleStorageChange = async (event) => {
+      if (!["token", "accessToken", "refreshToken"].includes(event.key)) {
+        return;
+      }
+
+      const latestToken =
+        localStorage.getItem("accessToken") || localStorage.getItem("token");
+
+      if (!latestToken) {
+        setUser(null);
+        setCustomerProfile(null);
+        setHasCustomerProfile(false);
+        return;
+      }
+
+      try {
+        const res = await API.get("/users/profile");
+        setUser(res.data);
+      } catch (err) {
+        console.error(
+          "Failed to sync auth state across tabs:",
+          err.response?.data || err.message
+        );
+        setUser(null);
+        setCustomerProfile(null);
+        setHasCustomerProfile(false);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   const login = (token, userData, refreshToken = null) => {
     console.log("Login called with user data:", userData);
     localStorage.setItem("token", token);

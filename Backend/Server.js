@@ -41,6 +41,9 @@ app.use("/api/energy", require("./server/routes/energyRoutes"));
 // Booking
 app.use("/api/bookings", require("./server/routes/bookingRoutes"));
 
+// Maintenance
+app.use("/api/maintenance", require("./server/routes/maintenanceRoutes"));
+
 // Subsidy
 app.use("/api/subsidy", require("./server/routes/subsidyRoutes"));
 app.use("/api/subsidy-applications", require("./server/routes/subsidyApplicationRoutes"));

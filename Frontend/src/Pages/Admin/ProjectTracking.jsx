@@ -103,8 +103,11 @@ export default function ProjectTracking() {
 
   const fetchEngineers = async () => {
     try {
-      const data = await roleService.getAllUsers({ role: "engineer" });
-      setEngineers(data);
+      const data = await roleService.getAllUsers({ role: "staff" });
+      const assignees = Array.isArray(data)
+        ? data.filter((user) => user.role === "engineer" || user.role === "technician")
+        : [];
+      setEngineers(assignees);
     } catch (err) {
       console.error("Failed to load engineers:", err);
     }

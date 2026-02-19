@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../Context/AuthContext";
 import projectService from "../services/projectService";
 import inventoryService from "../services/inventoryService";
+import maintenanceService from "../services/maintenanceService";
 
 export default function EngineerDashboard() {
   const { user } = useAuth();
@@ -32,6 +33,17 @@ export default function EngineerDashboard() {
 
   // Filter state
   const [statusFilter, setStatusFilter] = useState("all");
+  const [assignedServices, setAssignedServices] = useState([]);
+  const [showServiceExecutionModal, setShowServiceExecutionModal] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
+  const [executionForm, setExecutionForm] = useState({
+    executionStatus: "Pending",
+    technicianNotes: "",
+    completionTime: "",
+  });
+  const [beforePhotoFiles, setBeforePhotoFiles] = useState([]);
+  const [afterPhotoFiles, setAfterPhotoFiles] = useState([]);
+  const [savingExecution, setSavingExecution] = useState(false);
 
   const fetchMyProjects = useCallback(async () => {
     try {
@@ -49,9 +61,98 @@ export default function EngineerDashboard() {
     }
   }, [user._id]);
 
+  const fetchAssignedServices = useCallback(async () => {
+    try {
+      const data = await maintenanceService.getAssignedServicesForStaff();
+      setAssignedServices(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setAssignedServices([]);
+      console.error("Failed to load assigned maintenance services", err.response?.data || err.message);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMyProjects();
-  }, [fetchMyProjects]);
+    fetchAssignedServices();
+  }, [fetchMyProjects, fetchAssignedServices]);
+
+  const formatServiceDate = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getServiceCustomerLabel = (item) => {
+    const customer = item?.userId || {};
+    const fullName = [customer.firstName, customer.lastName].filter(Boolean).join(" ");
+    return customer.name || fullName || customer.email || "-";
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getExecutionStatusLabel = (service) => service.executionStatus || "Pending";
+
+  const openServiceExecutionModal = (service) => {
+    setSelectedService(service);
+    setExecutionForm({
+      executionStatus: service.executionStatus || "Pending",
+      technicianNotes: service.technicianNotes || "",
+      completionTime: service.completionTime
+        ? new Date(service.completionTime).toISOString().slice(0, 16)
+        : "",
+    });
+    setBeforePhotoFiles([]);
+    setAfterPhotoFiles([]);
+    setShowServiceExecutionModal(true);
+  };
+
+  const handleSaveServiceExecution = async () => {
+    if (!selectedService) return;
+
+    try {
+      setSavingExecution(true);
+
+      await maintenanceService.updateServiceExecution(selectedService._id, {
+        executionStatus: executionForm.executionStatus,
+        technicianNotes: executionForm.technicianNotes,
+        completionTime:
+          executionForm.executionStatus === "Completed"
+            ? executionForm.completionTime || undefined
+            : undefined,
+      });
+
+      if (beforePhotoFiles.length > 0 || afterPhotoFiles.length > 0) {
+        const formData = new FormData();
+        beforePhotoFiles.forEach((file) => formData.append("beforePhotos", file));
+        afterPhotoFiles.forEach((file) => formData.append("afterPhotos", file));
+        await maintenanceService.uploadServiceExecutionPhotos(selectedService._id, formData);
+      }
+
+      await fetchAssignedServices();
+      setShowServiceExecutionModal(false);
+      setSelectedService(null);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update service execution tracking");
+    } finally {
+      setSavingExecution(false);
+    }
+  };
 
   const openDetailModal = (project) => {
     setSelectedProject(project);
@@ -296,6 +397,164 @@ export default function EngineerDashboard() {
             <div className="text-sm text-gray-600">Completed</div>
           </div>
         </div>
+
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden mb-6">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900">Assigned Cleaning Services ({assignedServices.length})</h2>
+          </div>
+
+          {assignedServices.length === 0 ? (
+            <div className="text-center py-10 text-gray-600">No cleaning services assigned to you yet</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Customer</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Service Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Details</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {assignedServices.map((service) => (
+                    <tr key={service._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-700">{formatServiceDate(service.date)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{getServiceCustomerLabel(service)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">{service.type || "-"}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">{getExecutionStatusLabel(service)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        <div className="space-y-1">
+                          <p>
+                            <span className="font-medium">Notes:</span>{" "}
+                            {service.technicianNotes ? service.technicianNotes : "-"}
+                          </p>
+                          <p>
+                            <span className="font-medium">Before Photos:</span>{" "}
+                            {(service.beforePhotos || []).length}
+                          </p>
+                          <p>
+                            <span className="font-medium">After Photos:</span>{" "}
+                            {(service.afterPhotos || []).length}
+                          </p>
+                          <p>
+                            <span className="font-medium">Completion Time:</span>{" "}
+                            {formatDateTime(service.completionTime)}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <button
+                          type="button"
+                          onClick={() => openServiceExecutionModal(service)}
+                          className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1.5 rounded font-semibold transition"
+                        >
+                          Update
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {showServiceExecutionModal && selectedService && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Service Execution Tracking</h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                  <select
+                    value={executionForm.executionStatus}
+                    onChange={(e) =>
+                      setExecutionForm({ ...executionForm, executionStatus: e.target.value })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Technician Notes</label>
+                  <textarea
+                    rows="4"
+                    value={executionForm.technicianNotes}
+                    onChange={(e) =>
+                      setExecutionForm({ ...executionForm, technicianNotes: e.target.value })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    placeholder="Work details and observations..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Before Photos</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => setBeforePhotoFiles(Array.from(e.target.files || []))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">After Photos</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => setAfterPhotoFiles(Array.from(e.target.files || []))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Completion Time</label>
+                  <input
+                    type="datetime-local"
+                    value={executionForm.completionTime}
+                    onChange={(e) =>
+                      setExecutionForm({ ...executionForm, completionTime: e.target.value })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    disabled={executionForm.executionStatus !== "Completed"}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={handleSaveServiceExecution}
+                  disabled={savingExecution}
+                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2.5 rounded-lg"
+                >
+                  {savingExecution ? "Saving..." : "Save"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowServiceExecutionModal(false);
+                    setSelectedService(null);
+                  }}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2.5 rounded-lg"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filter */}
         <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">

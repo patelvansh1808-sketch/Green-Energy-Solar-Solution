@@ -94,7 +94,7 @@ exports.updateInventorySelection = async (req, res) => {
     }
 
     if (
-      req.user?.role === "engineer" &&
+      (req.user?.role === "engineer" || req.user?.role === "technician") &&
       project.engineerAssignment?.engineerId?.toString() !== req.user.id
     ) {
       return res.status(403).json({ message: "Not authorized" });
@@ -124,7 +124,7 @@ exports.updateInventorySelection = async (req, res) => {
 
     project.inventorySelection = cleanSelections;
 
-    if (req.user?.role === "engineer" || issueNow) {
+    if (req.user?.role === "engineer" || req.user?.role === "technician" || issueNow) {
       const issueResult = await issueInventoryForProject(project, req.user?.id);
       if (!issueResult.ok) {
         return res.status(400).json({ message: issueResult.message });
@@ -325,8 +325,8 @@ exports.assignEngineer = async (req, res) => {
     const { engineerId } = req.body;
 
     const engineer = await User.findById(engineerId);
-    if (!engineer || engineer.role !== "engineer") {
-      return res.status(400).json({ message: "Invalid engineer selection" });
+    if (!engineer || !["engineer", "technician"].includes(engineer.role)) {
+      return res.status(400).json({ message: "Invalid engineer/technician selection" });
     }
 
     const project = await Project.findByIdAndUpdate(

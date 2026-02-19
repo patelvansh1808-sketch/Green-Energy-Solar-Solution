@@ -44,9 +44,9 @@ const roleMiddleware = (requiredRole) => {
   };
 };
 
-// Check if user is internal staff (admin, sales, engineer, support)
+// Check if user is internal staff (admin, sales, engineer, technician, support)
 const isStaff = (req, res, next) => {
-  const staffRoles = ["admin", "sales", "engineer", "support"];
+  const staffRoles = ["admin", "sales", "engineer", "technician", "support"];
   
   if (!req.user) {
     return res.status(401).json({ message: "Authentication required" });
@@ -78,15 +78,15 @@ const hasPermission = (permission) => {
     "customers.delete": ["admin"],
     
     // Booking Management
-    "bookings.view": ["admin", "sales", "engineer"],
+    "bookings.view": ["admin", "sales", "engineer", "technician"],
     "bookings.create": ["admin", "sales"],
-    "bookings.edit": ["admin", "sales", "engineer"],
+    "bookings.edit": ["admin", "sales", "engineer", "technician"],
     "bookings.delete": ["admin"],
     "bookings.assign": ["admin", "sales"],
     
     // Installation & Technical
-    "installations.view": ["admin", "engineer", "sales"],
-    "installations.manage": ["admin", "engineer"],
+    "installations.view": ["admin", "engineer", "technician", "sales"],
+    "installations.manage": ["admin", "engineer", "technician"],
     
     // Support & Tickets
     "support.view": ["admin", "support", "sales"],
@@ -94,7 +94,7 @@ const hasPermission = (permission) => {
     
     // Analytics & Reports
     "analytics.view": ["admin", "sales"],
-    "reports.generate": ["admin", "sales", "engineer"],
+    "reports.generate": ["admin", "sales", "engineer", "technician"],
     
     // System Settings
     "settings.view": ["admin"],

@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "../../Context/I18nContext";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,7 +44,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <p className="mt-4 text-gray-600">{t("dashboard.loading")}</p>
         </div>
       </div>
     );
@@ -57,7 +59,7 @@ export default function Dashboard() {
             onClick={fetchDashboard}
             className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
           >
-            Retry
+            {t("dashboard.retry")}
           </button>
         </div>
       </div>
@@ -65,7 +67,7 @@ export default function Dashboard() {
   }
 
   if (!dashboardData) {
-    return <div className="text-center py-8">No dashboard data available</div>;
+    return <div className="text-center py-8">{t("dashboard.noDashboardData")}</div>;
   }
 
   const {
@@ -87,9 +89,9 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-4">
         {/* HEADER */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-4xl font-bold text-gray-900">{t("dashboard.title")}</h1>
           <p className="text-gray-600 mt-2">
-            Welcome back, {userData.name}! Here's your solar system performance.
+            {t("dashboard.welcomeBack", `Welcome back,` ).replace("{name}", userData.name )}
           </p>
         </div>
 
@@ -99,9 +101,9 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">Total Energy Generated</p>
+                <p className="text-gray-500 text-sm">{t("dashboard.totalGenerated")}</p>
                 <p className="text-3xl font-bold text-green-600">{fmtNum(energy.totalGenerated)}</p>
-                <p className="text-xs text-gray-400 mt-1">kWh (Last 30 days)</p>
+                <p className="text-xs text-gray-400 mt-1">kWh ({t("dashboard.last30Days", "Last 30 days")})</p>
               </div>
               <span className="text-4xl">⚡</span>
             </div>
@@ -111,9 +113,9 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">Total Savings</p>
+                <p className="text-gray-500 text-sm">{t("dashboard.totalSavings")}</p>
                 <p className="text-3xl font-bold text-blue-600">₹{fmtNum(savings.total)}</p>
-                <p className="text-xs text-gray-400 mt-1">Cost saved</p>
+                <p className="text-xs text-gray-400 mt-1">{t("dashboard.costSaved", "Cost saved")}</p>
               </div>
               <span className="text-4xl">💰</span>
             </div>
@@ -123,9 +125,9 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">ROI</p>
+                <p className="text-gray-500 text-sm">{t("dashboard.roiEarned")}</p>
                 <p className="text-3xl font-bold text-purple-600">{roi.percentage ?? 0}%</p>
-                <p className="text-xs text-gray-400 mt-1">Payback in {roi.paybackYears ?? "—"} years</p>
+                <p className="text-xs text-gray-400 mt-1">{t("dashboard.paybackIn", "Payback in")} {roi.paybackYears ?? "—"} {t("dashboard.years")}</p>
               </div>
               <span className="text-4xl">📈</span>
             </div>
@@ -135,11 +137,11 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">System Status</p>
+                <p className="text-gray-500 text-sm">{t("dashboard.systemStatus")}</p>
                 <p className={`text-3xl font-bold ${system.status === "Online" ? "text-green-600" : "text-yellow-600"}`}>
                   {system.status ?? "—"}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">{system.onlinePercentage ?? 0}% online</p>
+                <p className="text-xs text-gray-400 mt-1">{system.onlinePercentage ?? 0}% {t("dashboard.online", "online")}</p>
               </div>
               <span className="text-4xl">{system.status === "Online" ? "✅" : "⚠️"}</span>
             </div>
@@ -152,14 +154,14 @@ export default function Dashboard() {
           <div className="lg:col-span-2 space-y-8">
             {/* ENERGY DETAILS */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold mb-4">⚡ Energy Generation</h2>
+              <h2 className="text-2xl font-bold mb-4">⚡ {t("dashboard.energyDetails")}</h2>
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div>
-                  <p className="text-gray-500 text-sm">Average Daily</p>
+                  <p className="text-gray-500 text-sm">{t("dashboard.monthlyAverage")}</p>
                   <p className="text-2xl font-bold text-green-600">{fmtNum(energy.averageDaily)} kWh</p>
                 </div>
                 <div>
-                  <p className="text-gray-500 text-sm">Peak Generation</p>
+                  <p className="text-gray-500 text-sm">{t("dashboard.peakGeneration", "Peak Generation")}</p>
                   <p className="text-2xl font-bold text-blue-600">{fmtNum(energy.maxDaily)} kWh</p>
                 </div>
                 <div>
@@ -178,22 +180,22 @@ export default function Dashboard() {
 
             {/* SAVINGS BREAKDOWN */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold mb-4">💰 Savings Breakdown</h2>
+              <h2 className="text-2xl font-bold mb-4">💰 {t("dashboard.savingsBreakdown")}</h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-3 border-b">
-                  <span className="text-gray-600">Energy Generated</span>
+                  <span className="text-gray-600">{t("dashboard.energyGenerated", "Energy Generated")}</span>
                   <span className="font-bold">{fmtNum(energy.totalGenerated)} kWh</span>
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b">
-                  <span className="text-gray-600">Cost per Unit</span>
+                  <span className="text-gray-600">{t("dashboard.costPerUnit")}</span>
                   <span className="font-bold">₹{fmtNum(savings.costPerUnit)}</span>
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b bg-green-50 p-3 rounded">
-                  <span className="font-semibold">Total Savings</span>
+                  <span className="font-semibold">{t("dashboard.totalSavings")}</span>
                   <span className="text-2xl font-bold text-green-600">₹{fmtNum(savings.total)}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2">
-                  <span className="text-gray-600">Monthly Average</span>
+                  <span className="text-gray-600">{t("dashboard.monthlyROI")}</span>
                   <span className="font-bold">₹{fmtNum(savings.monthlyAverage)}/month</span>
                 </div>
               </div>
@@ -201,20 +203,20 @@ export default function Dashboard() {
 
             {/* ROI DETAILS */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold mb-4">📈 Return on Investment</h2>
+              <h2 className="text-2xl font-bold mb-4">📈 {t("dashboard.roiSection")}</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-blue-50 p-4 rounded">
                   <p className="text-gray-600 text-sm">System Cost</p>
                   <p className="text-2xl font-bold text-blue-600">₹{fmtNum(roi.systemCost)}</p>
                 </div>
                 <div className="bg-purple-50 p-4 rounded">
-                  <p className="text-gray-600 text-sm">Current ROI</p>
+                  <p className="text-gray-600 text-sm">{t("dashboard.currentROI")}</p>
                   <p className="text-2xl font-bold text-purple-600">{roi.percentage ?? 0}%</p>
                 </div>
               </div>
               <div className="mt-4 bg-gray-50 p-4 rounded">
                 <p className="text-sm text-gray-600">
-                  Your system will pay for itself in approximately <strong>{roi.paybackYears ?? "—"} years</strong> at the current savings rate.
+                  {t("dashboard.paybackMessage", "Your system will pay for itself in approximately ")} <strong>{roi.paybackYears ?? "—"} {t("dashboard.years")}</strong> {t("dashboard.atCurrentRate", "at the current savings rate.")}
                 </p>
               </div>
             </div>
@@ -224,22 +226,22 @@ export default function Dashboard() {
           <div className="space-y-8">
             {/* CUSTOMER INFO */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-bold mb-4">🏠 System Information</h3>
+              <h3 className="text-lg font-bold mb-4">🏠 {t("dashboard.systemInfo")}</h3>
               <div className="space-y-3">
                 <div>
-                  <p className="text-gray-500 text-sm">System Capacity</p>
+                  <p className="text-gray-500 text-sm">{t("dashboard.capacity", "System Capacity")}</p>
                   <p className="font-bold">{customer.systemCapacity ?? "—"} kW</p>
                 </div>
                 <div>
-                  <p className="text-gray-500 text-sm">Location</p>
+                  <p className="text-gray-500 text-sm">{t("profile.siteLocation")}</p>
                   <p className="font-bold">{customer.location ?? "—"}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500 text-sm">Installation Date</p>
+                  <p className="text-gray-500 text-sm">{t("profile.installationDate")}</p>
                   <p className="font-bold">{fmtDate(customer.installationDate)}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500 text-sm">Status</p>
+                  <p className="text-gray-500 text-sm">{t("dashboard.status", "Status")}</p>
                   <span
                     className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                       customer.status === "Active"
@@ -256,14 +258,14 @@ export default function Dashboard() {
             {/* SUBSIDY STATUS */}
             {subsidy && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-bold mb-4">💵 Subsidy Status</h3>
+                <h3 className="text-lg font-bold mb-4">💵 {t("subsidy.statusTitle", "Subsidy Status")}</h3>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-gray-500 text-sm">State</p>
+                    <p className="text-gray-500 text-sm">{t("profile.state", "State")}</p>
                     <p className="font-bold">{subsidy.state ?? "—"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500 text-sm">Eligibility</p>
+                    <p className="text-gray-500 text-sm">{t("subsidy.status", "Status")}</p>
                     <p className="font-bold">{subsidy.eligibilityPercentage ?? 0}%</p>
                   </div>
                   <div>
@@ -271,7 +273,7 @@ export default function Dashboard() {
                     <p className="font-bold">₹{fmtNum(subsidy.appliedAmount)}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500 text-sm">Status</p>
+                    <p className="text-gray-500 text-sm">{t("dashboard.status", "Status")}</p>
                     <span
                       className={`inline-block px-3 py-1 rounded text-xs font-semibold ${
                         subsidy.status === "approved"
@@ -286,7 +288,7 @@ export default function Dashboard() {
                   </div>
                   {subsidy?.approvedAmount && (
                     <div className="bg-green-50 p-3 rounded">
-                      <p className="text-gray-600 text-sm">Approved Amount</p>
+                      <p className="text-gray-600 text-sm">{t("subsidy.approvedAmount", "Approved Amount")}</p>
                       <p className="text-xl font-bold text-green-600">
                         ₹{fmtNum(subsidy.approvedAmount)}
                       </p>
@@ -299,11 +301,11 @@ export default function Dashboard() {
             {/* ALERTS */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-bold mb-4">
-                ⚠️ Recent Alerts ({alerts.unresolvedCount ?? 0})
+                ⚠️ {t("dashboard.alerts")} ({alerts.unresolvedCount ?? 0})
               </h3>
               {alerts.recent?.length === 0 ? (
                 <div className="text-center py-6">
-                  <p className="text-gray-500">No alerts</p>
+                  <p className="text-gray-500">{t("dashboard.noAlerts")}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -334,7 +336,7 @@ export default function Dashboard() {
                   onClick={() => navigate("/dashboard/alerts")}
                   className="mt-4 w-full bg-orange-100 text-orange-700 py-2 rounded hover:bg-orange-200 transition text-sm font-semibold"
                 >
-                  View All Alerts →
+                  {t("dashboard.seeMore")} →
                 </button>
               )}
             </div>

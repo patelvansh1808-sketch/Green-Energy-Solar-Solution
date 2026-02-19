@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../Context/AuthContext";
+import { useI18n } from "../../Context/I18nContext";
 
 export default function Register() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useI18n();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -46,14 +48,14 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white">
       <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-8 animate-slideUp">
         <h2 className="text-2xl font-bold text-green-700 text-center mb-6">
-          Create New Account
+          {t("auth.registerTitle")}
         </h2>
 
         <form className="space-y-4" onSubmit={submitHandler}>
           <input
             type="text"
             name="name"
-            placeholder="Full Name"
+            placeholder={t("auth.fullName")}
             value={formData.name}
             onChange={handleChange}
             required
@@ -63,7 +65,7 @@ export default function Register() {
           <input
             type="email"
             name="email"
-            placeholder="Email address"
+            placeholder={t("auth.email")}
             value={formData.email}
             onChange={handleChange}
             required
@@ -73,7 +75,7 @@ export default function Register() {
           <input
             type="password"
             name="password"
-            placeholder="Password"
+            placeholder={t("auth.password")}
             value={formData.password}
             onChange={handleChange}
             required
@@ -83,7 +85,7 @@ export default function Register() {
           <input
             type="text"
             name="location"
-            placeholder="Location"
+            placeholder={t("auth.location")}
             value={formData.location}
             onChange={handleChange}
             className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-600 outline-none"
@@ -96,9 +98,9 @@ export default function Register() {
             required
             className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-600 outline-none"
           >
-            <option value="">Select User Type</option>
-            <option value="Residential">Residential</option>
-            <option value="Commercial">Commercial</option>
+            <option value="">{t("auth.userType")}</option>
+            <option value="Residential">{t("auth.residential")}</option>
+            <option value="Commercial">{t("auth.commercial")}</option>
           </select>
 
           <button
@@ -106,14 +108,14 @@ export default function Register() {
             disabled={loading}
             className="w-full bg-green-700 hover:bg-green-800 text-white py-2 rounded-lg font-semibold transition"
           >
-            {loading ? "Registering..." : "Register"}
+            {loading ? t("auth.registering") : t("common.register")}
           </button>
         </form>
 
         <p className="text-sm text-center mt-6">
-          Already have an account?{" "}
+          {t("auth.haveAccount")}{" "}
           <Link to="/login" className="text-green-700 font-semibold">
-            Login
+            {t("common.login")}
           </Link>
         </p>
       </div>

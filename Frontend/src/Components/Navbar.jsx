@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import NotificationBell from "./NotificationBell";
+import { useI18n } from "../Context/I18nContext";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, logout, hasCustomerProfile } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthRoute =
@@ -27,34 +29,35 @@ export default function Navbar() {
         {/* LOGO */}
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition">
           <span className="text-2xl">☀️</span>
-          <span className="text-lg md:text-xl font-bold">SuryaUrja</span>
+          <span className="text-lg md:text-xl font-bold">{t("common.appName")}</span>
         </Link>
 
         {/* ===== DESKTOP MENU ===== */}
         <div className="hidden md:flex items-center gap-8 text-sm font-medium">
 
           <Link to="/" className="hover:text-green-200 transition">
-            Home
+            {t("nav.home")}
           </Link>
 
           {user && !isAuthRoute && (
             <>
               {hasCustomerProfile && (
                 <Link to="/dashboard" className="hover:text-green-200 transition">
-                  Dashboard
+                  {t("nav.dashboard")}
                 </Link>
               )}
 
               {/* FEATURES */}
               <div className="relative group">
                 <button className="hover:text-green-200 transition">
-                  Features ▾
+                  {t("nav.features")} ▾
                 </button>
                 <div className="absolute left-0 top-full pt-2 hidden group-hover:block bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2">
-                  <NavItem to="/booking" label="📅 Booking" />
-                  <NavItem to="/booking-status" label="📊 Booking Status" />
-                  <NavItem to="/apply-subsidy" label="💰 Apply for Subsidy" />
-                  <NavItem to="/subsidy-status" label="📈 Subsidy Status" />
+                  <NavItem to="/booking" label={`📅 ${t("nav.booking")}`} />
+                  <NavItem to="/booking-status" label={`📊 ${t("nav.bookingStatus")}`} />
+                  <NavItem to="/maintenance" label={`🛠️ ${t("nav.maintenance")}`} />
+                  <NavItem to="/apply-subsidy" label={`💰 ${t("nav.applySubsidy")}`} />
+                  <NavItem to="/subsidy-status" label={`📈 ${t("nav.subsidyStatus")}`} />
                 </div>
               </div>
 
@@ -74,14 +77,14 @@ export default function Navbar() {
               {/* ENGINEER DASHBOARD */}
               {user.role === "engineer" && (
                 <Link to="/engineer/dashboard" className="hover:text-green-200 transition">
-                  🔧 My Tasks
+                  🔧 {t("nav.myTasks")}
                 </Link>
               )}
 
               {/* TEAM MEMBER DASHBOARD */}
               {(user.role === "engineer" || user.role === "sales" || user.role === "support") && (
                 <Link to="/team/my-leads" className="hover:text-green-200 transition">
-                  📋 My Leads
+                  📋 {t("nav.myLeads")}
                 </Link>
               )}
 
@@ -91,11 +94,11 @@ export default function Navbar() {
               {/* PROFILE */}
               <div className="relative group">
                 <button className="hover:text-green-200 transition">
-                  Profile ▾
+                  {t("nav.profile")} ▾
                 </button>
 
                 <div className="absolute right-0 top-full pt-2 hidden group-hover:block bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2">
-                  <NavItem to="/profile" label="👤 My Profile" />
+                  <NavItem to="/profile" label={`👤 ${t("nav.myProfile")}`} />
 
                   {/* 🔐 ADMIN LINKS */}
                   {user.role === "admin" && (
@@ -158,7 +161,7 @@ export default function Navbar() {
                 onClick={handleLogout}
                 className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
               >
-                🚪 Logout
+                🚪 {t("common.logout")}
               </button>
             </div>
           </div>
@@ -167,24 +170,24 @@ export default function Navbar() {
 
       {user && !isAuthRoute && (
         <Link to="/support" className="hover:text-green-200 transition">
-          Support
+          {t("common.support")}
         </Link>
       )}
 
       <Link to="/contact" className="hover:text-green-200 transition">
-        Contact
+        {t("common.contact")}
       </Link>
 
           {!user && (
             <>
               <Link to="/login" className="hover:text-green-200 transition">
-                Login
+                {t("common.login")}
               </Link>
               <Link
                 to="/register"
                 className="bg-white text-green-700 px-4 py-2 rounded-lg font-bold"
               >
-                Register
+                {t("common.register")}
               </Link>
             </>
           )}
@@ -199,21 +202,22 @@ export default function Navbar() {
       {/* ===== MOBILE MENU ===== */}
       {open && (
         <div className="md:hidden bg-green-600 px-4 py-4 space-y-2 text-sm">
-          <Link to="/" onClick={() => setOpen(false)}>Home</Link>
+          <Link to="/" onClick={() => setOpen(false)}>{t("nav.home")}</Link>
 
           {user && !isAuthRoute && (
             <>
               {hasCustomerProfile && (
                 <Link to="/dashboard" onClick={() => setOpen(false)}>
-                  Dashboard
+                  {t("nav.dashboard")}
                 </Link>
               )}
 
-              <p className="text-xs uppercase text-green-200 mt-3">⚡ Features</p>
-              <MobileItem to="/booking" label="📅 Booking" />
-              <MobileItem to="/booking-status" label="📊 Booking Status" />
-              <MobileItem to="/apply-subsidy" label="💰 Apply for Subsidy" />
-              <MobileItem to="/subsidy-status" label="📈 Subsidy Status" />
+              <p className="text-xs uppercase text-green-200 mt-3">⚡ {t("nav.features")}</p>
+              <MobileItem to="/booking" label={`📅 ${t("nav.booking")}`} />
+              <MobileItem to="/booking-status" label={`📊 ${t("nav.bookingStatus")}`} />
+              <MobileItem to="/maintenance" label={`🛠️ ${t("nav.maintenance")}`} />
+              <MobileItem to="/apply-subsidy" label={`💰 ${t("nav.applySubsidy")}`} />
+              <MobileItem to="/subsidy-status" label={`📈 ${t("nav.subsidyStatus")}`} />
 
               {user.role === "admin" && (
                 <>
@@ -223,8 +227,8 @@ export default function Navbar() {
                 </>
               )}
 
-              <p className="text-xs uppercase text-green-200 mt-3">👤 Account</p>
-              <MobileItem to="/profile" label="My Profile" />
+              <p className="text-xs uppercase text-green-200 mt-3">👤 {t("nav.profile")}</p>
+              <MobileItem to="/profile" label={t("nav.myProfile")} />
 
               {user.role === "admin" && (
                 <>
@@ -242,16 +246,16 @@ export default function Navbar() {
                 onClick={handleLogout}
                 className="block w-full text-left text-red-200 mt-2"
               >
-                🚪 Logout
+                🚪 {t("common.logout")}
               </button>
             </>
           )}
 
           {!user && (
             <>
-              <Link to="/contact" onClick={() => setOpen(false)}>Contact</Link>
-              <Link to="/login" onClick={() => setOpen(false)}>Login</Link>
-              <Link to="/register" onClick={() => setOpen(false)}>Register</Link>
+              <Link to="/contact" onClick={() => setOpen(false)}>{t("common.contact")}</Link>
+              <Link to="/login" onClick={() => setOpen(false)}>{t("common.login")}</Link>
+              <Link to="/register" onClick={() => setOpen(false)}>{t("common.register")}</Link>
             </>
           )}
         </div>

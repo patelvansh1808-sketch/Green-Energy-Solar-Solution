@@ -414,6 +414,7 @@ export default function AdminDashboard() {
                   required
                 >
                   <option value="engineer">Sales Engineer</option>
+                  <option value="technician">Technician</option>
                   <option value="sales">Sales Manager</option>
                   <option value="support">Support Staff</option>
                 </select>

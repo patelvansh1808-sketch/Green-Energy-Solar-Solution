@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useI18n } from "../../Context/I18nContext";
 
 export default function ContactUs() {
+  const { t } = useI18n();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -52,11 +54,10 @@ export default function ContactUs() {
         {/* Left Info Section */}
         <div className="space-y-4">
           <h1 className="text-3xl font-bold text-primary">
-            Contact Us
+            {t("contact.title")}
           </h1>
           <p className="text-gray-600">
-            Have questions about solar installation, subsidy, or energy
-            analytics? Reach out to us anytime.
+            {t("contact.subtitle")}
           </p>
 
           <div className="space-y-2 text-sm">
@@ -83,7 +84,7 @@ export default function ContactUs() {
           <input
             className="input"
             name="name"
-            placeholder="Your Name"
+            placeholder={t("contact.yourName")}
             value={form.name}
             onChange={handleChange}
             required
@@ -94,7 +95,7 @@ export default function ContactUs() {
             className="input"
             type="email"
             name="email"
-            placeholder="Your Email"
+            placeholder={t("contact.yourEmail")}
             value={form.email}
             onChange={handleChange}
             required
@@ -104,7 +105,7 @@ export default function ContactUs() {
           <textarea
             className="input h-32 resize-none"
             name="message"
-            placeholder="Your Message"
+            placeholder={t("contact.yourMessage")}
             value={form.message}
             onChange={handleChange}
             required
@@ -116,7 +117,7 @@ export default function ContactUs() {
             type="submit"
             disabled={loading}
           >
-            {loading ? "Sending..." : "Send Message"}
+            {loading ? t("contact.sending") : t("contact.sendMessage")}
           </button>
         </form>
       </div>

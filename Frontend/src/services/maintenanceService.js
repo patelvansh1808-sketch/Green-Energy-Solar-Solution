@@ -11,6 +11,16 @@ const maintenanceService = {
     return res.data;
   },
 
+  createPaymentOrder: async (planType) => {
+    const res = await api.post("/maintenance/payments/create-order", { planType });
+    return res.data;
+  },
+
+  verifyPaymentAndCreatePlan: async (payload) => {
+    const res = await api.post("/maintenance/payments/verify", payload);
+    return res.data;
+  },
+
   createPlan: async (data) => {
     const res = await api.post("/maintenance/plans", data);
     return res.data;

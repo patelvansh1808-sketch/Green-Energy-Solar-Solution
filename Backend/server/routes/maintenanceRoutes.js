@@ -168,6 +168,20 @@ router.patch(
 );
 
 /* ===============================
+   PAYMENTS
+================================ */
+router.post(
+  "/payments/create-order",
+  authMiddleware,
+  maintenanceController.createMaintenancePaymentOrder
+);
+router.post(
+  "/payments/verify",
+  authMiddleware,
+  maintenanceController.verifyMaintenancePaymentAndCreatePlan
+);
+
+/* ===============================
    PLANS
 ================================ */
 router.post("/plans", authMiddleware, maintenanceController.createPlan);

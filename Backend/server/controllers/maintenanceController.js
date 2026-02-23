@@ -2,9 +2,12 @@ const MaintenancePlan = require("../models/MaintenancePlan");
 const MaintenanceService = require("../models/MaintenanceService");
 const MaintenanceReport = require("../models/MaintenanceReport");
 const MaintenanceSetting = require("../models/MaintenanceSetting");
+const MaintenancePayment = require("../models/MaintenancePayment");
 const Customer = require("../models/Customer");
 const User = require("../models/User");
 const { generateMaintenanceServiceReportPDF } = require("../utils/pdfGenerator");
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
 
 const PLAN_DEFAULTS = {
   "1 Month": { durationMonths: 1, servicesTotal: 1 },
@@ -97,6 +100,20 @@ const getChecklistForServiceType = (settings, serviceType) => {
 
 const getTechnicianNotesTemplate = (settings) =>
   String(settings?.defaultServiceChecklist?.technicianNotesTemplate || "").trim();
+
+const getRazorpayInstance = () => {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+    throw new Error("Razorpay credentials are not configured");
+  }
+
+  return new Razorpay({
+    key_id: keyId,
+    key_secret: keySecret,
+  });
+};
 
 const getPlanConfigFromSettings = (settings, planType) => {
   const defaults = PLAN_DEFAULTS[planType] || { durationMonths: 0, servicesTotal: 0 };
@@ -1221,14 +1238,105 @@ exports.getSummary = async (req, res) => {
   }
 };
 
+const createMaintenancePlanForUser = async ({
+  userId,
+  planType,
+  startDate,
+  nextServiceDate,
+  servicesTotal,
+}) => {
+  if (!planType || !PLAN_DEFAULTS[planType]) {
+    throw new Error("Invalid plan type");
+  }
+
+  const existingPlan = await MaintenancePlan.findOne({
+    userId,
+    status: "Active",
+  });
+
+  if (existingPlan) {
+    const conflictError = new Error("Active maintenance plan already exists");
+    conflictError.statusCode = 409;
+    throw conflictError;
+  }
+
+  const settings = await getOrCreateMaintenanceSettings();
+  const planConfig = getPlanConfigFromSettings(settings, planType);
+
+  if (!planConfig.isPlanActive) {
+    const inactiveError = new Error("Selected maintenance plan is currently unavailable");
+    inactiveError.statusCode = 400;
+    throw inactiveError;
+  }
+
+  const start = startDate ? new Date(startDate) : new Date();
+  if (Number.isNaN(start.getTime())) {
+    const invalidStartDateError = new Error("Invalid start date");
+    invalidStartDateError.statusCode = 400;
+    throw invalidStartDateError;
+  }
+
+  let resolvedNextServiceDate = null;
+  if (nextServiceDate) {
+    const manualNextDate = new Date(nextServiceDate);
+    if (Number.isNaN(manualNextDate.getTime())) {
+      const invalidNextDateError = new Error("Invalid next service date");
+      invalidNextDateError.statusCode = 400;
+      throw invalidNextDateError;
+    }
+    resolvedNextServiceDate = manualNextDate;
+  } else {
+    const defaultNextResolution = resolveDateByFrequencyRules(settings, start, start);
+    resolvedNextServiceDate = defaultNextResolution.scheduledDate;
+  }
+
+  const effectiveServicesTotal =
+    typeof servicesTotal === "number"
+      ? Math.max(0, Math.floor(servicesTotal))
+      : planConfig.servicesTotal;
+
+  const endDate = addMonths(start, planConfig.durationMonths);
+
+  const plan = await MaintenancePlan.create({
+    userId,
+    planType,
+    durationMonths: planConfig.durationMonths,
+    servicesTotal: effectiveServicesTotal,
+    servicesUsed: 0,
+    status: "Active",
+    startDate: start,
+    endDate,
+    nextServiceDate: resolvedNextServiceDate,
+    planPrice: planConfig.planPrice,
+    taxPercent: planConfig.taxPercent,
+    discountPercent: planConfig.discountPercent,
+    totalAmount: planConfig.totalAmount,
+  });
+
+  if (resolvedNextServiceDate && effectiveServicesTotal !== 0) {
+    await MaintenanceService.create({
+      userId,
+      planId: plan._id,
+      date: resolvedNextServiceDate,
+      type: "Cleaning",
+      status: "Scheduled",
+      executionStatus: "Pending",
+      technicianNotes: getTechnicianNotesTemplate(settings),
+      serviceChecklist: getChecklistForServiceType(settings, "Cleaning"),
+    });
+  }
+
+  return { plan, planConfig };
+};
+
 /* ===============================
-   PLANS
-   POST /api/maintenance/plans
+   CREATE PAYMENT ORDER
+   POST /api/maintenance/payments/create-order
 ================================ */
-exports.createPlan = async (req, res) => {
+exports.createMaintenancePaymentOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { planType, startDate, nextServiceDate, servicesTotal } = req.body;
+    const { planType } = req.body || {};
 
     if (!planType || !PLAN_DEFAULTS[planType]) {
       return res.status(400).json({ message: "Invalid plan type" });
@@ -1245,7 +1353,7 @@ exports.createPlan = async (req, res) => {
       });
     }
 
-    const [settings] = await Promise.all([getOrCreateMaintenanceSettings()]);
+    const settings = await getOrCreateMaintenanceSettings();
     const planConfig = getPlanConfigFromSettings(settings, planType);
 
     if (!planConfig.isPlanActive) {
@@ -1254,64 +1362,167 @@ exports.createPlan = async (req, res) => {
       });
     }
 
-    const start = startDate ? new Date(startDate) : new Date();
-    if (Number.isNaN(start.getTime())) {
-      return res.status(400).json({ message: "Invalid start date" });
-    }
-
-    let resolvedNextServiceDate = null;
-    if (nextServiceDate) {
-      const manualNextDate = new Date(nextServiceDate);
-      if (Number.isNaN(manualNextDate.getTime())) {
-        return res.status(400).json({ message: "Invalid next service date" });
-      }
-      resolvedNextServiceDate = manualNextDate;
-    } else {
-      const defaultNextResolution = resolveDateByFrequencyRules(settings, start, start);
-      resolvedNextServiceDate = defaultNextResolution.scheduledDate;
-    }
-
-    const effectiveServicesTotal =
-      typeof servicesTotal === "number"
-        ? Math.max(0, Math.floor(servicesTotal))
-        : planConfig.servicesTotal;
-
-    const endDate = addMonths(start, planConfig.durationMonths);
-
-    const plan = await MaintenancePlan.create({
-      userId,
-      planType,
-      durationMonths: planConfig.durationMonths,
-      servicesTotal: effectiveServicesTotal,
-      servicesUsed: 0,
-      status: "Active",
-      startDate: start,
-      endDate,
-      nextServiceDate: resolvedNextServiceDate,
-      planPrice: planConfig.planPrice,
-      taxPercent: planConfig.taxPercent,
-      discountPercent: planConfig.discountPercent,
-      totalAmount: planConfig.totalAmount,
-    });
-
-    if (resolvedNextServiceDate && effectiveServicesTotal !== 0) {
-      await MaintenanceService.create({
-        userId,
-        planId: plan._id,
-        date: resolvedNextServiceDate,
-        type: "Cleaning",
-        status: "Scheduled",
-        executionStatus: "Pending",
-        technicianNotes: getTechnicianNotesTemplate(settings),
-        serviceChecklist: getChecklistForServiceType(settings, "Cleaning"),
+    const amountInPaise = Math.round((planConfig.totalAmount || 0) * 100);
+    if (amountInPaise <= 0) {
+      return res.status(400).json({
+        message: "Invalid payment amount for selected plan",
       });
     }
+
+    const razorpay = getRazorpayInstance();
+    const receipt = `maint_${Date.now()}_${userId.toString().slice(-6)}`;
+
+    const order = await razorpay.orders.create({
+      amount: amountInPaise,
+      currency: "INR",
+      receipt,
+      notes: {
+        userId: String(userId),
+        planType,
+      },
+    });
+
+    await MaintenancePayment.create({
+      userId,
+      planType,
+      amount: planConfig.totalAmount,
+      currency: "INR",
+      receipt,
+      razorpayOrderId: order.id,
+      paymentStatus: "created",
+    });
+
+    return res.status(201).json({
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      planType,
+      displayAmount: planConfig.totalAmount,
+    });
+  } catch (error) {
+    console.error("CREATE MAINTENANCE PAYMENT ORDER ERROR:", error);
+    return res.status(500).json({
+      message: "Failed to create payment order",
+      error: error.message,
+    });
+  }
+};
+
+/* ===============================
+   VERIFY PAYMENT AND CREATE PLAN
+   POST /api/maintenance/payments/verify
+================================ */
+exports.verifyMaintenancePaymentAndCreatePlan = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const {
+      planType,
+      razorpay_order_id: razorpayOrderId,
+      razorpay_payment_id: razorpayPaymentId,
+      razorpay_signature: razorpaySignature,
+    } = req.body || {};
+
+    if (!planType || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return res.status(400).json({
+        message: "Missing required payment verification fields",
+      });
+    }
+
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+      return res.status(500).json({
+        message: "Razorpay credentials are not configured",
+      });
+    }
+
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
+      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .digest("hex");
+
+    if (generatedSignature !== razorpaySignature) {
+      await MaintenancePayment.findOneAndUpdate(
+        { razorpayOrderId, userId },
+        {
+          razorpayPaymentId,
+          razorpaySignature,
+          paymentStatus: "failed",
+        },
+        { new: true }
+      );
+
+      return res.status(400).json({
+        message: "Payment verification failed",
+      });
+    }
+
+    let paymentRecord = await MaintenancePayment.findOne({
+      razorpayOrderId,
+      userId,
+    });
+
+    if (!paymentRecord) {
+      return res.status(404).json({ message: "Payment record not found" });
+    }
+
+    if (paymentRecord.paymentStatus === "paid" && paymentRecord.planId) {
+      const existingPlan = await MaintenancePlan.findById(paymentRecord.planId);
+      if (existingPlan) {
+        return res.json({
+          message: "Plan already created",
+          plan: existingPlan,
+        });
+      }
+    }
+
+    const { plan } = await createMaintenancePlanForUser({
+      userId,
+      planType,
+    });
+
+    paymentRecord.razorpayPaymentId = razorpayPaymentId;
+    paymentRecord.razorpaySignature = razorpaySignature;
+    paymentRecord.paymentStatus = "paid";
+    paymentRecord.planId = plan._id;
+    await paymentRecord.save();
+
+    return res.status(201).json({
+      message: "Payment verified and maintenance plan created",
+      plan,
+    });
+  } catch (error) {
+    console.error("VERIFY MAINTENANCE PAYMENT ERROR:", error);
+    const statusCode = error.statusCode || 500;
+    return res.status(statusCode).json({
+      message:
+        error.message ||
+        "Failed to verify payment and create maintenance plan",
+    });
+  }
+};
+
+/* ===============================
+   PLANS
+   POST /api/maintenance/plans
+================================ */
+exports.createPlan = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { planType, startDate, nextServiceDate, servicesTotal } = req.body;
+    const { plan } = await createMaintenancePlanForUser({
+      userId,
+      planType,
+      startDate,
+      nextServiceDate,
+      servicesTotal,
+    });
 
     return res.status(201).json(plan);
   } catch (error) {
     console.error("CREATE MAINTENANCE PLAN ERROR:", error);
-    return res.status(500).json({
-      message: "Failed to create maintenance plan",
+    const statusCode = error.statusCode || 500;
+    return res.status(statusCode).json({
+      message: error.message || "Failed to create maintenance plan",
       error: error.message,
     });
   }

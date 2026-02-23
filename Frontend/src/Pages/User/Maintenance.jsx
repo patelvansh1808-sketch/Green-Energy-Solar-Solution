@@ -272,6 +272,29 @@ export default function Maintenance() {
     [getPlanPricingBreakdown]
   );
 
+  const loadRazorpaySdk = useCallback(() => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+
+      const existingScript = document.getElementById("razorpay-checkout-sdk");
+      if (existingScript) {
+        existingScript.addEventListener("load", () => resolve(true));
+        existingScript.addEventListener("error", () => resolve(false));
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.id = "razorpay-checkout-sdk";
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  }, []);
+
   const handleSubscribe = async () => {
     if (!selectedPlanForCheckout) {
       return;
@@ -282,11 +305,61 @@ export default function Maintenance() {
     try {
       setSubscribeError("");
       setSubscribingPlan(planType);
-      await maintenanceService.createPlan({ planType });
-      setSelectedPlanForCheckout(null);
-      await loadSummary();
+
+      const sdkLoaded = await loadRazorpaySdk();
+      if (!sdkLoaded) {
+        throw new Error("Unable to load Razorpay checkout. Please try again.");
+      }
+
+      const order = await maintenanceService.createPaymentOrder(planType);
+
+      await new Promise((resolve, reject) => {
+        const razorpay = new window.Razorpay({
+          key: order.keyId,
+          amount: order.amount,
+          currency: order.currency || "INR",
+          name: "Green Energy Solar Solutions",
+          description: `${planType} Maintenance Plan`,
+          order_id: order.orderId,
+          handler: async (response) => {
+            try {
+              await maintenanceService.verifyPaymentAndCreatePlan({
+                planType,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              });
+
+              setSelectedPlanForCheckout(null);
+              await loadSummary();
+              resolve(true);
+            } catch (verificationError) {
+              reject(
+                new Error(
+                  verificationError.response?.data?.message ||
+                    t("maintenance.subscribeFailed")
+                )
+              );
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              reject(new Error("Payment cancelled by user"));
+            },
+          },
+          prefill: {
+            name: user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(" "),
+            email: user?.email || "",
+          },
+          theme: {
+            color: "#059669",
+          },
+        });
+
+        razorpay.open();
+      });
     } catch (err) {
-      setSubscribeError(err.response?.data?.message || t("maintenance.subscribeFailed"));
+      setSubscribeError(err.response?.data?.message || err.message || t("maintenance.subscribeFailed"));
     } finally {
       setSubscribingPlan("");
     }

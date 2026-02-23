@@ -143,11 +143,11 @@ export default function ManageBookings() {
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           {[
-            { label: "Total Bookings", value: stats.total, icon: "📊", color: "blue" },
-            { label: "Pending", value: stats.pending, icon: "⏳", color: "yellow" },
-            { label: "Approved", value: stats.approved, icon: "✅", color: "green" },
-            { label: "In Progress", value: stats.inProgress, icon: "⚙️", color: "cyan" },
-            { label: "Completed", value: stats.completed, icon: "🎉", color: "purple" },
+            { label: "Total Bookings", value: stats.total, color: "blue" },
+            { label: "Pending", value: stats.pending, color: "yellow" },
+            { label: "Approved", value: stats.approved, color: "green" },
+            { label: "In Progress", value: stats.inProgress, color: "cyan" },
+            { label: "Completed", value: stats.completed, color: "purple" },
           ].map((stat, idx) => (
             <div
               key={idx}
@@ -155,7 +155,7 @@ export default function ManageBookings() {
             >
               <p className="text-sm text-gray-600 font-semibold">{stat.label}</p>
               <p className="text-3xl font-bold text-gray-800 mt-2">
-                {stat.icon} {stat.value}
+                {stat.value}
               </p>
             </div>
           ))}

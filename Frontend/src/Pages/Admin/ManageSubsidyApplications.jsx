@@ -24,13 +24,6 @@ export default function ManageSubsidyApplications() {
     Rejected: "bg-red-100 text-red-800",
   };
 
-  const statusIcons = {
-    Applied: "📝",
-    "Under Review": "👀",
-    Approved: "✅",
-    Rejected: "❌",
-  };
-
   // Fetch all applications
   useEffect(() => {
     fetchApplications();
@@ -229,7 +222,6 @@ export default function ManageSubsidyApplications() {
                           <p className="font-semibold text-gray-900">{app.customerId?.fullName || "N/A"}</p>
                           <p className="text-xs text-gray-500 mt-1">{app.customerId?.email || "N/A"}</p>
                         </div>
-                        <span className="text-lg">{statusIcons[app.status]}</span>
                       </div>
                       <div className="mt-2">
                         <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${statusColors[app.status]}`}>

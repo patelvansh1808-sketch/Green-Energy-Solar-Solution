@@ -329,6 +329,29 @@ export default function MaintenanceOverview() {
     }
   };
 
+  const handleDeleteSubscription = async (id) => {
+    const confirmed = window.confirm(
+      "Delete this subscription permanently? This will remove plan, services, reports, and related payment links for this plan from both admin and user side."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setActionLoadingId(id);
+      await api.delete(`/maintenance/admin/subscriptions/${id}`);
+      await Promise.all([fetchOverview(), fetchSubscriptions()]);
+      if (selectedSubscription?._id === id) {
+        setSelectedSubscription(null);
+      }
+    } catch (err) {
+      setSubsError(err.response?.data?.message || "Failed to delete subscription");
+    } finally {
+      setActionLoadingId("");
+    }
+  };
+
   const getServiceCustomerLabel = (item) => {
     const user = item?.userId || {};
     const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
@@ -1125,6 +1148,14 @@ export default function MaintenanceOverview() {
                           className="px-2.5 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200 disabled:opacity-60"
                         >
                           Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSubscription(item._id)}
+                          disabled={actionLoadingId === item._id}
+                          className="px-2.5 py-1 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                        >
+                          Delete
                         </button>
                       </div>
                     </td>

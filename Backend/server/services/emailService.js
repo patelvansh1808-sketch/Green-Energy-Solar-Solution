@@ -518,3 +518,242 @@ exports.sendTicketNotificationEmail = async (ticketData) => {
     return false;
   }
 };
+
+// Send maintenance plan subscription email
+exports.sendMaintenancePlanSubscriptionEmail = async (userEmail, userName, planDetails) => {
+  try {
+    const planDurationText = {
+      "1 Month": "1 Month",
+      "6 Months": "6 Months",
+      "1 Year": "1 Year",
+      "Lifetime": "Lifetime",
+    }[planDetails.planType] || planDetails.planType;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER || "noreply@suryaurja.com",
+      to: userEmail,
+      subject: "✅ Maintenance Plan Subscription Confirmed - SuryaUrja",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+            .details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #16a34a; }
+            .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+            .detail-label { font-weight: bold; color: #374151; }
+            .detail-value { color: #16a34a; font-weight: 600; }
+            .highlight-box { background: #f0fdf4; padding: 15px; border-radius: 6px; margin: 15px 0; }
+            .button { display: inline-block; background: #16a34a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>☀️ SuryaUrja</h1>
+              <h2>Maintenance Plan Activated!</h2>
+            </div>
+            <div class="content">
+              <p>Dear ${userName},</p>
+              <p>🎉 Congratulations! Your maintenance plan subscription has been successfully activated.</p>
+              
+              <div class="details">
+                <h3 style="color: #16a34a; margin-top: 0;">Plan Details</h3>
+                <div class="detail-row">
+                  <span class="detail-label">Plan Type:</span>
+                  <span class="detail-value">${planDurationText}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Total Services:</span>
+                  <span class="detail-value">${planDetails.servicesTotal || 0}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Services Used:</span>
+                  <span class="detail-value">${planDetails.servicesUsed || 0}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Remaining Services:</span>
+                  <span class="detail-value">${(planDetails.servicesTotal || 0) - (planDetails.servicesUsed || 0)}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Start Date:</span>
+                  <span>${planDetails.startDate ? new Date(planDetails.startDate).toLocaleDateString('en-IN') : '-'}</span>
+                </div>
+                ${planDetails.endDate ? `
+                <div class="detail-row">
+                  <span class="detail-label">End Date:</span>
+                  <span>${new Date(planDetails.endDate).toLocaleDateString('en-IN')}</span>
+                </div>
+                ` : ''}
+                <div class="detail-row" style="border-bottom: none;">
+                  <span class="detail-label">Amount Paid:</span>
+                  <span class="detail-value" style="font-size: 18px;">₹${(planDetails.totalAmount || 0).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div class="highlight-box">
+                <h4 style="margin-top: 0; color: #16a34a;">📅 Next Service</h4>
+                <p style="margin: 0;">Your first service is scheduled for: <strong>${planDetails.nextServiceDate ? new Date(planDetails.nextServiceDate).toLocaleDateString('en-IN') : '-'}</strong></p>
+              </div>
+
+              <p><strong>What to Expect:</strong></p>
+              <ul style="color: #4b5563;">
+                <li>Our technician will contact you 24 hours before the scheduled service</li>
+                <li>Each service includes system cleaning, testing, and detailed inspection</li>
+                <li>You'll receive a comprehensive report after each service completion</li>
+                <li>Service reminders will be sent via email</li>
+              </ul>
+
+              <center>
+                <a href="http://localhost:3000/user/maintenance" class="button">View My Plan</a>
+              </center>
+
+              <p>If you have any questions or need to reschedule, please don't hesitate to contact our support team.</p>
+              
+              <p style="margin-top: 30px;">Best regards,<br>
+              <strong>SuryaUrja Team</strong><br>
+              Green Energy Solar Solutions</p>
+            </div>
+            <div class="footer">
+              <p>This is an automated email. Please do not reply to this message.</p>
+              <p>&copy; 2026 SuryaUrja. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Maintenance plan subscription email sent:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("❌ Failed to send maintenance plan subscription email:", error);
+    return false;
+  }
+};
+
+// Send maintenance service completion email
+exports.sendMaintenanceServiceCompletedEmail = async (userEmail, userName, serviceDetails) => {
+  try {
+    const serviceTypeText = {
+      "Cleaning": "System Cleaning",
+      "Testing": "System Testing",
+    }[serviceDetails.serviceType] || serviceDetails.serviceType;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER || "noreply@suryaurja.com",
+      to: userEmail,
+      subject: "✅ Maintenance Service Completed - SuryaUrja",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+            .details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #16a34a; }
+            .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+            .detail-label { font-weight: bold; color: #374151; }
+            .detail-value { color: #16a34a; font-weight: 600; }
+            .status-badge { display: inline-block; background: #10b981; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+            .remaining-box { background: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6; text-align: center; }
+            .remaining-count { font-size: 36px; color: #3b82f6; font-weight: bold; }
+            .remaining-text { color: #1e40af; font-weight: 600; margin-top: 5px; }
+            .button { display: inline-block; background: #16a34a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>☀️ SuryaUrja</h1>
+              <h2>Service Completed Successfully!</h2>
+            </div>
+            <div class="content">
+              <p>Dear ${userName},</p>
+              <p>✅ Great news! Your maintenance service has been completed successfully.</p>
+              
+              <div class="details">
+                <h3 style="color: #16a34a; margin-top: 0;">Service Details</h3>
+                <div class="detail-row">
+                  <span class="detail-label">Service Type:</span>
+                  <span class="detail-value">${serviceTypeText}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Completed On:</span>
+                  <span>${serviceDetails.completionTime ? new Date(serviceDetails.completionTime).toLocaleDateString('en-IN') + ' ' + new Date(serviceDetails.completionTime).toLocaleTimeString('en-IN') : '-'}</span>
+                </div>
+                ${serviceDetails.technicianName ? `
+                <div class="detail-row">
+                  <span class="detail-label">Technician:</span>
+                  <span>${serviceDetails.technicianName}</span>
+                </div>
+                ` : ''}
+                <div class="detail-row" style="border-bottom: none;">
+                  <span class="detail-label">Status:</span>
+                  <span><span class="status-badge">✓ COMPLETED</span></span>
+                </div>
+              </div>
+
+              <div class="remaining-box">
+                <p style="margin-top: 0; color: #1e40af; font-weight: 600;">Services Remaining</p>
+                <div class="remaining-count">${serviceDetails.remainingServices}</div>
+                <div class="remaining-text">${serviceDetails.remainingServices === 1 ? 'service left' : 'services left'} in your plan</div>
+              </div>
+
+              ${serviceDetails.workDone ? `
+              <div class="details">
+                <h4 style="margin-top: 0; color: #374151;">Work Completed</h4>
+                <p>${serviceDetails.workDone}</p>
+              </div>
+              ` : ''}
+
+              ${serviceDetails.nextServiceDate ? `
+              <div class="details">
+                <h4 style="margin-top: 0; color: #16a34a;">📅 Next Service Scheduled</h4>
+                <p style="margin: 0;">Date: <strong>${new Date(serviceDetails.nextServiceDate).toLocaleDateString('en-IN')}</strong></p>
+              </div>
+              ` : ''}
+
+              <p><strong>Next Steps:</strong></p>
+              <ul style="color: #4b5563;">
+                <li>You can download the detailed service report from your dashboard</li>
+                <li>Keep the report for warranty and record purposes</li>
+                ${serviceDetails.remainingServices > 0 ? `<li>Your next service is already scheduled - a reminder will be sent soon</li>` : `<li>Your plan has been completed - consider renewing for continued maintenance</li>`}
+              </ul>
+
+              <center>
+                <a href="http://localhost:3000/user/maintenance" class="button">View Service Report</a>
+              </center>
+
+              <p>If you have any questions about the completed service, please contact our support team.</p>
+              
+              <p style="margin-top: 30px;">Best regards,<br>
+              <strong>SuryaUrja Team</strong><br>
+              Green Energy Solar Solutions</p>
+            </div>
+            <div class="footer">
+              <p>This is an automated email. Please do not reply to this message.</p>
+              <p>&copy; 2026 SuryaUrja. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Maintenance service completion email sent:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("❌ Failed to send maintenance service completion email:", error);
+    return false;
+  }
+};

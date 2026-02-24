@@ -130,6 +130,12 @@ router.patch(
   roleMiddleware("admin"),
   maintenanceController.cancelAdminSubscription
 );
+router.delete(
+  "/admin/subscriptions/:id",
+  authMiddleware,
+  roleMiddleware("admin"),
+  maintenanceController.deleteAdminSubscription
+);
 router.get(
   "/admin/services/schedule",
   authMiddleware,

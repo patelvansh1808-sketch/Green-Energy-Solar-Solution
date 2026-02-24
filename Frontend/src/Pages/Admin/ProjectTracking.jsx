@@ -403,7 +403,6 @@ export default function ProjectTracking() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold text-gray-900">Installation & Project Tracking</h1>
-            <p className="text-gray-600 mt-2">Manage projects from survey to go-live</p>
           </div>
           <div className="flex gap-3">
             <button

@@ -105,8 +105,7 @@ export default function InventoryManagement() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-gray-800">📦 Inventory & Asset Management</h1>
-            <p className="text-gray-600 mt-2">Track stock levels for panels, inverters, meters, and spares.</p>
+            <h1 className="text-4xl font-bold text-gray-800">Inventory & Asset Management</h1>
           </div>
           <button
             onClick={() => setShowAddModal(true)}

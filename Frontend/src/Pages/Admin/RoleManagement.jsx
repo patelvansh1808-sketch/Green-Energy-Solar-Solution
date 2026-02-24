@@ -185,8 +185,7 @@ export default function RoleManagement() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">👥 Role & User Management</h1>
-            <p className="text-gray-600">Manage staff roles and permissions (In-house only)</p>
+            <h1 className="text-3xl font-bold text-gray-800">Role & User Management</h1>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}

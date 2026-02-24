@@ -136,8 +136,7 @@ export default function ManageBookings() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">📋 Booking Management</h1>
-          <p className="text-gray-600">CRM + Operations Bridge - Manage all solar installations</p>
+          <h1 className="text-4xl font-bold text-gray-800">Booking Management</h1>
         </div>
 
         {/* Statistics Cards */}

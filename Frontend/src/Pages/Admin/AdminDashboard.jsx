@@ -127,7 +127,6 @@ export default function AdminDashboard() {
         {/* HEADER */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">System overview and quick actions</p>
         </div>
 
         {/* STAT CARDS */}
@@ -230,6 +229,13 @@ export default function AdminDashboard() {
               className="flex items-center justify-center p-4 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition text-emerald-700 font-medium"
             >
               <span className="text-2xl mr-2">💼</span> Financial Analytics
+            </button>
+
+            <button
+              onClick={() => navigate("/admin/maintenance")}
+              className="flex items-center justify-center p-4 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 transition text-cyan-700 font-medium"
+            >
+              <span className="text-2xl mr-2">🛠️</span> Maintenance
             </button>
 
             <button

@@ -108,10 +108,7 @@ export default function FinancialAnalytics() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div>
-          <h1 className="text-4xl font-bold text-gray-800">💼 Financial & Revenue Analytics</h1>
-          <p className="text-gray-600 mt-2">
-            Company performance, profit margins, and revenue trends in one place.
-          </p>
+          <h1 className="text-4xl font-bold text-gray-800">Financial & Revenue Analytics</h1>
         </div>
 
         {error && (

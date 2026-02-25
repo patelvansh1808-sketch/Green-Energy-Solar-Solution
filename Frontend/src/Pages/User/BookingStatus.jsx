@@ -2,6 +2,21 @@ import React, { useState, useEffect } from "react";
 import { useI18n } from "../../Context/I18nContext";
 import bookingService from "../../services/bookingService";
 
+const loadRazorpaySdk = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+
 const BookingStatus = () => {
   const { t } = useI18n();
   const [bookings, setBookings] = useState([]);
@@ -9,6 +24,7 @@ const BookingStatus = () => {
   const [error, setError] = useState("");
   const [expandedDetails, setExpandedDetails] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [payingBookingId, setPayingBookingId] = useState("");
 
   useEffect(() => {
     fetchBookings();
@@ -83,6 +99,156 @@ const BookingStatus = () => {
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete booking");
       setDeleteConfirm(null);
+    }
+  };
+
+  const isTruthyFlag = (value) => {
+    return value === true || value === "true" || value === 1 || value === "1";
+  };
+
+  const canShowInitialPayment = (booking) => {
+    const advancePaid = isTruthyFlag(booking?.payment?.advancePaid);
+    const paymentCaptured = isTruthyFlag(booking?.payment?.paymentCaptured);
+    const finalPaid = isTruthyFlag(booking?.payment?.finalPaid);
+    return !advancePaid && !paymentCaptured && !finalPaid && booking?.status !== "Cancelled";
+  };
+
+  const canShowFinalPayment = (booking) => {
+    const finalPaymentRequested = isTruthyFlag(booking?.payment?.finalPaymentRequested);
+    const finalPaid = isTruthyFlag(booking?.payment?.finalPaid);
+    return finalPaymentRequested && !finalPaid && Number(booking?.payment?.finalAmount || 0) > 0;
+  };
+
+  const getPaymentHint = (booking) => {
+    if (booking?.status === "Cancelled") {
+      return "Payment is unavailable for cancelled bookings.";
+    }
+
+    const advancePaid = isTruthyFlag(booking?.payment?.advancePaid);
+    const paymentCaptured = isTruthyFlag(booking?.payment?.paymentCaptured);
+    const finalPaymentRequested = isTruthyFlag(booking?.payment?.finalPaymentRequested);
+    const finalPaid = isTruthyFlag(booking?.payment?.finalPaid);
+
+    if (finalPaid) {
+      return "All payments are completed for this booking.";
+    }
+
+    if (advancePaid || paymentCaptured) {
+      if (finalPaymentRequested) {
+        return "Remaining payment request is active. Use Pay Remaining Amount.";
+      }
+      return "Advance payment is completed. Remaining payment button appears after admin starts installation and sends request.";
+    }
+
+    return "Initial booking payment is pending. Use Pay Booking Amount.";
+  };
+
+  const handlePayRemaining = async (booking) => {
+    try {
+      setPayingBookingId(booking._id);
+      setError("");
+
+      const sdkLoaded = await loadRazorpaySdk();
+      if (!sdkLoaded) {
+        throw new Error("Razorpay SDK failed to load");
+      }
+
+      const orderData = await bookingService.createFinalPaymentOrder(booking._id);
+
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amountInPaise,
+        currency: orderData.currency || "INR",
+        name: "SuryaUrja Solar Solutions",
+        description: `Remaining Payment ${orderData.bookingCode || ""}${orderData.isSplitPayment ? ` (${orderData.totalTransactionsNeeded} payments needed)` : ""}`,
+        order_id: orderData.orderId,
+        prefill: {
+          name: booking.contactPerson || booking.customer?.fullName || "",
+          contact: booking.contactPhone || booking.customer?.phone || "",
+        },
+        theme: { color: "#2563eb" },
+        method: {
+          upi: orderData.enableUpi !== false,
+        },
+        handler: async (paymentResponse) => {
+          try {
+            const verifyResponse = await bookingService.verifyFinalPayment(booking._id, paymentResponse);
+            
+            // Show success message with remaining amount info
+            const paymentStatus = verifyResponse?.paymentStatus;
+            if (paymentStatus?.remainingAmount > 0) {
+              setError(`Payment successful! Remaining amount: ₹${paymentStatus.remainingAmount.toLocaleString("en-IN")}. Click "Pay Remaining Amount" again to complete payment.`);
+            }
+            
+            await fetchBookings();
+          } catch (err) {
+            setError(err.response?.data?.message || err.message || "Payment verification failed");
+          }
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", (failure) => {
+        setError(failure?.error?.description || "Remaining payment failed. Please try again.");
+      });
+      razorpay.open();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || "Failed to process remaining payment"
+      );
+    } finally {
+      setPayingBookingId("");
+    }
+  };
+
+  const handlePayBooking = async (booking) => {
+    try {
+      setPayingBookingId(booking._id);
+      setError("");
+
+      const sdkLoaded = await loadRazorpaySdk();
+      if (!sdkLoaded) {
+        throw new Error("Razorpay SDK failed to load");
+      }
+
+      const orderData = await bookingService.createBookingPaymentOrder(booking._id);
+
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amountInPaise,
+        currency: orderData.currency || "INR",
+        name: "SuryaUrja Solar Solutions",
+        description: `Booking Payment ${orderData.bookingCode || ""}`,
+        order_id: orderData.orderId,
+        prefill: {
+          name: booking.contactPerson || booking.customer?.fullName || "",
+          contact: booking.contactPhone || booking.customer?.phone || "",
+        },
+        theme: { color: "#2563eb" },
+        method: {
+          upi: orderData.enableUpi !== false,
+        },
+        handler: async (paymentResponse) => {
+          try {
+            await bookingService.verifyBookingPayment(booking._id, paymentResponse);
+            await fetchBookings();
+          } catch (err) {
+            setError(err.response?.data?.message || err.message || "Payment verification failed");
+          }
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", (failure) => {
+        setError(failure?.error?.description || "Booking payment failed. Please try again.");
+      });
+      razorpay.open();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || "Failed to process booking payment"
+      );
+    } finally {
+      setPayingBookingId("");
     }
   };
 
@@ -564,7 +730,7 @@ const BookingStatus = () => {
                 )}
 
                 {/* Action Buttons */}
-                <div className="p-6 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
+                <div className="p-6 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:flex-wrap gap-3">
                   <button
                     onClick={() => toggleDetails(booking._id)}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
@@ -584,6 +750,47 @@ const BookingStatus = () => {
                   >
                     <span>📄</span> Download Report
                   </button>
+                  {canShowInitialPayment(booking) && (
+                    <button
+                      onClick={() => handlePayBooking(booking)}
+                      disabled={payingBookingId === booking._id}
+                      className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-60"
+                    >
+                      <span>💰</span>
+                      {payingBookingId === booking._id ? "Processing..." : "Pay Booking Amount"}
+                    </button>
+                  )}
+                  {canShowFinalPayment(booking) && (
+                    <div className="flex-1 space-y-3">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-blue-900 font-semibold text-sm">
+                          💳 Remaining: ₹{Number(booking?.payment?.finalAmount || 0).toLocaleString("en-IN")}
+                        </p>
+                        <p className="text-blue-700 text-xs mt-1">
+                          {booking?.payment?.isSplitPayment 
+                            ? `(Using domestic card: Transactions needed: ${Math.ceil(Number(booking?.payment?.finalAmount || 0) / 15000)})` 
+                            : ""}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handlePayRemaining(booking)}
+                        disabled={payingBookingId === booking._id}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-60"
+                      >
+                        <span>💳</span>
+                        {payingBookingId === booking._id 
+                          ? "Processing..." 
+                          : "Pay Remaining Amount"}
+                      </button>
+                    </div>
+                  )}
+                  {!canShowInitialPayment(booking) && !canShowFinalPayment(booking) && booking?.status !== "Cancelled" && (
+                    <div className="flex-1 bg-slate-100 border border-slate-200 rounded-lg p-3">
+                      <p className="text-slate-700 text-sm font-medium">
+                        {getPaymentHint(booking)}
+                      </p>
+                    </div>
+                  )}
                   {["Pending", "Cancelled"].includes(booking.status) && (
                     <button
                       onClick={() => setDeleteConfirm(booking._id)}

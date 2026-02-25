@@ -24,6 +24,34 @@ router.post(
   bookingController.createBooking
 );
 
+// CREATE BOOKING PAYMENT ORDER (Razorpay)
+router.post(
+  "/:id/payment/create-order",
+  authMiddleware,
+  bookingController.createBookingPaymentOrder
+);
+
+// VERIFY BOOKING PAYMENT (Razorpay)
+router.post(
+  "/:id/payment/verify",
+  authMiddleware,
+  bookingController.verifyBookingPayment
+);
+
+// CREATE REMAINING BOOKING PAYMENT ORDER (Razorpay)
+router.post(
+  "/:id/payment/create-final-order",
+  authMiddleware,
+  bookingController.createBookingFinalPaymentOrder
+);
+
+// VERIFY REMAINING BOOKING PAYMENT (Razorpay)
+router.post(
+  "/:id/payment/verify-final",
+  authMiddleware,
+  bookingController.verifyBookingFinalPayment
+);
+
 // GET LOGGED-IN USER BOOKINGS
 router.get(
   "/my",

@@ -364,18 +364,18 @@ export default function EngineerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">👷 Engineer Dashboard</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">👷 Engineer Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome back, {user?.name}! Here are your assigned projects.</p>
         </div>
 
         {error && <div className="bg-red-50 border border-red-300 text-red-800 rounded-lg p-4 mb-6">{error}</div>}
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <div className="bg-white border border-gray-200 rounded-lg p-4 text-center shadow-sm">
             <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
             <div className="text-sm text-gray-600">Total Projects</div>
@@ -399,8 +399,8 @@ export default function EngineerDashboard() {
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden mb-6">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Assigned Cleaning Services ({assignedServices.length})</h2>
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Assigned Cleaning Services ({assignedServices.length})</h2>
           </div>
 
           {assignedServices.length === 0 ? (
@@ -464,7 +464,7 @@ export default function EngineerDashboard() {
 
         {showServiceExecutionModal && selectedService && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Service Execution Tracking</h3>
 
               <div className="space-y-4">
@@ -576,8 +576,8 @@ export default function EngineerDashboard() {
 
         {/* Projects List */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">My Assigned Projects ({filteredProjects.length})</h2>
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">My Assigned Projects ({filteredProjects.length})</h2>
           </div>
 
           {filteredProjects.length === 0 ? (
@@ -653,11 +653,11 @@ export default function EngineerDashboard() {
 
       {/* PROJECT DETAIL MODAL */}
       {showDetailModal && selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-3xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{selectedProject.projectName}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{selectedProject.projectName}</h2>
                 <p className="text-gray-600 mt-1">{selectedProject.description}</p>
               </div>
               <button onClick={() => setShowDetailModal(false)} className="text-2xl text-gray-500 hover:text-gray-700">
@@ -675,7 +675,7 @@ export default function EngineerDashboard() {
               </div>
 
               {/* Customer Details */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-600">Customer Name</p>
                   <p className="font-semibold text-gray-900">{selectedProject.customerName}</p>
@@ -697,7 +697,7 @@ export default function EngineerDashboard() {
               {/* System Details */}
               <div className="border-t pt-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">System Details</h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600">System Capacity</p>
                     <p className="text-2xl font-bold text-blue-600">{selectedProject.systemCapacity} kW</p>

@@ -4,6 +4,21 @@ import { LocationService } from "../../services/locationService";
 import { useAuth } from "../../Context/AuthContext";
 import { useI18n } from "../../Context/I18nContext";
 
+const loadRazorpaySdk = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+
 export default function Booking() {
   const { user } = useAuth();
   const { t } = useI18n();
@@ -143,8 +158,109 @@ export default function Booking() {
 
       const response = await bookingService.createBooking(bookingPayload);
 
-      setSuccess(`✅ Booking ${response.booking?.bookingId || '#' + response.booking?._id?.slice(-8)} submitted successfully! We will contact you within 24 hours.`);
-      setActiveStep(3);
+      const bookingId = response?.booking?._id;
+      if (!bookingId) {
+        throw new Error("Booking created but payment could not be initialized");
+      }
+
+      const sdkLoaded = await loadRazorpaySdk();
+      if (!sdkLoaded) {
+        throw new Error("Razorpay SDK failed to load. Please try again.");
+      }
+
+      const orderData = await bookingService.createBookingPaymentOrder(bookingId);
+
+      const amountValue = Number(orderData?.amount || 0);
+      const fullAmountValue = Number(orderData?.fullAmount || amountValue);
+      const isHighAmount = fullAmountValue >= 100000;
+      const isAdvanceStage = orderData?.paymentStage === "advance";
+
+      const checkoutOptions = {
+        key: orderData.keyId,
+        amount: orderData.amountInPaise,
+        currency: orderData.currency || "INR",
+        name: "SuryaUrja Solar Solutions",
+        description: `${isAdvanceStage ? "Booking Advance Payment" : "Booking Payment"} ${orderData.bookingCode || ""}`,
+        order_id: orderData.orderId,
+        prefill: {
+          name: formData.contactPerson || user?.name || "",
+          email: user?.email || "",
+          contact: formData.contactPhone || "",
+        },
+        notes: {
+          bookingId,
+          bookingCode: orderData.bookingCode || "",
+        },
+        theme: {
+          color: "#2563eb",
+        },
+        config: {
+          display: {
+            blocks: isHighAmount
+              ? {
+                  preferred: {
+                    name: "Preferred Methods for Large Amount",
+                    instruments: [
+                      { method: "netbanking" },
+                      { method: "card" },
+                      { method: "emi" },
+                    ],
+                  },
+                }
+              : undefined,
+            sequence: isHighAmount ? ["block.preferred"] : undefined,
+            preferences: {
+              show_default_blocks: true,
+            },
+          },
+        },
+        handler: async (paymentResponse) => {
+          try {
+            await bookingService.verifyBookingPayment(bookingId, paymentResponse);
+            setSuccess(
+              isAdvanceStage
+                ? `✅ Booking ${response.booking?.bookingId || ""} created and advance payment completed successfully! Remaining amount can be collected before installation.`
+                : `✅ Booking ${response.booking?.bookingId || ""} created and payment completed successfully!`
+            );
+            setActiveStep(3);
+          } catch (verifyError) {
+            setError(
+              verifyError?.response?.data?.message ||
+                "Payment received, but verification failed. Please contact support with transaction details."
+            );
+            setActiveStep(2);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setError(
+              "Payment was cancelled. Your booking is created in pending state; you can retry payment from booking status page."
+            );
+            setActiveStep(2);
+          },
+        },
+      };
+
+      if (isHighAmount) {
+        checkoutOptions.method = {
+          upi: false,
+        };
+      }
+
+      const razorpay = new window.Razorpay(checkoutOptions);
+      razorpay.on("payment.failed", (failureResponse) => {
+        setError(
+          failureResponse?.error?.description ||
+            "Payment failed. Please try again with Card/NetBanking/EMI."
+        );
+      });
+      razorpay.open();
+
+      if (isHighAmount) {
+        setSuccess(
+          `Booking ${response.booking?.bookingId || ""} created. Since total exceeds ₹1,00,000, checkout is collecting only advance amount ₹${amountValue.toLocaleString("en-IN")} with non-UPI methods prioritized.`
+        );
+      }
       
       // Reset form after 3 seconds
       setTimeout(() => {

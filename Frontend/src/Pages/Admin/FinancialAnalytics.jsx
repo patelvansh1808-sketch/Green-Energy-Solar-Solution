@@ -13,7 +13,11 @@ export default function FinancialAnalytics() {
   const [profitability, setProfitability] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filters, setFilters] = useState({ startDate: "", endDate: "" });
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    revenueType: "all",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,6 +26,7 @@ export default function FinancialAnalytics() {
         const params = {};
         if (filters.startDate) params.startDate = filters.startDate;
         if (filters.endDate) params.endDate = filters.endDate;
+        if (filters.revenueType) params.revenueType = filters.revenueType;
         const [overviewRes, reportRes, profitRes, roiRes, costRes] = await Promise.all([
           financeService.getOverview(params),
           financeService.getRevenueReport(params),
@@ -44,13 +49,24 @@ export default function FinancialAnalytics() {
     };
 
     fetchData();
-  }, [filters.startDate, filters.endDate]);
+  }, [filters.startDate, filters.endDate, filters.revenueType]);
 
   const handleExportRevenueCsv = () => {
-    const header = ["Period", "Revenue", "Cost", "Profit", "MarginPercent", "Bookings"];
+    const header = [
+      "Period",
+      "Revenue",
+      "InstallationRevenue",
+      "MaintenanceRevenue",
+      "Cost",
+      "Profit",
+      "MarginPercent",
+      "Entries",
+    ];
     const rows = report.map((r) => [
       r.period,
       r.revenue || 0,
+      r.bookingRevenue || 0,
+      r.maintenanceRevenue || 0,
       r.cost || 0,
       r.profit || 0,
       r.marginPercent || 0,
@@ -82,17 +98,17 @@ export default function FinancialAnalytics() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
         <p className="text-gray-600">Loading financial analytics...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         <div>
-          <h1 className="text-4xl font-bold text-gray-800">💼 Financial & Revenue Analytics</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">💼 Financial & Revenue Analytics</h1>
           <p className="text-gray-600 mt-2">
             Company performance, profit margins, and revenue trends in one place.
           </p>
@@ -105,8 +121,8 @@ export default function FinancialAnalytics() {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date</label>
               <input
@@ -126,8 +142,20 @@ export default function FinancialAnalytics() {
               />
             </div>
             <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Revenue Type</label>
+              <select
+                value={filters.revenueType}
+                onChange={(e) => setFilters({ ...filters, revenueType: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="all">All Revenue</option>
+                <option value="maintenance">Maintenance Revenue Only</option>
+                <option value="booking">Booking / Installation Revenue Only</option>
+              </select>
+            </div>
+            <div>
               <button
-                onClick={() => setFilters({ startDate: "", endDate: "" })}
+                onClick={() => setFilters({ startDate: "", endDate: "", revenueType: "all" })}
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition"
               >
                 Reset Filters
@@ -146,27 +174,33 @@ export default function FinancialAnalytics() {
 
         {/* Overview Cards */}
         {overview && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
-              <p className="text-sm text-gray-500">Total Revenue (Completed)</p>
+              <p className="text-sm text-gray-500">Total Revenue</p>
               <p className="text-2xl font-bold text-green-600 mt-2">
                 {formatCurrency(overview.revenue?.totalRevenue)}
               </p>
-              <p className="text-xs text-gray-400 mt-1">From completed installations</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Filter: {filters.revenueType === "maintenance"
+                  ? "Maintenance only"
+                  : filters.revenueType === "booking"
+                    ? "Booking / Installation only"
+                    : "All revenue streams"}
+              </p>
             </div>
             <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-              <p className="text-sm text-gray-500">Pipeline Revenue</p>
+              <p className="text-sm text-gray-500">Booking / Installation Revenue</p>
               <p className="text-2xl font-bold text-blue-600 mt-2">
-                {formatCurrency(overview.revenue?.pipelineRevenue)}
+                {formatCurrency(overview.revenue?.installationRevenue)}
               </p>
-              <p className="text-xs text-gray-400 mt-1">Approved + scheduled + in progress</p>
+              <p className="text-xs text-gray-400 mt-1">From completed installations</p>
             </div>
             <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
-              <p className="text-sm text-gray-500">Total Cost (Completed)</p>
+              <p className="text-sm text-gray-500">Maintenance Revenue</p>
               <p className="text-2xl font-bold text-orange-600 mt-2">
-                {formatCurrency(overview.costs?.totalCost)}
+                {formatCurrency(overview.revenue?.maintenanceRevenue)}
               </p>
-              <p className="text-xs text-gray-400 mt-1">Actual installation costs</p>
+              <p className="text-xs text-gray-400 mt-1">Paid maintenance subscriptions</p>
             </div>
             <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
               <p className="text-sm text-gray-500">Gross Profit & Margin</p>
@@ -180,20 +214,28 @@ export default function FinancialAnalytics() {
           </div>
         )}
 
+        {overview && (
+          <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
+            <p className="text-sm text-gray-600">
+              Pipeline Revenue (booking only): {formatCurrency(overview.revenue?.pipelineRevenue)}
+            </p>
+          </div>
+        )}
+
         {/* Company ROI */}
-        {companyRoi && (
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-emerald-500">
-            <div className="flex items-center justify-between">
+        {companyRoi && filters.revenueType !== "maintenance" && (
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 border-l-4 border-emerald-500">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p className="text-sm text-gray-500">Company ROI (Completed)</p>
-                <p className="text-3xl font-bold text-emerald-600 mt-2">
+                <p className="text-2xl sm:text-3xl font-bold text-emerald-600 mt-2">
                   {companyRoi.roi?.percent || 0}%
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
                   Based on completed bookings: {companyRoi.totals?.completedBookings || 0}
                 </p>
               </div>
-              <div className="text-right text-sm text-gray-500 space-y-1">
+              <div className="text-left sm:text-right text-sm text-gray-500 space-y-1">
                 <p>Revenue: {formatCurrency(companyRoi.totals?.totalRevenue)}</p>
                 <p>Cost: {formatCurrency(companyRoi.totals?.totalCost)}</p>
                 <p>Profit: {formatCurrency(companyRoi.totals?.profit)}</p>
@@ -203,8 +245,8 @@ export default function FinancialAnalytics() {
         )}
 
         {/* Installation Cost Analysis */}
-        {costAnalysis && (
-          <div className="bg-white rounded-lg shadow p-6">
+        {costAnalysis && filters.revenueType !== "maintenance" && (
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-800">🧾 Installation Cost Analysis</h2>
               <span className="text-sm text-gray-500">
@@ -273,7 +315,13 @@ export default function FinancialAnalytics() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-800">📈 Revenue & Profit Trend</h2>
-            <span className="text-sm text-gray-500">Completed bookings</span>
+            <span className="text-sm text-gray-500">
+              {filters.revenueType === "maintenance"
+                ? "Paid maintenance subscriptions"
+                : filters.revenueType === "booking"
+                  ? "Completed bookings"
+                  : "Bookings + maintenance"}
+            </span>
           </div>
           {chartData.labels.length > 1 ? (
             <div className="border rounded-lg p-4">
@@ -334,50 +382,129 @@ export default function FinancialAnalytics() {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4">📊 Project Profitability</h2>
           {profitability.length === 0 ? (
-            <p className="text-gray-500">No completed projects found.</p>
+            <p className="text-gray-500">
+              {filters.revenueType === "maintenance"
+                ? "No paid maintenance revenue found."
+                : filters.revenueType === "booking"
+                  ? "No completed projects found."
+                  : "No revenue entries found."}
+            </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Booking</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Customer</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">System</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Revenue</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Cost</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Profit</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Margin %</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {profitability.map((row) => (
-                    <tr key={row.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-blue-600 font-mono">
-                        {row.bookingId || row.id?.slice(-8)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
-                        {row.customer || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
-                        {row.systemType} • {row.capacity} kW
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
-                        {formatCurrency(row.revenue)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
-                        {formatCurrency(row.cost)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
-                        {formatCurrency(row.profit)}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-gray-700">
-                        {row.marginPercent}%
-                      </td>
+            <>
+              {/* DESKTOP VIEW */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-100 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Reference</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Source</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Customer</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Plan / System</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Revenue</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Cost</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Profit</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Margin %</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {profitability.map((row) => (
+                      <tr key={row.id} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm text-blue-600 font-mono">
+                          {row.bookingId || row.paymentId || row.id?.slice(-8)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {row.entryType === "maintenance" ? "Maintenance" : "Booking"}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {row.customer || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {row.entryType === "maintenance"
+                            ? `${row.planType || "-"} Plan`
+                            : `${row.systemType || "-"} • ${row.capacity || 0} kW`}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {formatCurrency(row.revenue)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {formatCurrency(row.cost)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {formatCurrency(row.profit)}
+                        </td>
+                        <td className="px-4 py-3 text-sm font-semibold text-gray-700">
+                          {row.marginPercent}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE VIEW */}
+              <div className="md:hidden p-4 space-y-4">
+                {profitability.map((row) => (
+                  <div
+                    key={row.id}
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <p className="font-mono text-sm text-blue-600 font-semibold">
+                          {row.bookingId || row.paymentId || row.id?.slice(-8)}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {row.entryType === "maintenance" ? "Maintenance" : "Booking"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded border border-gray-200 text-sm">
+                      <p className="text-xs text-gray-600 font-medium">Customer</p>
+                      <p className="text-gray-800 mt-1">{row.customer || "—"}</p>
+                    </div>
+
+                    <div className="bg-white p-3 rounded border border-gray-200 text-sm">
+                      <p className="text-xs text-gray-600 font-medium">
+                        {row.entryType === "maintenance" ? "Plan" : "System"}
+                      </p>
+                      <p className="text-gray-800 mt-1">
+                        {row.entryType === "maintenance"
+                          ? `${row.planType || "-"} Plan`
+                          : `${row.systemType || "-"} • ${row.capacity || 0} kW`}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p className="text-gray-600 font-medium">Revenue</p>
+                        <p className="text-gray-800 font-semibold mt-1">
+                          {formatCurrency(row.revenue)}
+                        </p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p className="text-gray-600 font-medium">Cost</p>
+                        <p className="text-gray-800 font-semibold mt-1">
+                          {formatCurrency(row.cost)}
+                        </p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p className="text-gray-600 font-medium">Profit</p>
+                        <p className="text-gray-800 font-semibold mt-1">
+                          {formatCurrency(row.profit)}
+                        </p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p className="text-gray-600 font-medium">Margin %</p>
+                        <p className="text-gray-800 font-semibold mt-1">
+                          {row.marginPercent}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

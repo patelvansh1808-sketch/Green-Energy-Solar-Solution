@@ -94,18 +94,18 @@ export default function InventoryManagement() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
         <p className="text-gray-600">Loading inventory...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-gray-800">📦 Inventory & Asset Management</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">📦 Inventory & Asset Management</h1>
             <p className="text-gray-600 mt-2">Track stock levels for panels, inverters, meters, and spares.</p>
           </div>
           <button
@@ -123,7 +123,7 @@ export default function InventoryManagement() {
         )}
 
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
               <p className="text-sm text-gray-500">Total Items</p>
               <p className="text-2xl font-bold text-blue-600 mt-2">{stats.totalItems}</p>
@@ -150,7 +150,7 @@ export default function InventoryManagement() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
@@ -207,46 +207,92 @@ export default function InventoryManagement() {
           {items.length === 0 ? (
             <div className="p-8 text-center text-gray-500">No inventory items found.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Item</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Category</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Stock</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Min Stock</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Location</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => (
-                    <tr key={item._id} className="border-b hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-semibold text-gray-800">{item.name}</p>
-                          <p className="text-xs text-gray-500">SKU: {item.sku}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 capitalize">{item.category}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {item.stockOnHand} {item.unit}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{item.minStock}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{item.location || "—"}</td>
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => setSelectedItem(item)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-1 rounded"
-                        >
-                          Adjust Stock
-                        </button>
-                      </td>
+            <>
+              {/* DESKTOP VIEW */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-100 border-b">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Item</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Category</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Stock</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Min Stock</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Location</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {items.map((item) => (
+                      <tr key={item._id} className="border-b hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-semibold text-gray-800">{item.name}</p>
+                            <p className="text-xs text-gray-500">SKU: {item.sku}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 capitalize">{item.category}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {item.stockOnHand} {item.unit}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{item.minStock}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{item.location || "—"}</td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => setSelectedItem(item)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-1 rounded"
+                          >
+                            Adjust Stock
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE VIEW */}
+              <div className="md:hidden p-4 space-y-4">
+                {items.map((item) => (
+                  <div
+                    key={item._id}
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3"
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-800">{item.name}</p>
+                      <p className="text-xs text-gray-600 mt-1">SKU: {item.sku}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p className="text-xs text-gray-600 font-medium">Category</p>
+                        <p className="text-gray-800 mt-1 capitalize">{item.category}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p className="text-xs text-gray-600 font-medium">Current Stock</p>
+                        <p className="text-gray-800 mt-1">
+                          {item.stockOnHand} {item.unit}
+                        </p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p className="text-xs text-gray-600 font-medium">Min Stock</p>
+                        <p className="text-gray-800 mt-1">{item.minStock}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p className="text-xs text-gray-600 font-medium">Location</p>
+                        <p className="text-gray-800 mt-1">{item.location || "—"}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setSelectedItem(item)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-3 rounded"
+                    >
+                      Adjust Stock
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -254,12 +300,12 @@ export default function InventoryManagement() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-8 bg-gradient-to-r from-emerald-600 to-green-600 rounded-t-2xl">
-              <h2 className="text-3xl font-bold text-white">Add New Inventory Item</h2>
+            <div className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-emerald-600 to-green-600 rounded-t-2xl">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white">Add New Inventory Item</h2>
               <p className="text-emerald-100 mt-1">Fill in the details to add a new item to inventory</p>
             </div>
 
-            <div className="p-8 space-y-6">
+            <div className="p-4 sm:p-6 md:p-8 space-y-6\">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="text-sm font-semibold text-gray-700">Item Name <span className="text-red-500">*</span></label>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import NotificationBell from "./NotificationBell";
@@ -22,31 +22,42 @@ export default function Navbar() {
     navigate("/");
   };
 
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
+
+  const closeMenu = () => setOpen(false);
+
+  const showSupportLink = user && !isAuthRoute;
+  const showDashboardLink = user && !isAuthRoute && hasCustomerProfile;
+  const isAdmin = user?.role === "admin";
+  const isTeamMember = user?.role === "engineer" || user?.role === "sales" || user?.role === "support";
+
   return (
     <nav className="bg-green-700 text-white shadow-lg sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center gap-3">
 
         {/* LOGO */}
-        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition">
-          <span className="text-2xl">☀️</span>
-          <span className="text-lg md:text-xl font-bold">{t("common.appName")}</span>
+        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition min-w-0">
+          <span className="text-xl sm:text-2xl">☀️</span>
+          <span className="text-base sm:text-lg md:text-xl font-bold truncate">{t("common.appName")}</span>
         </Link>
 
         {/* ===== DESKTOP MENU ===== */}
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+        <div className="hidden lg:flex items-center gap-6 xl:gap-8 text-sm font-medium">
 
           <Link to="/" className="hover:text-green-200 transition">
             {t("nav.home")}
           </Link>
 
+          {showDashboardLink && (
+            <Link to="/dashboard" className="hover:text-green-200 transition">
+              {t("nav.dashboard")}
+            </Link>
+          )}
+
           {user && !isAuthRoute && (
             <>
-              {hasCustomerProfile && (
-                <Link to="/dashboard" className="hover:text-green-200 transition">
-                  {t("nav.dashboard")}
-                </Link>
-              )}
-
               {/* FEATURES */}
               <div className="relative group">
                 <button className="hover:text-green-200 transition">
@@ -62,7 +73,7 @@ export default function Navbar() {
               </div>
 
               {/* CRM */}
-              {user.role === "admin" && (
+              {isAdmin && (
                 <div className="relative group">
                   <button className="hover:text-green-200 transition">
                     CRM ▾
@@ -75,14 +86,14 @@ export default function Navbar() {
               )}
 
               {/* ENGINEER DASHBOARD */}
-              {user.role === "engineer" && (
+              {user?.role === "engineer" && (
                 <Link to="/engineer/dashboard" className="hover:text-green-200 transition">
                   🔧 {t("nav.myTasks")}
                 </Link>
               )}
 
               {/* TEAM MEMBER DASHBOARD */}
-              {(user.role === "engineer" || user.role === "sales" || user.role === "support") && (
+              {isTeamMember && (
                 <Link to="/team/my-leads" className="hover:text-green-200 transition">
                   📋 {t("nav.myLeads")}
                 </Link>
@@ -101,7 +112,7 @@ export default function Navbar() {
                   <NavItem to="/profile" label={`👤 ${t("nav.myProfile")}`} />
 
                   {/* 🔐 ADMIN LINKS */}
-                  {user.role === "admin" && (
+                  {isAdmin && (
                     <>
                       <div className="border-t my-1"></div>
 
@@ -111,72 +122,39 @@ export default function Navbar() {
                         admin
                       />
 
-                      <NavItem
-                    to="/admin/subsidy-applications"
-                    label="📋 Subsidy Applications"
-                    admin
-                  />
+                      <NavItem to="/admin/subsidy-applications" label="📋 Subsidy Applications" admin />
+                      <NavItem to="/admin/roles" label="👥 Role Management" admin />
+                      <NavItem to="/admin/projects" label="🔧 Installation Tracking" admin />
+                      <NavItem to="/admin/finance" label="💼 Financial Analytics" admin />
+                      <NavItem to="/admin/inventory" label="📦 Inventory Management" admin />
+                      <NavItem to="/admin" label="⚙️ Admin Dashboard" admin />
+                    </>
+                  )}
 
-                  <NavItem
-                    to="/admin/roles"
-                    label="👥 Role Management"
-                    admin
-                  />
+                  {(isAdmin || user?.role === "support") && (
+                    <NavItem to="/admin/tickets" label="🎫 Ticket Management" admin />
+                  )}
 
-                  <NavItem
-                    to="/admin/projects"
-                    label="🔧 Installation Tracking"
-                    admin
-                  />
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
+                  >
+                    🚪 {t("common.logout")}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
 
-                  <NavItem
-                    to="/admin/finance"
-                    label="💼 Financial Analytics"
-                    admin
-                  />
+          {showSupportLink && (
+            <Link to="/support" className="hover:text-green-200 transition">
+              {t("common.support")}
+            </Link>
+          )}
 
-                  <NavItem
-                    to="/admin/inventory"
-                    label="📦 Inventory Management"
-                    admin
-                  />
-
-                  <NavItem
-                    to="/admin"
-                    label="⚙️ Admin Dashboard"
-                    admin
-                  />
-                </>
-              )}
-
-              {(user.role === "admin" || user.role === "support") && (
-                <NavItem
-                  to="/admin/tickets"
-                  label="🎫 Ticket Management"
-                  admin
-                />
-              )}
-
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600"
-              >
-                🚪 {t("common.logout")}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {user && !isAuthRoute && (
-        <Link to="/support" className="hover:text-green-200 transition">
-          {t("common.support")}
-        </Link>
-      )}
-
-      <Link to="/contact" className="hover:text-green-200 transition">
-        {t("common.contact")}
-      </Link>
+          <Link to="/contact" className="hover:text-green-200 transition">
+            {t("common.contact")}
+          </Link>
 
           {!user && (
             <>
@@ -194,20 +172,24 @@ export default function Navbar() {
         </div>
 
         {/* MOBILE MENU BUTTON */}
-        <button className="md:hidden" onClick={() => setOpen(!open)}>
-          ☰
+        <button
+          className="lg:hidden inline-flex items-center justify-center rounded-md border border-green-500/70 bg-green-600 px-3 py-2"
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle navigation menu"
+        >
+          {open ? "✕" : "☰"}
         </button>
       </div>
 
       {/* ===== MOBILE MENU ===== */}
       {open && (
-        <div className="md:hidden bg-green-600 px-4 py-4 space-y-2 text-sm">
-          <Link to="/" onClick={() => setOpen(false)}>{t("nav.home")}</Link>
+        <div className="lg:hidden bg-green-600 px-4 py-4 space-y-2 text-sm max-h-[75vh] overflow-y-auto">
+          <Link to="/" onClick={closeMenu} className="block py-1">{t("nav.home")}</Link>
 
           {user && !isAuthRoute && (
             <>
-              {hasCustomerProfile && (
-                <Link to="/dashboard" onClick={() => setOpen(false)}>
+              {showDashboardLink && (
+                <Link to="/dashboard" onClick={closeMenu} className="block py-1">
                   {t("nav.dashboard")}
                 </Link>
               )}
@@ -219,7 +201,7 @@ export default function Navbar() {
               <MobileItem to="/apply-subsidy" label={`💰 ${t("nav.applySubsidy")}`} />
               <MobileItem to="/subsidy-status" label={`📈 ${t("nav.subsidyStatus")}`} />
 
-              {user.role === "admin" && (
+              {isAdmin && (
                 <>
                   <p className="text-xs uppercase text-green-200 mt-3">📱 CRM</p>
                   <MobileItem to="/crm/dashboard" label="📊 CRM Dashboard" />
@@ -230,7 +212,7 @@ export default function Navbar() {
               <p className="text-xs uppercase text-green-200 mt-3">👤 {t("nav.profile")}</p>
               <MobileItem to="/profile" label={t("nav.myProfile")} />
 
-              {user.role === "admin" && (
+              {isAdmin && (
                 <>
                   <MobileItem to="/admin/customers" label="🧑‍💼 Manage Customers" />
                   <MobileItem to="/admin/subsidy-applications" label="📋 Subsidy Applications" />
@@ -241,6 +223,13 @@ export default function Navbar() {
                   <MobileItem to="/admin" label="⚙️ Admin Dashboard" />
                 </>
               )}
+
+              {(isAdmin || user?.role === "support") && (
+                <MobileItem to="/admin/tickets" label="🎫 Ticket Management" />
+              )}
+
+              <MobileItem to="/support" label={t("common.support")} />
+              <MobileItem to="/contact" label={t("common.contact")} />
 
               <button
                 onClick={handleLogout}
@@ -253,9 +242,9 @@ export default function Navbar() {
 
           {!user && (
             <>
-              <Link to="/contact" onClick={() => setOpen(false)}>{t("common.contact")}</Link>
-              <Link to="/login" onClick={() => setOpen(false)}>{t("common.login")}</Link>
-              <Link to="/register" onClick={() => setOpen(false)}>{t("common.register")}</Link>
+              <Link to="/contact" onClick={closeMenu} className="block py-1">{t("common.contact")}</Link>
+              <Link to="/login" onClick={closeMenu} className="block py-1">{t("common.login")}</Link>
+              <Link to="/register" onClick={closeMenu} className="block py-1">{t("common.register")}</Link>
             </>
           )}
         </div>
@@ -277,7 +266,7 @@ const NavItem = ({ to, label, highlight, admin }) => (
 );
 
 const MobileItem = ({ to, label }) => (
-  <Link to={to} className="block py-1">
+  <Link to={to} className="block py-1.5">
     {label}
   </Link>
 );

@@ -6,6 +6,7 @@ const MaintenancePayment = require("../models/MaintenancePayment");
 const Customer = require("../models/Customer");
 const User = require("../models/User");
 const { generateMaintenanceServiceReportPDF } = require("../utils/pdfGenerator");
+const emailService = require("../services/emailService");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 
@@ -528,6 +529,26 @@ const updateAdminSubscriptionStatus = async (id, status, res, message) => {
   return res.json({ message, plan });
 };
 
+const deletePlanAndRelatedData = async (plan) => {
+  const relatedServices = await MaintenanceService.find({
+    planId: plan._id,
+    userId: plan.userId,
+  })
+    .select("_id")
+    .lean();
+
+  const serviceIds = relatedServices.map((service) => service._id);
+
+  await Promise.all([
+    serviceIds.length
+      ? MaintenanceReport.deleteMany({ serviceId: { $in: serviceIds } })
+      : Promise.resolve(),
+    MaintenanceService.deleteMany({ planId: plan._id, userId: plan.userId }),
+    MaintenancePayment.deleteMany({ userId: plan.userId, planId: plan._id }),
+    MaintenancePlan.deleteOne({ _id: plan._id }),
+  ]);
+};
+
 /* ===============================
    ADMIN PAUSE SUBSCRIPTION
    PATCH /api/maintenance/admin/subscriptions/:id/pause
@@ -621,6 +642,33 @@ exports.cancelAdminSubscription = async (req, res) => {
     console.error("ADMIN CANCEL SUBSCRIPTION ERROR:", error);
     return res.status(500).json({
       message: "Failed to cancel subscription",
+      error: error.message,
+    });
+  }
+};
+
+/* ===============================
+   ADMIN DELETE SUBSCRIPTION
+   DELETE /api/maintenance/admin/subscriptions/:id
+================================ */
+exports.deleteAdminSubscription = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const plan = await MaintenancePlan.findById(id);
+
+    if (!plan) {
+      return res.status(404).json({ message: "Subscription not found" });
+    }
+
+    await deletePlanAndRelatedData(plan);
+
+    return res.json({
+      message: "Subscription deleted from admin and user records",
+    });
+  } catch (error) {
+    console.error("ADMIN DELETE SUBSCRIPTION ERROR:", error);
+    return res.status(500).json({
+      message: "Failed to delete subscription",
       error: error.message,
     });
   }
@@ -1115,6 +1163,45 @@ exports.updateAssignedServiceExecution = async (req, res) => {
       }
     }
 
+    // Send service completion email if service was just completed
+    if (isNowCompleted && (!wasServiceCompleted || !wasExecutionCompleted)) {
+      try {
+        const user = await User.findById(service.userId).select("email firstName lastName name");
+        if (user && user.email) {
+          const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.name || user.email;
+          
+          // Calculate remaining services
+          let remainingServices = 0;
+          if (service.planId) {
+            const plan = await MaintenancePlan.findById(service.planId);
+            if (plan) {
+              remainingServices = Math.max(0, (plan.servicesTotal || 0) - (plan.servicesUsed || 0));
+            }
+          }
+
+          const technicianName = [service.technicianId?.firstName, service.technicianId?.lastName]
+            .filter(Boolean)
+            .join(" ") ||
+            service.technicianId?.name ||
+            service.technician ||
+            "-";
+
+          const serviceDetails = {
+            serviceType: service.type || "Cleaning",
+            completionTime: service.completionTime || new Date(),
+            technicianName,
+            remainingServices,
+            workDone: service.workDone || "",
+            nextServiceDate: service.planId ? (await MaintenancePlan.findById(service.planId))?.nextServiceDate : null,
+          };
+          await emailService.sendMaintenanceServiceCompletedEmail(user.email, userName, serviceDetails);
+        }
+      } catch (emailError) {
+        console.error("Failed to send service completion email:", emailError);
+        // Don't fail the request, just log the error
+      }
+    }
+
     return res.json({ message: "Service execution updated", service });
   } catch (error) {
     console.error("UPDATE ASSIGNED SERVICE EXECUTION ERROR:", error);
@@ -1486,6 +1573,27 @@ exports.verifyMaintenancePaymentAndCreatePlan = async (req, res) => {
     paymentRecord.planId = plan._id;
     await paymentRecord.save();
 
+    // Send subscription confirmation email
+    try {
+      const user = await User.findById(userId).select("email firstName lastName name");
+      if (user && user.email) {
+        const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.name || user.email;
+        const planDetails = {
+          planType: plan.planType,
+          servicesTotal: plan.servicesTotal,
+          servicesUsed: plan.servicesUsed,
+          totalAmount: plan.totalAmount,
+          startDate: plan.startDate,
+          endDate: plan.endDate,
+          nextServiceDate: plan.nextServiceDate,
+        };
+        await emailService.sendMaintenancePlanSubscriptionEmail(user.email, userName, planDetails);
+      }
+    } catch (emailError) {
+      console.error("Failed to send subscription email:", emailError);
+      // Don't fail the request, just log the error
+    }
+
     return res.status(201).json({
       message: "Payment verified and maintenance plan created",
       plan,
@@ -1516,6 +1624,27 @@ exports.createPlan = async (req, res) => {
       nextServiceDate,
       servicesTotal,
     });
+
+    // Send subscription confirmation email
+    try {
+      const user = await User.findById(userId).select("email firstName lastName name");
+      if (user && user.email) {
+        const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.name || user.email;
+        const planDetails = {
+          planType: plan.planType,
+          servicesTotal: plan.servicesTotal,
+          servicesUsed: plan.servicesUsed,
+          totalAmount: plan.totalAmount,
+          startDate: plan.startDate,
+          endDate: plan.endDate,
+          nextServiceDate: plan.nextServiceDate,
+        };
+        await emailService.sendMaintenancePlanSubscriptionEmail(user.email, userName, planDetails);
+      }
+    } catch (emailError) {
+      console.error("Failed to send subscription email:", emailError);
+      // Don't fail the request, just log the error
+    }
 
     return res.status(201).json(plan);
   } catch (error) {

@@ -11,6 +11,26 @@ const bookingService = {
     return res.data;
   },
 
+  createBookingPaymentOrder: async (bookingId) => {
+    const res = await api.post(`/bookings/${bookingId}/payment/create-order`);
+    return res.data;
+  },
+
+  verifyBookingPayment: async (bookingId, payload) => {
+    const res = await api.post(`/bookings/${bookingId}/payment/verify`, payload);
+    return res.data;
+  },
+
+  createFinalPaymentOrder: async (bookingId) => {
+    const res = await api.post(`/bookings/${bookingId}/payment/create-final-order`);
+    return res.data;
+  },
+
+  verifyFinalPayment: async (bookingId, payload) => {
+    const res = await api.post(`/bookings/${bookingId}/payment/verify-final`, payload);
+    return res.data;
+  },
+
   getMyBookings: async () => {
     const res = await api.get("/bookings/my");
     return res.data;
@@ -28,6 +48,11 @@ const bookingService = {
 
   updateBookingStatus: async (id, data) => {
     const res = await api.patch(`/admin/bookings/${id}`, data);
+    return res.data;
+  },
+
+  requestRemainingPayment: async (id, data = {}) => {
+    const res = await api.post(`/admin/bookings/${id}/request-remaining-payment`, data);
     return res.data;
   },
 

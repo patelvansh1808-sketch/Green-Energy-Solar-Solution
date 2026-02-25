@@ -115,97 +115,173 @@ export default function ManageCustomers() {
         ))}
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded-lg shadow overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-green-600 text-white">
-            <tr>
-              <th className="p-3 text-left">Customer</th>
-              <th className="p-3 text-center">Phone</th>
-              <th className="p-3 text-center">Capacity</th>
-              <th className="p-3 text-center">Installation</th>
-              <th className="p-3 text-center">Site</th>
-              <th className="p-3 text-center">Status</th>
-              <th className="p-3 text-center">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredCustomers.length === 0 ? (
+      {/* TABLE - RESPONSIVE */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        {/* DESKTOP VIEW */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-green-600 text-white">
               <tr>
-                <td colSpan="7" className="p-6 text-center text-gray-500">
-                  {customers.length === 0
-                    ? "No customers found in database"
-                    : `No ${filterStatus} customers found`}
-                </td>
+                <th className="p-3 text-left">Customer</th>
+                <th className="p-3 text-center">Phone</th>
+                <th className="p-3 text-center">Capacity</th>
+                <th className="p-3 text-center">Installation</th>
+                <th className="p-3 text-center">Site</th>
+                <th className="p-3 text-center">Status</th>
+                <th className="p-3 text-center">Actions</th>
               </tr>
-            ) : (
-              filteredCustomers.map((c) => (
-                <tr key={c._id} className="border-t hover:bg-gray-50">
-                  <td className="p-3 font-semibold">{c.fullName}</td>
+            </thead>
 
-                  <td className="p-3 text-center">{c.phone || "—"}</td>
-
-                  <td className="p-3 text-center">
-                    {c.systemCapacityKW} kW
-                  </td>
-
-                  <td className="p-3 text-center">
-                    {c.installationDate
-                      ? new Date(c.installationDate).toLocaleDateString()
-                      : "—"}
-                  </td>
-
-                  <td className="p-3 text-center">
-                    {c.city || "—"}, {c.state || "—"}
-                    <br />
-                    <span className="text-xs text-gray-500">
-                      {c.pincode || ""}
-                    </span>
-                  </td>
-
-                  <td className="p-3 text-center">
-                    <span
-                      className={`px-3 py-1 rounded text-xs font-semibold ${
-                        c.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : c.status === "Inactive"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {c.status || "Active"}
-                    </span>
-                  </td>
-
-                  <td className="p-3 text-center space-x-2">
-                    <button
-                      onClick={() =>
-                        navigate(`/admin/customers/edit/${c._id}`)
-                      }
-                      className="text-blue-600 hover:underline text-xs font-semibold"
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={() => toggleStatus(c._id, c.status)}
-                      className={`text-xs font-semibold ${
-                        c.status === "Active"
-                          ? "text-red-600 hover:text-red-800"
-                          : "text-green-600 hover:text-green-800"
-                      }`}
-                    >
-                      {c.status === "Active"
-                        ? "Deactivate"
-                        : "Activate"}
-                    </button>
+            <tbody>
+              {filteredCustomers.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="p-6 text-center text-gray-500">
+                    {customers.length === 0
+                      ? "No customers found in database"
+                      : `No ${filterStatus} customers found`}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredCustomers.map((c) => (
+                  <tr key={c._id} className="border-t hover:bg-gray-50">
+                    <td className="p-3 font-semibold">{c.fullName}</td>
+                    <td className="p-3 text-center">{c.phone || "—"}</td>
+                    <td className="p-3 text-center">{c.systemCapacityKW} kW</td>
+                    <td className="p-3 text-center">
+                      {c.installationDate
+                        ? new Date(c.installationDate).toLocaleDateString()
+                        : "—"}
+                    </td>
+                    <td className="p-3 text-center">
+                      {c.city || "—"}, {c.state || "—"}
+                      <br />
+                      <span className="text-xs text-gray-500">
+                        {c.pincode || ""}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <span
+                        className={`px-3 py-1 rounded text-xs font-semibold ${
+                          c.status === "Active"
+                            ? "bg-green-100 text-green-700"
+                            : c.status === "Inactive"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {c.status || "Active"}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center space-x-2">
+                      <button
+                        onClick={() =>
+                          navigate(`/admin/customers/edit/${c._id}`)
+                        }
+                        className="text-blue-600 hover:underline text-xs font-semibold"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => toggleStatus(c._id, c.status)}
+                        className={`text-xs font-semibold ${
+                          c.status === "Active"
+                            ? "text-red-600 hover:text-red-800"
+                            : "text-green-600 hover:text-green-800"
+                        }`}
+                      >
+                        {c.status === "Active"
+                          ? "Deactivate"
+                          : "Activate"}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* MOBILE VIEW */}
+        <div className="md:hidden p-4 space-y-4">
+          {filteredCustomers.length === 0 ? (
+            <div className="py-8 text-center text-gray-500 text-sm">
+              {customers.length === 0
+                ? "No customers found in database"
+                : `No ${filterStatus} customers found`}
+            </div>
+          ) : (
+            filteredCustomers.map((c) => (
+              <div
+                key={c._id}
+                className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3"
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <div>
+                    <p className="font-semibold text-gray-800">{c.fullName}</p>
+                    <p className="text-xs text-gray-600 mt-1">{c.phone || "—"}</p>
+                  </div>
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap shrink-0 ${
+                      c.status === "Active"
+                        ? "bg-green-100 text-green-700"
+                        : c.status === "Inactive"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {c.status || "Active"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="bg-white p-3 rounded border border-gray-200">
+                    <p className="text-xs text-gray-600 font-medium">Capacity</p>
+                    <p className="text-gray-800 mt-1">{c.systemCapacityKW} kW</p>
+                  </div>
+                  <div className="bg-white p-3 rounded border border-gray-200">
+                    <p className="text-xs text-gray-600 font-medium">Installation</p>
+                    <p className="text-gray-800 mt-1 text-xs">
+                      {c.installationDate
+                        ? new Date(c.installationDate).toLocaleDateString()
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white p-3 rounded border border-gray-200 text-sm">
+                  <p className="text-xs text-gray-600 font-medium">Location</p>
+                  <p className="text-gray-800 mt-1">
+                    {c.city || "—"}, {c.state || "—"}
+                    {c.pincode && <span className="text-xs text-gray-500"> - {c.pincode}</span>}
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() =>
+                      navigate(`/admin/customers/edit/${c._id}`)
+                    }
+                    className="flex-1 text-blue-600 hover:bg-blue-50 font-semibold py-2 px-3 rounded text-sm border border-blue-300"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => toggleStatus(c._id, c.status)}
+                    className={`flex-1 font-semibold py-2 px-3 rounded text-sm border ${
+                      c.status === "Active"
+                        ? "text-red-600 hover:bg-red-50 border-red-300"
+                        : "text-green-600 hover:bg-green-50 border-green-300"
+                    }`}
+                  >
+                    {c.status === "Active"
+                      ? "Deactivate"
+                      : "Activate"}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,12 @@
 const Booking = require("../models/Booking");
+const MaintenancePayment = require("../models/MaintenancePayment");
+
+const VALID_REVENUE_TYPES = ["all", "maintenance", "booking"];
+
+const normalizeRevenueType = (value) => {
+  const normalized = String(value || "all").trim().toLowerCase();
+  return VALID_REVENUE_TYPES.includes(normalized) ? normalized : "all";
+};
 
 const getRevenueFromBooking = (booking) => {
   return (
@@ -47,19 +55,36 @@ exports.getFinancialOverview = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const dateFilter = buildDateFilter(startDate, endDate);
+    const revenueType = normalizeRevenueType(req.query?.revenueType);
+    const includeBookingRevenue = revenueType !== "maintenance";
+    const includeMaintenanceRevenue = revenueType !== "booking";
 
-    const allBookings = await Booking.find(dateFilter);
-    const completedBookings = allBookings.filter(
-      (b) => b.status === "Completed"
-    );
-    const pipelineBookings = allBookings.filter((b) =>
-      ["Approved", "Scheduled", "In Progress"].includes(b.status)
-    );
+    const [allBookings, paidMaintenancePayments] = await Promise.all([
+      includeBookingRevenue ? Booking.find(dateFilter) : Promise.resolve([]),
+      includeMaintenanceRevenue
+        ? MaintenancePayment.find({ ...dateFilter, paymentStatus: "paid" })
+        : Promise.resolve([]),
+    ]);
 
-    const totalRevenue = completedBookings.reduce(
+    const completedBookings = includeBookingRevenue
+      ? allBookings.filter((b) => b.status === "Completed")
+      : [];
+    const pipelineBookings = includeBookingRevenue
+      ? allBookings.filter((b) =>
+          ["Approved", "Scheduled", "In Progress"].includes(b.status)
+        )
+      : [];
+
+    const bookingRevenue = completedBookings.reduce(
       (sum, b) => sum + getRevenueFromBooking(b),
       0
     );
+    const maintenanceRevenue = paidMaintenancePayments.reduce(
+      (sum, payment) => sum + Number(payment.amount || 0),
+      0
+    );
+    const totalRevenue = bookingRevenue + maintenanceRevenue;
+
     const totalCost = completedBookings.reduce(
       (sum, b) => sum + getCostFromBooking(b),
       0
@@ -89,10 +114,14 @@ exports.getFinancialOverview = async (req, res) => {
         bookings: allBookings.length,
         completed: completedBookings.length,
         pipeline: pipelineBookings.length,
+        maintenancePayments: paidMaintenancePayments.length,
       },
       revenue: {
         totalRevenue,
+        installationRevenue: bookingRevenue,
+        maintenanceRevenue,
         pipelineRevenue,
+        revenueType,
       },
       costs: {
         totalCost,
@@ -122,11 +151,24 @@ exports.getRevenueReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const dateFilter = buildDateFilter(startDate, endDate);
+    const revenueType = normalizeRevenueType(req.query?.revenueType);
+    const includeBookingRevenue = revenueType !== "maintenance";
+    const includeMaintenanceRevenue = revenueType !== "booking";
 
-    const completedBookings = await Booking.find({
-      ...dateFilter,
-      status: "Completed",
-    });
+    const [completedBookings, paidMaintenancePayments] = await Promise.all([
+      includeBookingRevenue
+        ? Booking.find({
+            ...dateFilter,
+            status: "Completed",
+          })
+        : Promise.resolve([]),
+      includeMaintenanceRevenue
+        ? MaintenancePayment.find({
+            ...dateFilter,
+            paymentStatus: "paid",
+          })
+        : Promise.resolve([]),
+    ]);
 
     const report = {};
 
@@ -140,6 +182,8 @@ exports.getRevenueReport = async (req, res) => {
       if (!report[key]) {
         report[key] = {
           revenue: 0,
+          bookingRevenue: 0,
+          maintenanceRevenue: 0,
           cost: 0,
           profit: 0,
           count: 0,
@@ -149,8 +193,34 @@ exports.getRevenueReport = async (req, res) => {
       const revenue = getRevenueFromBooking(b);
       const cost = getCostFromBooking(b);
       report[key].revenue += revenue;
+      report[key].bookingRevenue += revenue;
       report[key].cost += cost;
       report[key].profit += revenue - cost;
+      report[key].count += 1;
+    });
+
+    paidMaintenancePayments.forEach((payment) => {
+      const date = new Date(payment.createdAt);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}`;
+
+      if (!report[key]) {
+        report[key] = {
+          revenue: 0,
+          bookingRevenue: 0,
+          maintenanceRevenue: 0,
+          cost: 0,
+          profit: 0,
+          count: 0,
+        };
+      }
+
+      const maintenanceAmount = Number(payment.amount || 0);
+      report[key].revenue += maintenanceAmount;
+      report[key].maintenanceRevenue += maintenanceAmount;
+      report[key].profit += maintenanceAmount;
       report[key].count += 1;
     });
 
@@ -172,6 +242,7 @@ exports.getRevenueReport = async (req, res) => {
 
     res.json({
       series,
+      revenueType,
     });
   } catch (error) {
     console.error("REVENUE REPORT ERROR:", error);
@@ -191,15 +262,30 @@ exports.getRevenueReport = async (req, res) => {
 exports.getProjectProfitability = async (req, res) => {
   try {
     const { status = "Completed", limit = 50, skip = 0 } = req.query;
+    const { startDate, endDate } = req.query;
+    const dateFilter = buildDateFilter(startDate, endDate);
+    const revenueType = normalizeRevenueType(req.query?.revenueType);
+    const parsedLimit = Math.max(parseInt(limit, 10) || 50, 1);
+    const parsedSkip = Math.max(parseInt(skip, 10) || 0, 0);
 
-    const bookings = await Booking.find({ status })
-      .populate("customer", "fullName phone")
-      .populate("user", "name email")
-      .sort({ createdAt: -1 })
-      .skip(parseInt(skip))
-      .limit(parseInt(limit));
+    const includeBookingRevenue = revenueType !== "maintenance";
+    const includeMaintenanceRevenue = revenueType !== "booking";
 
-    const data = bookings.map((b) => {
+    const [bookings, maintenancePayments] = await Promise.all([
+      includeBookingRevenue
+        ? Booking.find({ ...dateFilter, status })
+            .populate("customer", "fullName phone")
+            .populate("user", "name email")
+            .sort({ createdAt: -1 })
+        : Promise.resolve([]),
+      includeMaintenanceRevenue
+        ? MaintenancePayment.find({ ...dateFilter, paymentStatus: "paid" })
+            .populate("userId", "name firstName lastName email")
+            .sort({ createdAt: -1 })
+        : Promise.resolve([]),
+    ]);
+
+    const bookingRows = bookings.map((b) => {
       const revenue = getRevenueFromBooking(b);
       const cost = getCostFromBooking(b);
       const profit = revenue - cost;
@@ -207,6 +293,7 @@ exports.getProjectProfitability = async (req, res) => {
 
       return {
         id: b._id,
+        entryType: "booking",
         bookingId: b.bookingId,
         customer: b.contactPerson || b.customer?.fullName || b.user?.name,
         systemType: b.systemType,
@@ -219,6 +306,32 @@ exports.getProjectProfitability = async (req, res) => {
         createdAt: b.createdAt,
       };
     });
+
+    const maintenanceRows = maintenancePayments.map((payment) => {
+      const revenue = Number(payment.amount || 0);
+      const user = payment.userId || {};
+      const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+      const customer = user.name || fullName || user.email || "-";
+
+      return {
+        id: payment._id,
+        entryType: "maintenance",
+        paymentId: payment.razorpayPaymentId || payment.razorpayOrderId,
+        customer,
+        planType: payment.planType,
+        status: payment.paymentStatus,
+        revenue,
+        cost: 0,
+        profit: revenue,
+        marginPercent: revenue > 0 ? 100 : 0,
+        createdAt: payment.createdAt,
+      };
+    });
+
+    const combined = [...bookingRows, ...maintenanceRows]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const data = combined.slice(parsedSkip, parsedSkip + parsedLimit);
 
     res.json({ data });
   } catch (error) {

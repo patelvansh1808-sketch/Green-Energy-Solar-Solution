@@ -968,66 +968,134 @@ export default function MaintenanceOverview() {
         )}
 
         {!serviceLoading && !serviceError && serviceItems.length > 0 && serviceView === "list" && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left text-gray-500 border-b">
-                  <th className="py-2 pr-4">Date</th>
-                  <th className="py-2 pr-4">Customer</th>
-                  <th className="py-2 pr-4">Location</th>
-                  <th className="py-2 pr-4">Assigned Technician</th>
-                  <th className="py-2 pr-4">Service Type</th>
-                  <th className="py-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {serviceItems.map((item) => (
-                  <tr key={item._id} className="border-b last:border-0">
-                    <td className="py-3 pr-4 text-gray-900">{formatDate(item.date)}</td>
-                    <td className="py-3 pr-4 text-gray-700">{getServiceCustomerLabel(item)}</td>
-                    <td className="py-3 pr-4 text-gray-700">{item.location || "-"}</td>
-                    <td className="py-3 pr-4 text-gray-700">{getServiceTechnicianLabel(item)}</td>
-                    <td className="py-3 pr-4 text-gray-700">{item.type || "-"}</td>
-                    <td className="py-3">
-                      <div className="flex flex-col gap-2 min-w-[220px]">
-                        <select
-                          value={item.technicianId?._id || item.technicianId || ""}
-                          onChange={(event) =>
-                            handleServiceTechnicianChange(item._id, event.target.value)
-                          }
-                          disabled={serviceActionLoadingId === item._id}
-                          className="px-2.5 py-1.5 rounded border border-gray-300 text-sm bg-white"
-                        >
-                          <option value="">Assign / Reassign Technician</option>
-                          {technicians.map((tech) => {
-                            const displayName =
-                              [tech.firstName, tech.lastName].filter(Boolean).join(" ") ||
-                              tech.name ||
-                              tech.email;
-                            return (
-                              <option key={tech._id} value={tech._id}>
-                                {displayName}
-                              </option>
-                            );
-                          })}
-                        </select>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="date"
-                            defaultValue={item.date ? new Date(item.date).toISOString().split("T")[0] : ""}
-                            onChange={(event) => handleServiceDateChange(item._id, event.target.value)}
-                            disabled={serviceActionLoadingId === item._id}
-                            className="px-2.5 py-1.5 rounded border border-gray-300 text-sm"
-                          />
-                          <span className="text-xs text-gray-500">Change Date</span>
-                        </div>
-                      </div>
-                    </td>
+          <>
+            {/* DESKTOP VIEW */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b">
+                    <th className="py-2 pr-4">Date</th>
+                    <th className="py-2 pr-4">Customer</th>
+                    <th className="py-2 pr-4">Location</th>
+                    <th className="py-2 pr-4">Assigned Technician</th>
+                    <th className="py-2 pr-4">Service Type</th>
+                    <th className="py-2">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {serviceItems.map((item) => (
+                    <tr key={item._id} className="border-b last:border-0">
+                      <td className="py-3 pr-4 text-gray-900">{formatDate(item.date)}</td>
+                      <td className="py-3 pr-4 text-gray-700">{getServiceCustomerLabel(item)}</td>
+                      <td className="py-3 pr-4 text-gray-700">{item.location || "-"}</td>
+                      <td className="py-3 pr-4 text-gray-700">{getServiceTechnicianLabel(item)}</td>
+                      <td className="py-3 pr-4 text-gray-700">{item.type || "-"}</td>
+                      <td className="py-3">
+                        <div className="flex flex-col gap-2 min-w-[220px]">
+                          <select
+                            value={item.technicianId?._id || item.technicianId || ""}
+                            onChange={(event) =>
+                              handleServiceTechnicianChange(item._id, event.target.value)
+                            }
+                            disabled={serviceActionLoadingId === item._id}
+                            className="px-2.5 py-1.5 rounded border border-gray-300 text-sm bg-white"
+                          >
+                            <option value="">Assign / Reassign Technician</option>
+                            {technicians.map((tech) => {
+                              const displayName =
+                                [tech.firstName, tech.lastName].filter(Boolean).join(" ") ||
+                                tech.name ||
+                                tech.email;
+                              return (
+                                <option key={tech._id} value={tech._id}>
+                                  {displayName}
+                                </option>
+                              );
+                            })}
+                          </select>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="date"
+                              defaultValue={item.date ? new Date(item.date).toISOString().split("T")[0] : ""}
+                              onChange={(event) => handleServiceDateChange(item._id, event.target.value)}
+                              disabled={serviceActionLoadingId === item._id}
+                              className="px-2.5 py-1.5 rounded border border-gray-300 text-sm"
+                            />
+                            <span className="text-xs text-gray-500">Change Date</span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* MOBILE VIEW */}
+            <div className="md:hidden p-4 space-y-4">
+              {serviceItems.map((item) => (
+                <div
+                  key={item._id}
+                  className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <p className="font-semibold text-gray-900">{formatDate(item.date)}</p>
+                      <p className="text-xs text-gray-600 mt-1">{getServiceCustomerLabel(item)}</p>
+                    </div>
+                    <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700 whitespace-nowrap shrink-0">
+                      {item.type || "—"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium">Location</p>
+                      <p className="text-gray-800 mt-1 text-xs">{item.location || "—"}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium">Technician</p>
+                      <p className="text-gray-800 mt-1 text-xs">{getServiceTechnicianLabel(item)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <select
+                      value={item.technicianId?._id || item.technicianId || ""}
+                      onChange={(event) =>
+                        handleServiceTechnicianChange(item._id, event.target.value)
+                      }
+                      disabled={serviceActionLoadingId === item._id}
+                      className="px-2.5 py-1.5 rounded border border-gray-300 text-sm bg-white w-full"
+                    >
+                      <option value="">Assign Technician</option>
+                      {technicians.map((tech) => {
+                        const displayName =
+                          [tech.firstName, tech.lastName].filter(Boolean).join(" ") ||
+                          tech.name ||
+                          tech.email;
+                        return (
+                          <option key={tech._id} value={tech._id}>
+                            {displayName}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="date"
+                        defaultValue={item.date ? new Date(item.date).toISOString().split("T")[0] : ""}
+                        onChange={(event) => handleServiceDateChange(item._id, event.target.value)}
+                        disabled={serviceActionLoadingId === item._id}
+                        className="flex-1 px-2.5 py-1.5 rounded border border-gray-300 text-sm"
+                      />
+                      <span className="text-xs text-gray-600 font-medium whitespace-nowrap">Change</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {!serviceLoading && !serviceError && serviceItems.length > 0 && serviceView === "calendar" && (
@@ -1085,85 +1153,180 @@ export default function MaintenanceOverview() {
         )}
 
         {!subsLoading && !subsError && subscriptions.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left text-gray-500 border-b">
-                  <th className="py-2 pr-4">Customer Name</th>
-                  <th className="py-2 pr-4">Plan Type</th>
-                  <th className="py-2 pr-4">Start Date</th>
-                  <th className="py-2 pr-4">End Date</th>
-                  <th className="py-2 pr-4">Status</th>
-                  <th className="py-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subscriptions.map((item) => (
-                  <tr key={item._id} className="border-b last:border-0">
-                    <td className="py-3 pr-4 text-gray-900">{getUserLabel(item)}</td>
-                    <td className="py-3 pr-4 text-gray-700">{getPlanLabel(item.planType)}</td>
-                    <td className="py-3 pr-4 text-gray-700">{formatDate(item.startDate)}</td>
-                    <td className="py-3 pr-4 text-gray-700">{formatDate(item.endDate)}</td>
-                    <td className="py-3 pr-4 text-gray-700">{item.status || "-"}</td>
-                    <td className="py-3">
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleViewDetails(item._id)}
-                          className="px-2.5 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        >
-                          View Details
-                        </button>
-                        {item.status === "Active" ? (
-                          <button
-                            type="button"
-                            onClick={() => runAction(item._id, "pause")}
-                            disabled={actionLoadingId === item._id}
-                            className="px-2.5 py-1 rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 disabled:opacity-60"
-                          >
-                            Pause
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => runAction(item._id, "resume")}
-                            disabled={actionLoadingId === item._id}
-                            className="px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 hover:bg-emerald-200 disabled:opacity-60"
-                          >
-                            Resume
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => runAction(item._id, "renew")}
-                          disabled={actionLoadingId === item._id}
-                          className="px-2.5 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200 disabled:opacity-60"
-                        >
-                          Renew
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => runAction(item._id, "cancel")}
-                          disabled={actionLoadingId === item._id || item.status === "Cancelled"}
-                          className="px-2.5 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200 disabled:opacity-60"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteSubscription(item._id)}
-                          disabled={actionLoadingId === item._id}
-                          className="px-2.5 py-1 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+          <>
+            {/* DESKTOP VIEW */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b">
+                    <th className="py-2 pr-4">Customer Name</th>
+                    <th className="py-2 pr-4">Plan Type</th>
+                    <th className="py-2 pr-4">Start Date</th>
+                    <th className="py-2 pr-4">End Date</th>
+                    <th className="py-2 pr-4">Status</th>
+                    <th className="py-2">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {subscriptions.map((item) => (
+                    <tr key={item._id} className="border-b last:border-0">
+                      <td className="py-3 pr-4 text-gray-900">{getUserLabel(item)}</td>
+                      <td className="py-3 pr-4 text-gray-700">{getPlanLabel(item.planType)}</td>
+                      <td className="py-3 pr-4 text-gray-700">{formatDate(item.startDate)}</td>
+                      <td className="py-3 pr-4 text-gray-700">{formatDate(item.endDate)}</td>
+                      <td className="py-3 pr-4 text-gray-700">{item.status || "-"}</td>
+                      <td className="py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleViewDetails(item._id)}
+                            className="px-2.5 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          >
+                            View Details
+                          </button>
+                          {item.status === "Active" ? (
+                            <button
+                              type="button"
+                              onClick={() => runAction(item._id, "pause")}
+                              disabled={actionLoadingId === item._id}
+                              className="px-2.5 py-1 rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 disabled:opacity-60"
+                            >
+                              Pause
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => runAction(item._id, "resume")}
+                              disabled={actionLoadingId === item._id}
+                              className="px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 hover:bg-emerald-200 disabled:opacity-60"
+                            >
+                              Resume
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => runAction(item._id, "renew")}
+                            disabled={actionLoadingId === item._id}
+                            className="px-2.5 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200 disabled:opacity-60"
+                          >
+                            Renew
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => runAction(item._id, "cancel")}
+                            disabled={actionLoadingId === item._id || item.status === "Cancelled"}
+                            className="px-2.5 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200 disabled:opacity-60"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSubscription(item._id)}
+                            disabled={actionLoadingId === item._id}
+                            className="px-2.5 py-1 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* MOBILE VIEW */}
+            <div className="md:hidden p-4 space-y-4">
+              {subscriptions.map((item) => (
+                <div
+                  key={item._id}
+                  className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <p className="font-semibold text-gray-900">{getUserLabel(item)}</p>
+                      <p className="text-xs text-gray-600 mt-1">{getPlanLabel(item.planType)}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap shrink-0 ${
+                      item.status === "Active"
+                        ? "bg-green-100 text-green-700"
+                        : item.status === "Inactive"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : item.status === "Cancelled"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}>
+                      {item.status || "—"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium">Start Date</p>
+                      <p className="text-gray-800 mt-1 text-xs">{formatDate(item.startDate)}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium">End Date</p>
+                      <p className="text-gray-800 mt-1 text-xs">{formatDate(item.endDate)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleViewDetails(item._id)}
+                      className="flex-1 min-w-[80px] px-2 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-xs font-semibold"
+                    >
+                      View
+                    </button>
+                    {item.status === "Active" ? (
+                      <button
+                        type="button"
+                        onClick={() => runAction(item._id, "pause")}
+                        disabled={actionLoadingId === item._id}
+                        className="flex-1 min-w-[80px] px-2 py-1.5 rounded bg-yellow-100 text-yellow-800 hover:bg-yellow-200 disabled:opacity-60 text-xs font-semibold"
+                      >
+                        Pause
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => runAction(item._id, "resume")}
+                        disabled={actionLoadingId === item._id}
+                        className="flex-1 min-w-[80px] px-2 py-1.5 rounded bg-emerald-100 text-emerald-800 hover:bg-emerald-200 disabled:opacity-60 text-xs font-semibold"
+                      >
+                        Resume
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => runAction(item._id, "renew")}
+                      disabled={actionLoadingId === item._id}
+                      className="flex-1 min-w-[80px] px-2 py-1.5 rounded bg-blue-100 text-blue-800 hover:bg-blue-200 disabled:opacity-60 text-xs font-semibold"
+                    >
+                      Renew
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runAction(item._id, "cancel")}
+                      disabled={actionLoadingId === item._id || item.status === "Cancelled"}
+                      className="flex-1 min-w-[80px] px-2 py-1.5 rounded bg-red-100 text-red-800 hover:bg-red-200 disabled:opacity-60 text-xs font-semibold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSubscription(item._id)}
+                      disabled={actionLoadingId === item._id}
+                      className="flex-1 min-w-[80px] px-2 py-1.5 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 text-xs font-semibold"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {selectedSubscription && (

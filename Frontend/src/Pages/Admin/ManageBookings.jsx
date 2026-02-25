@@ -23,6 +23,7 @@ export default function ManageBookings() {
     overhead: 0,
     other: 0,
   });
+  const [requestingPaymentId, setRequestingPaymentId] = useState("");
 
   useEffect(() => {
     fetchBookings();
@@ -104,6 +105,52 @@ export default function ManageBookings() {
     return icons[status] || "📋";
   };
 
+  const getPaymentTotals = (booking) => {
+    const total =
+      Number(booking?.quotation?.netCost) ||
+      Number(booking?.finalCost) ||
+      Number(booking?.quotation?.totalCost) ||
+      Number(booking?.baseCost) ||
+      0;
+
+    const advanceAmount = Number(booking?.payment?.advanceAmount || 0);
+    const finalAmount = Number(booking?.payment?.finalAmount || 0);
+    const finalCollectedAmount = Number(booking?.payment?.finalCollectedAmount || 0);
+
+    const collectedAmount =
+      (booking?.payment?.advancePaid ? advanceAmount : 0) +
+      finalCollectedAmount;
+
+    const remainingAmount = Math.max(0, total - collectedAmount);
+
+    return {
+      total,
+      collectedAmount,
+      remainingAmount,
+      advanceAmount,
+      finalAmount,
+      finalCollectedAmount,
+    };
+  };
+
+  const handleRequestRemainingPayment = async (booking) => {
+    try {
+      setRequestingPaymentId(booking._id);
+      const note = "Installation has started. Please complete the remaining payment.";
+      await bookingService.requestRemainingPayment(booking._id, { note });
+      await fetchBookings();
+      const refreshed = bookings.find((item) => item._id === booking._id);
+      if (refreshed) {
+        setSelectedBooking(refreshed);
+      }
+      setError("");
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to request remaining payment");
+    } finally {
+      setRequestingPaymentId("");
+    }
+  };
+
   const filteredBookings = bookings.filter((booking) => {
     const matchFilter = filter === "All" || booking.status === filter;
     const matchSearch = 
@@ -123,7 +170,7 @@ export default function ManageBookings() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8">
+      <div className="min-h-screen bg-gray-100 p-4 sm:p-6">
         <div className="text-center">
           <p className="text-lg text-gray-600">Loading bookings...</p>
         </div>
@@ -132,16 +179,16 @@ export default function ManageBookings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">📋 Booking Management</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">📋 Booking Management</h1>
           <p className="text-gray-600">CRM + Operations Bridge - Manage all solar installations</p>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           {[
             { label: "Total Bookings", value: stats.total, color: "blue" },
             { label: "Pending", value: stats.pending, color: "yellow" },
@@ -169,7 +216,7 @@ export default function ManageBookings() {
         )}
 
         {/* Search & Filter */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
@@ -211,75 +258,160 @@ export default function ManageBookings() {
           </div>
         </div>
 
-        {/* Bookings Table */}
+        {/* Bookings Table - Responsive */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {filteredBookings.length === 0 ? (
             <div className="p-8 text-center">
               <p className="text-gray-600">No bookings found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Booking ID</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Customer</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">System</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Amount</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Applied Date</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredBookings.map((booking) => (
-                    <tr key={booking._id} className="border-b hover:bg-gray-50 transition">
-                      <td className="px-6 py-4 font-mono text-sm text-blue-600">#{booking._id?.slice(-8)}</td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-semibold text-gray-800">
+            <>
+              {/* DESKTOP VIEW */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-100 border-b">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Booking ID</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Customer</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">System</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Amount</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Applied Date</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredBookings.map((booking) => (
+                      (() => {
+                        const paymentTotals = getPaymentTotals(booking);
+                        return (
+                      <tr key={booking._id} className="border-b hover:bg-gray-50 transition">
+                        <td className="px-6 py-4 font-mono text-sm text-blue-600">#{booking._id?.slice(-8)}</td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-semibold text-gray-800">
+                              {booking.customer?.fullName || booking.user?.name || "—"}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {booking.customer?.phone || booking.user?.phone || "—"}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="font-semibold">{booking.systemType}</p>
+                          <p className="text-sm text-gray-500">{booking.capacity} kW</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="font-bold text-lg text-gray-800">
+                            ₹{(booking.quotation?.totalCost || booking.finalCost || 0).toLocaleString()}
+                          </p>
+                          <p className="text-xs text-emerald-700">
+                            Collected: ₹{paymentTotals.collectedAmount.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-amber-700">
+                            Remaining: ₹{paymentTotals.remainingAmount.toLocaleString()}
+                          </p>
+                          {(booking.quotation?.subsidyAmount || booking.subsidyAmount || 0) > 0 && (
+                            <p className="text-sm text-green-600">
+                              -₹{(booking.quotation?.subsidyAmount || booking.subsidyAmount || 0).toLocaleString()}
+                            </p>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(booking.status)}`}>
+                            {getStatusIcon(booking.status)} {booking.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {new Date(booking.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => setSelectedBooking(booking)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded transition text-sm"
+                          >
+                            View & Update
+                          </button>
+                        </td>
+                      </tr>
+                        );
+                      })()
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE VIEW */}
+              <div className="md:hidden p-4 space-y-4">
+                {filteredBookings.map((booking) => {
+                  const paymentTotals = getPaymentTotals(booking);
+                  return (
+                    <div
+                      key={booking._id}
+                      className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3"
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1">
+                          <p className="text-xs font-mono text-blue-600">
+                            #{booking._id?.slice(-8)}
+                          </p>
+                          <p className="text-sm font-semibold text-gray-800 mt-1">
                             {booking.customer?.fullName || booking.user?.name || "—"}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-xs text-gray-500">
                             {booking.customer?.phone || booking.user?.phone || "—"}
                           </p>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-semibold">{booking.systemType}</p>
-                        <p className="text-sm text-gray-500">{booking.capacity} kW</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-bold text-lg text-gray-800">
-                          ₹{(booking.quotation?.totalCost || booking.finalCost || 0).toLocaleString()}
-                        </p>
-                        {(booking.quotation?.subsidyAmount || booking.subsidyAmount || 0) > 0 && (
-                          <p className="text-sm text-green-600">
-                            -₹{(booking.quotation?.subsidyAmount || booking.subsidyAmount || 0).toLocaleString()}
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(booking.status)}`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold border whitespace-nowrap shrink-0 ${getStatusColor(
+                            booking.status
+                          )}`}
+                        >
                           {getStatusIcon(booking.status)} {booking.status}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(booking.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="bg-white p-3 rounded border border-gray-200">
+                          <p className="text-xs text-gray-600 font-medium">System</p>
+                          <p className="font-semibold text-gray-800">{booking.systemType}</p>
+                          <p className="text-xs text-gray-500">{booking.capacity} kW</p>
+                        </div>
+                        <div className="bg-white p-3 rounded border border-gray-200">
+                          <p className="text-xs text-gray-600 font-medium">Total Cost</p>
+                          <p className="font-bold text-gray-800">
+                            ₹{(booking.quotation?.totalCost || booking.finalCost || 0).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-3 rounded border border-gray-200 text-sm">
+                        <p className="text-xs text-emerald-700 font-medium">
+                          ✓ Collected: ₹{paymentTotals.collectedAmount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-amber-700 font-medium mt-1">
+                          ⏳ Remaining: ₹{paymentTotals.remainingAmount.toLocaleString()}
+                        </p>
+                        {(booking.quotation?.subsidyAmount || booking.subsidyAmount || 0) > 0 && (
+                          <p className="text-xs text-green-600 font-medium mt-1">
+                            - Subsidy: ₹{(booking.quotation?.subsidyAmount || booking.subsidyAmount || 0).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
                         <button
                           onClick={() => setSelectedBooking(booking)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded transition text-sm"
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded transition text-sm"
                         >
                           View & Update
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 
@@ -287,12 +419,12 @@ export default function ManageBookings() {
         {selectedBooking && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="bg-gradient-to-r from-blue-600 to-green-600 p-6">
+              <div className="bg-gradient-to-r from-blue-600 to-green-600 p-4 sm:p-6">
                 <h2 className="text-2xl font-bold text-white">Booking Details & Update</h2>
                 <p className="text-blue-100 text-sm">#{selectedBooking._id?.slice(-8)}</p>
               </div>
 
-              <div className="p-8 space-y-6">
+              <div className="p-4 sm:p-6 md:p-8 space-y-6">
                 {/* Customer Details */}
                 <div className="bg-gray-50 p-6 rounded-lg">
                   <h3 className="text-lg font-bold text-gray-800 mb-4">👤 Customer Information</h3>
@@ -326,9 +458,9 @@ export default function ManageBookings() {
                 </div>
 
                 {/* System Details */}
-                <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500">
+                <div className="bg-blue-50 p-4 sm:p-6 rounded-lg border-l-4 border-blue-500">
                   <h3 className="text-lg font-bold text-gray-800 mb-4">⚡ System Details</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-600">System Type</p>
                       <p className="font-semibold text-gray-800">{selectedBooking.systemType}</p>
@@ -351,6 +483,9 @@ export default function ManageBookings() {
                 {/* Cost Breakdown */}
                 <div className="bg-green-50 p-6 rounded-lg border-l-4 border-green-500">
                   <h3 className="text-lg font-bold text-gray-800 mb-4">💰 Financial Summary</h3>
+                  {(() => {
+                    const paymentTotals = getPaymentTotals(selectedBooking);
+                    return (
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <p className="text-gray-700">Estimated Cost:</p>
@@ -387,11 +522,49 @@ export default function ManageBookings() {
                         ).toLocaleString()}
                       </p>
                     </div>
+                    <div className="flex justify-between text-emerald-700 border-t pt-2">
+                      <p className="font-semibold">Collected Amount:</p>
+                      <p className="font-bold">₹{paymentTotals.collectedAmount.toLocaleString()}</p>
+                    </div>
+                    <div className="flex justify-between text-amber-700">
+                      <p className="font-semibold">Remaining Amount:</p>
+                      <p className="font-bold">₹{paymentTotals.remainingAmount.toLocaleString()}</p>
+                    </div>
+                    <div className="text-xs text-gray-600 mt-2">
+                      Advance Paid: {selectedBooking?.payment?.advancePaid ? "Yes" : "No"} • Final Paid: {selectedBooking?.payment?.finalPaid ? "Yes" : "No"}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Final Collected So Far: ₹{paymentTotals.finalCollectedAmount.toLocaleString()}
+                    </div>
                   </div>
+                    );
+                  })()}
                 </div>
 
+                {selectedBooking?.status === "In Progress" &&
+                  selectedBooking?.payment?.advancePaid &&
+                  !selectedBooking?.payment?.finalPaid && (
+                    <div className="bg-blue-50 p-4 sm:p-6 rounded-lg border-l-4 border-blue-500">
+                      <h3 className="text-lg font-bold text-gray-800 mb-3">💳 Remaining Payment Request</h3>
+                      <p className="text-sm text-gray-700 mb-4">
+                        Ask customer to pay remaining amount via Razorpay once installation has started.
+                      </p>
+                      <button
+                        onClick={() => handleRequestRemainingPayment(selectedBooking)}
+                        disabled={requestingPaymentId === selectedBooking._id || selectedBooking?.payment?.finalPaymentRequested}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:opacity-60"
+                      >
+                        {selectedBooking?.payment?.finalPaymentRequested
+                          ? "Request Sent"
+                          : requestingPaymentId === selectedBooking._id
+                            ? "Sending..."
+                            : "Send Remaining Payment Request"}
+                      </button>
+                    </div>
+                  )}
+
                 {/* Actual Cost Breakdown */}
-                <div className="bg-white p-6 rounded-lg border border-gray-200">
+                <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-gray-800">🧾 Actual Cost Breakdown</h3>
                     <span className="text-xs text-gray-500">Used for profit analytics</span>
@@ -447,7 +620,7 @@ export default function ManageBookings() {
                 </div>
 
                 {/* Update Form */}
-                <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                <div className="bg-gray-50 p-4 sm:p-6 rounded-lg space-y-4">
                   <h3 className="text-lg font-bold text-gray-800">📝 Update Booking</h3>
 
                   <div>

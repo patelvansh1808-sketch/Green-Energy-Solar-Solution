@@ -24,6 +24,7 @@ export default function AdminLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const menuRef = useRef(null);
   
   useEffect(() => {
@@ -47,12 +48,35 @@ export default function AdminLayout() {
     navigate("/login");
   };
 
+  const handleSidebarNavigate = () => {
+    setSidebarOpen(false);
+  };
+
   return (
-    <div className="h-screen bg-gray-100 flex overflow-hidden">
-      <aside className="fixed left-0 top-0 w-64 h-screen bg-white border-r border-gray-200 flex flex-col overflow-y-auto">
+    <div className="min-h-screen bg-gray-100 flex overflow-hidden">
+      {sidebarOpen && (
+        <button
+          className="lg:hidden fixed inset-0 bg-black/40 z-40"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close sidebar overlay"
+        />
+      )}
+
+      <aside
+        className={`fixed left-0 top-0 w-64 h-screen bg-white border-r border-gray-200 flex flex-col overflow-y-auto z-50 transform transition-transform duration-200 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0`}
+      >
         <div className="px-6 py-5 border-b border-gray-200 flex items-center gap-2">
           <span className="text-xl">☀️</span>
           <span className="text-lg font-bold text-gray-900">Solar CRM</span>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden ml-auto text-gray-600"
+            aria-label="Close sidebar"
+          >
+            ✕
+          </button>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -61,6 +85,7 @@ export default function AdminLayout() {
               key={item.to}
               to={item.to}
               end={item.to === "/admin"}
+              onClick={handleSidebarNavigate}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition ${
                   isActive
@@ -81,6 +106,7 @@ export default function AdminLayout() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={handleSidebarNavigate}
                 className={({ isActive }) =>
                   `mt-1 flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition ${
                     isActive
@@ -105,11 +131,20 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main className="ml-64 flex-1 overflow-y-auto h-screen flex flex-col">
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-          <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
+      <main className="lg:ml-64 flex-1 overflow-y-auto min-h-screen flex flex-col">
+        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-30">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen((prev) => !prev)}
+              className="lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-600"
+              aria-label="Open sidebar"
+            >
+              ☰
+            </button>
+            <h1 className="text-base sm:text-lg font-semibold text-gray-900">Admin Panel</h1>
+          </div>
           <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-600">{new Date().toLocaleDateString()}</div>
+            <div className="hidden sm:block text-sm text-gray-600">{new Date().toLocaleDateString()}</div>
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setOpenMenu((prev) => !prev)}
@@ -183,7 +218,7 @@ export default function AdminLayout() {
             </div>
           </div>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <Outlet />
         </div>
       </main>

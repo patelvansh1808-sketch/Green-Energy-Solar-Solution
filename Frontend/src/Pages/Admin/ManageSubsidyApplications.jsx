@@ -254,7 +254,7 @@ export default function ManageSubsidyApplications() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     👤 Customer Details
                   </h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-gray-500">Name</p>
                       <p className="font-semibold text-gray-800">{selectedApp.customerId?.fullName || "N/A"}</p>
@@ -279,7 +279,7 @@ export default function ManageSubsidyApplications() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     📊 Application Status
                   </h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className={`p-3 rounded-lg ${statusColors[selectedApp.status]}`}>
                       <p className="text-xs font-semibold opacity-75">Current Status</p>
                       <p className="text-lg font-bold">{selectedApp.status}</p>
@@ -296,7 +296,7 @@ export default function ManageSubsidyApplications() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     💰 Subsidy Amount
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4\">
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <p className="text-gray-600 text-sm">Applied Amount</p>
                       <p className="text-2xl font-bold text-blue-600 mt-1">
@@ -391,7 +391,7 @@ export default function ManageSubsidyApplications() {
                     <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       🏦 Bank Details
                     </h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded\">
                       <div>
                         <p className="text-gray-500">Account Holder</p>
                         <p className="font-semibold text-gray-800">{selectedApp.bankDetails.accountHolder}</p>

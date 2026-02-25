@@ -190,6 +190,10 @@ const bookingSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+      finalCollectedAmount: {
+        type: Number,
+        default: 0,
+      },
       finalPaid: {
         type: Boolean,
         default: false,
@@ -199,7 +203,62 @@ const bookingSchema = new mongoose.Schema(
       },
       paymentMethod: {
         type: String,
-        enum: ["Cash", "Card", "UPI", "Bank Transfer", "Cheque", "Other"],
+        enum: [
+          "Cash",
+          "Card",
+          "UPI",
+          "Bank Transfer",
+          "Cheque",
+          "Razorpay",
+          "Other",
+        ],
+      },
+      razorpayOrderId: {
+        type: String,
+        default: "",
+      },
+      razorpayPaymentId: {
+        type: String,
+        default: "",
+      },
+      razorpaySignature: {
+        type: String,
+        default: "",
+      },
+      paymentCaptured: {
+        type: Boolean,
+        default: false,
+      },
+      paymentCapturedAt: {
+        type: Date,
+      },
+      pendingOrderStage: {
+        type: String,
+        enum: ["", "advance", "full", "final"],
+        default: "",
+      },
+      finalPaymentRequested: {
+        type: Boolean,
+        default: false,
+      },
+      finalPaymentRequestedAt: {
+        type: Date,
+      },
+      finalPaymentRequestNote: {
+        type: String,
+        default: "",
+      },
+      finalRazorpayOrderId: {
+        type: String,
+        default: "",
+      },
+      finalRazorpayPaymentId: {
+        type: String,
+        default: "",
+      },
+      finalRazorpaySignature: {
+        type: String,
+        default: "",
       },
     },
 
@@ -267,8 +326,17 @@ const bookingSchema = new mongoose.Schema(
 bookingSchema.pre("save", async function (next) {
   if (!this.bookingId) {
     const year = new Date().getFullYear();
-    const count = await mongoose.model("Booking").countDocuments();
-    this.bookingId = `BK-${year}-${String(count + 1).padStart(4, "0")}`;
+    const MongoDB = require("mongoose").connection.collection("booking_counters");
+    
+    // Use findOneAndUpdate to atomically increment counter (prevents race conditions)
+    const result = await MongoDB.findOneAndUpdate(
+      { _id: `booking_${year}` },
+      { $inc: { seq: 1 } },
+      { upsert: true, returnDocument: "after" }
+    );
+    
+    const seq = result.value?.seq || 1;
+    this.bookingId = `BK-${year}-${String(seq).padStart(4, "0")}`;
   }
   next();
 });

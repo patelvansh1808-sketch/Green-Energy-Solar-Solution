@@ -42,6 +42,7 @@ import FinancialAnalytics from "./Pages/Admin/FinancialAnalytics";
 import InventoryManagement from "./Pages/Admin/InventoryManagement";
 import AdminProfile from "./Pages/Admin/AdminProfile";
 import MaintenanceOverview from "./Pages/Admin/MaintenanceOverview";
+import ManageUsers from "./Pages/Admin/ManageUsers";
 
 /* ===== CRM PAGES ===== */
 import CRMDashboard from "./Pages/CRMDashboard";
@@ -192,6 +193,7 @@ function AnimatedRoutes() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfile />} />
+          <Route path="users" element={<ManageUsers />} />
           <Route path="bookings" element={<ManageBookings />} />
           <Route path="subsidy-applications" element={<ManageSubsidyApplications />} />
           <Route path="customers" element={<ManageCustomers />} />
@@ -268,11 +270,11 @@ function AppShell() {
     location.pathname.startsWith("/crm");
 
   return (
-    <>
+    <div className="min-h-screen overflow-x-hidden">
       {!isAdminRoute && <Navbar />}
       <AnimatedRoutes />
       {!isAdminRoute && <ChatWidget />}
       {!isAdminRoute && <Footer />}
-    </>
+    </div>
   );
 }

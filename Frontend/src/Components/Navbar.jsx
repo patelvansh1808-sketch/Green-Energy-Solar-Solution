@@ -30,8 +30,13 @@ export default function Navbar() {
 
   const showSupportLink = user && !isAuthRoute;
   const showDashboardLink = user && !isAuthRoute && hasCustomerProfile;
+  const normalizedRole = String(user?.role || "")
+    .toLowerCase()
+    .replace(/[\s-]/g, "_");
   const isAdmin = user?.role === "admin";
-  const isTeamMember = user?.role === "engineer" || user?.role === "sales" || user?.role === "support";
+  const isEngineerOrTechnician = normalizedRole === "engineer" || normalizedRole === "technician";
+  const isSalesRole = normalizedRole.includes("sales");
+  const isTeamMember = isEngineerOrTechnician || isSalesRole || normalizedRole === "support";
 
   return (
     <nav className="bg-green-700 text-white shadow-lg sticky top-0 z-50">
@@ -86,7 +91,7 @@ export default function Navbar() {
               )}
 
               {/* ENGINEER DASHBOARD */}
-              {user?.role === "engineer" && (
+              {isEngineerOrTechnician && (
                 <Link to="/engineer/dashboard" className="hover:text-green-200 transition">
                   🔧 {t("nav.myTasks")}
                 </Link>
@@ -95,7 +100,7 @@ export default function Navbar() {
               {/* TEAM MEMBER DASHBOARD */}
               {isTeamMember && (
                 <Link to="/team/my-leads" className="hover:text-green-200 transition">
-                  📋 {t("nav.myLeads")}
+                  📋 {t("nav.myLeads") || "My Leads"}
                 </Link>
               )}
 
@@ -207,6 +212,14 @@ export default function Navbar() {
                   <MobileItem to="/crm/dashboard" label="📊 CRM Dashboard" />
                   <MobileItem to="/crm/sales-dashboard" label="💼 Sales Dashboard" />
                 </>
+              )}
+
+              {isEngineerOrTechnician && (
+                <MobileItem to="/engineer/dashboard" label={`🔧 ${t("nav.myTasks") || "My Tasks"}`} />
+              )}
+
+              {isTeamMember && (
+                <MobileItem to="/team/my-leads" label={`📋 ${t("nav.myLeads") || "My Leads"}`} />
               )}
 
               <p className="text-xs uppercase text-green-200 mt-3">👤 {t("nav.profile")}</p>

@@ -45,8 +45,8 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white">
-      <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-8 animate-slideUp">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white p-4 sm:p-6">
+      <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-6 sm:p-8 animate-slideUp">
         <h2 className="text-2xl font-bold text-green-700 text-center mb-6">
           {t("auth.registerTitle")}
         </h2>

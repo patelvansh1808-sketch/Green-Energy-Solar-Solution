@@ -406,59 +406,105 @@ export default function EngineerDashboard() {
           {assignedServices.length === 0 ? (
             <div className="text-center py-10 text-gray-600">No cleaning services assigned to you yet</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Customer</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Service Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Details</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {assignedServices.map((service) => (
-                    <tr key={service._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-700">{formatServiceDate(service.date)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{getServiceCustomerLabel(service)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{service.type || "-"}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{getExecutionStatusLabel(service)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        <div className="space-y-1">
-                          <p>
-                            <span className="font-medium">Notes:</span>{" "}
-                            {service.technicianNotes ? service.technicianNotes : "-"}
-                          </p>
-                          <p>
-                            <span className="font-medium">Before Photos:</span>{" "}
-                            {(service.beforePhotos || []).length}
-                          </p>
-                          <p>
-                            <span className="font-medium">After Photos:</span>{" "}
-                            {(service.afterPhotos || []).length}
-                          </p>
-                          <p>
-                            <span className="font-medium">Completion Time:</span>{" "}
-                            {formatDateTime(service.completionTime)}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <button
-                          type="button"
-                          onClick={() => openServiceExecutionModal(service)}
-                          className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1.5 rounded font-semibold transition"
-                        >
-                          Update
-                        </button>
-                      </td>
+            <>
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Customer</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Service Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Details</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {assignedServices.map((service) => (
+                      <tr key={service._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm text-gray-700">{formatServiceDate(service.date)}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{getServiceCustomerLabel(service)}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{service.type || "-"}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{getExecutionStatusLabel(service)}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          <div className="space-y-1">
+                            <p>
+                              <span className="font-medium">Notes:</span>{" "}
+                              {service.technicianNotes ? service.technicianNotes : "-"}
+                            </p>
+                            <p>
+                              <span className="font-medium">Before Photos:</span>{" "}
+                              {(service.beforePhotos || []).length}
+                            </p>
+                            <p>
+                              <span className="font-medium">After Photos:</span>{" "}
+                              {(service.afterPhotos || []).length}
+                            </p>
+                            <p>
+                              <span className="font-medium">Completion Time:</span>{" "}
+                              {formatDateTime(service.completionTime)}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <button
+                            type="button"
+                            onClick={() => openServiceExecutionModal(service)}
+                            className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1.5 rounded font-semibold transition"
+                          >
+                            Update
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="md:hidden p-4 space-y-4">
+                {assignedServices.map((service) => (
+                  <div key={service._id} className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-gray-900 text-sm">{getServiceCustomerLabel(service)}</p>
+                        <p className="text-xs text-gray-600 mt-1">{formatServiceDate(service.date)}</p>
+                      </div>
+                      <span className="px-2 py-1 rounded text-xs font-semibold bg-indigo-100 text-indigo-700 whitespace-nowrap">
+                        {service.type || "-"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-white border border-gray-200 rounded p-2">
+                        <p className="text-gray-500">Status</p>
+                        <p className="text-gray-800 font-medium">{getExecutionStatusLabel(service)}</p>
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded p-2">
+                        <p className="text-gray-500">Completion</p>
+                        <p className="text-gray-800 font-medium">{formatDateTime(service.completionTime)}</p>
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded p-2">
+                        <p className="text-gray-500">Before Photos</p>
+                        <p className="text-gray-800 font-medium">{(service.beforePhotos || []).length}</p>
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded p-2">
+                        <p className="text-gray-500">After Photos</p>
+                        <p className="text-gray-800 font-medium">{(service.afterPhotos || []).length}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-700 break-words">
+                      <span className="font-medium">Notes:</span> {service.technicianNotes ? service.technicianNotes : "-"}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openServiceExecutionModal(service)}
+                      className="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded font-semibold transition"
+                    >
+                      Update
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
@@ -587,66 +633,112 @@ export default function EngineerDashboard() {
                 : `No projects with status "${getStatusLabel(statusFilter)}"`}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Project</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Customer</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Capacity</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Priority</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredProjects.map((project) => (
-                    <tr key={project._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-medium text-gray-900">{project.projectName}</p>
-                          <p className="text-sm text-gray-600">{project.location?.city}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-medium text-gray-900">{project.customerName}</p>
-                          <p className="text-sm text-gray-600">{project.customerEmail}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(project.status)}`}>
-                          {getStatusLabel(project.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm">
-                          <p className="font-medium text-gray-900">{project.systemCapacity} kW</p>
-                          <p className="text-gray-600">{project.panelCount} panels</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-sm font-semibold ${
+            <>
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Project</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Customer</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Capacity</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Priority</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredProjects.map((project) => (
+                      <tr key={project._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-medium text-gray-900">{project.projectName}</p>
+                            <p className="text-sm text-gray-600">{project.location?.city}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-medium text-gray-900">{project.customerName}</p>
+                            <p className="text-sm text-gray-600">{project.customerEmail}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(project.status)}`}>
+                            {getStatusLabel(project.status)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm">
+                            <p className="font-medium text-gray-900">{project.systemCapacity} kW</p>
+                            <p className="text-gray-600">{project.panelCount} panels</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`text-sm font-semibold ${
+                            project.priority === 'urgent' ? 'text-red-600' :
+                            project.priority === 'high' ? 'text-orange-600' :
+                            project.priority === 'normal' ? 'text-blue-600' : 'text-green-600'
+                          }`}>
+                            {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => openDetailModal(project)}
+                            className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded text-sm font-semibold transition"
+                          >
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="md:hidden p-4 space-y-4">
+                {filteredProjects.map((project) => (
+                  <div key={project._id} className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-gray-900">{project.projectName}</p>
+                        <p className="text-xs text-gray-600 mt-1">{project.location?.city || "-"}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeColor(project.status)}`}>
+                        {getStatusLabel(project.status)}
+                      </span>
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded p-3">
+                      <p className="text-xs text-gray-600">Customer</p>
+                      <p className="text-sm text-gray-900 font-medium">{project.customerName}</p>
+                      <p className="text-xs text-gray-600 break-all">{project.customerEmail}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-white border border-gray-200 rounded p-2">
+                        <p className="text-gray-500">Capacity</p>
+                        <p className="text-gray-800 font-medium">{project.systemCapacity} kW</p>
+                        <p className="text-gray-600">{project.panelCount} panels</p>
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded p-2">
+                        <p className="text-gray-500">Priority</p>
+                        <p className={`font-semibold ${
                           project.priority === 'urgent' ? 'text-red-600' :
                           project.priority === 'high' ? 'text-orange-600' :
                           project.priority === 'normal' ? 'text-blue-600' : 'text-green-600'
                         }`}>
                           {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => openDetailModal(project)}
-                          className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded text-sm font-semibold transition"
-                        >
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => openDetailModal(project)}
+                      className="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded text-sm font-semibold transition"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -784,7 +876,7 @@ export default function EngineerDashboard() {
             {/* Action Buttons */}
             <div className="border-t pt-6 mt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Update Task Status</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {selectedProject.status === "survey" && (
                   <button
                     onClick={() => openUpdateModal(selectedProject, "survey")}
@@ -834,8 +926,8 @@ export default function EngineerDashboard() {
 
       {/* INVENTORY SELECTION MODAL */}
       {showInventoryModal && selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Select Inventory</h2>
@@ -929,8 +1021,8 @@ export default function EngineerDashboard() {
 
       {/* UPDATE TASK MODAL */}
       {showUpdateModal && selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -1114,8 +1206,8 @@ export default function EngineerDashboard() {
 
       {/* GO-LIVE CONFIRMATION MODAL */}
       {showGoLiveModal && selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">🚀 Confirm Go-Live</h2>

@@ -28,13 +28,17 @@ export default function Login() {
       const refreshToken = res.data.refreshToken;
       login(token, res.data.user, refreshToken);
 
-      const role = res.data.user?.role;
+      const role = String(res.data.user?.role || "")
+        .toLowerCase()
+        .replace(/[\s-]/g, "_");
       if (role === "admin") {
         navigate("/admin");
       } else if (role === "support") {
         navigate("/admin/tickets");
       } else if (role === "engineer" || role === "technician") {
         navigate("/engineer/dashboard");
+      } else if (role.includes("sales")) {
+        navigate("/team/my-leads");
       } else {
         navigate("/");
       }
@@ -50,8 +54,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white">
-      <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-8 animate-slideUp">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white p-4 sm:p-6">
+      <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-6 sm:p-8 animate-slideUp">
         <h2 className="text-2xl font-bold text-green-700 text-center mb-6">
           {t("auth.loginTitle")}
         </h2>

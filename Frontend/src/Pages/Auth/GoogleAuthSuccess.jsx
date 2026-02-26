@@ -34,13 +34,17 @@ export default function GoogleAuthSuccess() {
         .then((res) => {
           console.log("✅ User profile fetched:", res.data);
           login(token, res.data, refreshToken);
-          const role = res.data?.role;
+          const role = String(res.data?.role || "")
+            .toLowerCase()
+            .replace(/[\s-]/g, "_");
           if (role === "admin") {
             navigate("/admin");
           } else if (role === "support") {
             navigate("/admin/tickets");
           } else if (role === "engineer" || role === "technician") {
             navigate("/engineer/dashboard");
+          } else if (role.includes("sales")) {
+            navigate("/team/my-leads");
           } else {
             navigate("/");
           }
@@ -55,12 +59,17 @@ export default function GoogleAuthSuccess() {
             
             const user = { _id: payload.id, role: payload.role };
             login(token, user, refreshToken);
-            if (user.role === "admin") {
+            const normalizedRole = String(user.role || "")
+              .toLowerCase()
+              .replace(/[\s-]/g, "_");
+            if (normalizedRole === "admin") {
               navigate("/admin");
-            } else if (user.role === "support") {
+            } else if (normalizedRole === "support") {
               navigate("/admin/tickets");
-            } else if (user.role === "engineer" || user.role === "technician") {
+            } else if (normalizedRole === "engineer" || normalizedRole === "technician") {
               navigate("/engineer/dashboard");
+            } else if (normalizedRole.includes("sales")) {
+              navigate("/team/my-leads");
             } else {
               navigate("/");
             }

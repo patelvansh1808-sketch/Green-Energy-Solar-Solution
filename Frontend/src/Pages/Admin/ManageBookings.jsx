@@ -685,13 +685,13 @@ export default function ManageBookings() {
                 <div className="flex gap-4 pt-6">
                   <button
                     onClick={() => setSelectedBooking(null)}
-                    className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition"
+                    className="flex-1 h-11 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-semibold px-4 rounded-lg transition"
                   >
                     Close
                   </button>
                   <button
                     onClick={() => handleUpdateBooking(selectedBooking._id)}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                    className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 rounded-lg transition shadow-sm"
                   >
                     💾 Save Updates
                   </button>

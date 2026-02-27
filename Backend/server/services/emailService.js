@@ -435,6 +435,8 @@ exports.sendTicketNotificationEmail = async (ticketData) => {
       billing: "#8b5cf6",
       installation: "#3b82f6",
       maintenance: "#10b981",
+      solar_upgrade: "#0ea5e9",
+      solar_relocation: "#14b8a6",
       warranty: "#06b6d4",
       general: "#6b7280",
       feedback: "#ec4899",

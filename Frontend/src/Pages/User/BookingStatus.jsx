@@ -730,75 +730,79 @@ const BookingStatus = () => {
                 )}
 
                 {/* Action Buttons */}
-                <div className="p-6 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-                  <button
-                    onClick={() => toggleDetails(booking._id)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
-                  >
-                    <span>{expandedDetails[booking._id] ? "Hide Details" : "View Details"}</span>
-                    <span className="text-lg">{expandedDetails[booking._id] ? "▲" : "▼"}</span>
-                  </button>
-                  <a
-                    href="/contact"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
-                  >
-                    <span>📞</span> Contact Support
-                  </a>
-                  <button
-                    onClick={() => downloadBookingReport(booking)}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
-                  >
-                    <span>📄</span> Download Report
-                  </button>
-                  {canShowInitialPayment(booking) && (
+                <div className="p-4 sm:p-6 bg-gray-50 border-t border-gray-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <button
-                      onClick={() => handlePayBooking(booking)}
-                      disabled={payingBookingId === booking._id}
-                      className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-60"
+                      onClick={() => toggleDetails(booking._id)}
+                      className="h-12 bg-white border border-gray-300 hover:border-blue-500 hover:bg-blue-50 text-gray-800 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
                     >
-                      <span>💰</span>
-                      {payingBookingId === booking._id ? "Processing..." : "Pay Booking Amount"}
+                      <span>{expandedDetails[booking._id] ? "Hide Details" : "View Details"}</span>
+                      <span className="text-xs">{expandedDetails[booking._id] ? "▲" : "▼"}</span>
                     </button>
-                  )}
-                  {canShowFinalPayment(booking) && (
-                    <div className="flex-1 space-y-3">
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <p className="text-blue-900 font-semibold text-sm">
-                          💳 Remaining: ₹{Number(booking?.payment?.finalAmount || 0).toLocaleString("en-IN")}
-                        </p>
-                        <p className="text-blue-700 text-xs mt-1">
-                          {booking?.payment?.isSplitPayment 
-                            ? `(Using domestic card: Transactions needed: ${Math.ceil(Number(booking?.payment?.finalAmount || 0) / 15000)})` 
-                            : ""}
-                        </p>
-                      </div>
+
+                    <a
+                      href="/contact"
+                      className="h-12 bg-white border border-gray-300 hover:border-emerald-500 hover:bg-emerald-50 text-gray-800 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
+                    >
+                      <span>📞</span> Contact Support
+                    </a>
+
+                    <button
+                      onClick={() => downloadBookingReport(booking)}
+                      className="h-12 bg-white border border-gray-300 hover:border-violet-500 hover:bg-violet-50 text-gray-800 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
+                    >
+                      <span>📄</span> Download Report
+                    </button>
+
+                    {canShowInitialPayment(booking) && (
                       <button
-                        onClick={() => handlePayRemaining(booking)}
+                        onClick={() => handlePayBooking(booking)}
                         disabled={payingBookingId === booking._id}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-60"
+                        className="sm:col-span-2 lg:col-span-3 h-12 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 rounded-lg transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
                       >
-                        <span>💳</span>
-                        {payingBookingId === booking._id 
-                          ? "Processing..." 
-                          : "Pay Remaining Amount"}
+                        <span>💰</span>
+                        {payingBookingId === booking._id ? "Processing..." : "Pay Booking Amount"}
                       </button>
-                    </div>
-                  )}
-                  {!canShowInitialPayment(booking) && !canShowFinalPayment(booking) && booking?.status !== "Cancelled" && (
-                    <div className="flex-1 bg-slate-100 border border-slate-200 rounded-lg p-3">
-                      <p className="text-slate-700 text-sm font-medium">
-                        {getPaymentHint(booking)}
-                      </p>
-                    </div>
-                  )}
-                  {["Pending", "Cancelled"].includes(booking.status) && (
-                    <button
-                      onClick={() => setDeleteConfirm(booking._id)}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
-                    >
-                      <span>🗑️</span> Delete
-                    </button>
-                  )}
+                    )}
+
+                    {canShowFinalPayment(booking) && (
+                      <div className="sm:col-span-2 lg:col-span-3 bg-white border border-indigo-200 rounded-lg p-3 space-y-3">
+                        <div className="bg-indigo-50 border border-indigo-100 rounded-md p-3">
+                          <p className="text-indigo-900 font-semibold text-sm">
+                            Remaining Amount: ₹{Number(booking?.payment?.finalAmount || 0).toLocaleString("en-IN")}
+                          </p>
+                          <p className="text-indigo-700 text-xs mt-1">
+                            {booking?.payment?.isSplitPayment
+                              ? `(Using domestic card: Transactions needed: ${Math.ceil(Number(booking?.payment?.finalAmount || 0) / 15000)})`
+                              : ""}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handlePayRemaining(booking)}
+                          disabled={payingBookingId === booking._id}
+                          className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 rounded-lg transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
+                        >
+                          <span>💳</span>
+                          {payingBookingId === booking._id ? "Processing..." : "Pay Remaining Amount"}
+                        </button>
+                      </div>
+                    )}
+
+                    {!canShowInitialPayment(booking) && !canShowFinalPayment(booking) && booking?.status !== "Cancelled" && (
+                      <div className="sm:col-span-2 lg:col-span-3 bg-gray-100 border border-gray-200 rounded-lg p-3">
+                        <p className="text-gray-700 text-sm font-medium">{getPaymentHint(booking)}</p>
+                      </div>
+                    )}
+
+                    {["Pending", "Cancelled"].includes(booking.status) && (
+                      <button
+                        onClick={() => setDeleteConfirm(booking._id)}
+                        className="h-12 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
+                      >
+                        <span>🗑️</span> Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

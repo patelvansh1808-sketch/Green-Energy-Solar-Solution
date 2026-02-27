@@ -202,6 +202,37 @@ export default function TicketManagement() {
     return badges[priority] || "bg-gray-100 text-gray-800";
   };
 
+  const isChargeableServiceCategory = (category) =>
+    category === "solar_upgrade" || category === "solar_relocation";
+
+  const parseServiceDetailsFromDescription = (description = "") => {
+    const marker = "--- Service Details ---";
+    if (!description.includes(marker)) {
+      return { baseDescription: description, details: {} };
+    }
+
+    const [baseDescriptionRaw, detailsRaw] = description.split(marker);
+    const detailLines = (detailsRaw || "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const details = {};
+    detailLines.forEach((line) => {
+      const separatorIndex = line.indexOf(":");
+      if (separatorIndex > 0) {
+        const key = line.slice(0, separatorIndex).trim();
+        const value = line.slice(separatorIndex + 1).trim();
+        details[key] = value;
+      }
+    });
+
+    return {
+      baseDescription: (baseDescriptionRaw || "").trim(),
+      details,
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -317,6 +348,8 @@ export default function TicketManagement() {
                 <option value="billing">Billing</option>
                 <option value="installation">Installation</option>
                 <option value="maintenance">Maintenance</option>
+                <option value="solar_upgrade">Solar Upgrade</option>
+                <option value="solar_relocation">Solar Relocation</option>
                 <option value="warranty">Warranty</option>
                 <option value="complaint">Complaint</option>
                 <option value="feedback">Feedback</option>
@@ -481,14 +514,14 @@ export default function TicketManagement() {
                                 setSelectedTicket(ticket);
                                 setShowDetailModal(true);
                               }}
-                              className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded text-sm font-semibold transition"
+                              className="bg-white border border-gray-300 hover:border-blue-500 hover:bg-blue-50 text-gray-800 px-4 py-2 rounded text-sm font-semibold transition"
                             >
                               Manage
                             </button>
                             {user?.role === "admin" && (
                               <button
                                 onClick={() => handleDeleteTicket(ticket._id)}
-                                className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded text-sm font-semibold transition"
+                                className="bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 px-4 py-2 rounded text-sm font-semibold transition"
                               >
                                 Delete
                               </button>
@@ -558,14 +591,14 @@ export default function TicketManagement() {
                           setSelectedTicket(ticket);
                           setShowDetailModal(true);
                         }}
-                        className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded text-sm font-semibold transition"
+                        className="flex-1 bg-white border border-gray-300 hover:border-blue-500 hover:bg-blue-50 text-gray-800 px-3 py-2 rounded text-sm font-semibold transition"
                       >
                         Manage
                       </button>
                       {user?.role === "admin" && (
                         <button
                           onClick={() => handleDeleteTicket(ticket._id)}
-                          className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded text-sm font-semibold transition"
+                          className="flex-1 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 px-3 py-2 rounded text-sm font-semibold transition"
                         >
                           Delete
                         </button>
@@ -654,8 +687,50 @@ export default function TicketManagement() {
                 {/* Description */}
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm font-semibold text-gray-700 mb-2">Description</p>
-                  <p className="text-gray-900">{selectedTicket.description}</p>
+                  <p className="text-gray-900 whitespace-pre-line">
+                    {parseServiceDetailsFromDescription(selectedTicket.description).baseDescription ||
+                      selectedTicket.description}
+                  </p>
                 </div>
+
+                {/* Chargeable Service Details */}
+                {isChargeableServiceCategory(selectedTicket.category) && (() => {
+                  const parsed = parseServiceDetailsFromDescription(selectedTicket.description);
+                  const details = parsed.details || {};
+                  const currentLocation = details["Current Location"];
+                  const newLocation = details["New Location"];
+                  const expectedCapacity = details["Expected Capacity (kW)"];
+
+                  if (!currentLocation && !newLocation && !expectedCapacity) return null;
+
+                  return (
+                    <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                      <p className="text-sm font-semibold text-amber-800 mb-3">
+                        Chargeable Service Request Details
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {currentLocation && (
+                          <div className="bg-white border border-amber-200 rounded p-3">
+                            <p className="text-xs text-gray-600">Current Location</p>
+                            <p className="text-gray-900 font-medium mt-1">{currentLocation}</p>
+                          </div>
+                        )}
+                        {newLocation && (
+                          <div className="bg-white border border-amber-200 rounded p-3">
+                            <p className="text-xs text-gray-600">New Location</p>
+                            <p className="text-gray-900 font-medium mt-1">{newLocation}</p>
+                          </div>
+                        )}
+                        {expectedCapacity && (
+                          <div className="bg-white border border-amber-200 rounded p-3">
+                            <p className="text-xs text-gray-600">Expected Capacity (kW)</p>
+                            <p className="text-gray-900 font-medium mt-1">{expectedCapacity}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Conversation */}
                 {selectedTicket.responses && selectedTicket.responses.length > 0 && (

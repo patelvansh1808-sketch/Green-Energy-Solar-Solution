@@ -105,7 +105,7 @@ export default function Dashboard() {
                 <p className="text-3xl font-bold text-green-600">{fmtNum(energy.totalGenerated)}</p>
                 <p className="text-xs text-gray-400 mt-1">kWh ({t("dashboard.last30Days", "Last 30 days")})</p>
               </div>
-              <span className="text-4xl">⚡</span>
+              <span className="text-2xl font-bold text-green-600">EG</span>
             </div>
           </div>
 
@@ -117,7 +117,7 @@ export default function Dashboard() {
                 <p className="text-3xl font-bold text-blue-600">₹{fmtNum(savings.total)}</p>
                 <p className="text-xs text-gray-400 mt-1">{t("dashboard.costSaved", "Cost saved")}</p>
               </div>
-              <span className="text-4xl">💰</span>
+              <span className="text-2xl font-bold text-blue-600">SV</span>
             </div>
           </div>
 
@@ -129,7 +129,7 @@ export default function Dashboard() {
                 <p className="text-3xl font-bold text-purple-600">{roi.percentage ?? 0}%</p>
                 <p className="text-xs text-gray-400 mt-1">{t("dashboard.paybackIn", "Payback in")} {roi.paybackYears ?? "—"} {t("dashboard.years")}</p>
               </div>
-              <span className="text-4xl">📈</span>
+              <span className="text-2xl font-bold text-purple-600">ROI</span>
             </div>
           </div>
 
@@ -143,7 +143,7 @@ export default function Dashboard() {
                 </p>
                 <p className="text-xs text-gray-400 mt-1">{system.onlinePercentage ?? 0}% {t("dashboard.online", "online")}</p>
               </div>
-              <span className="text-4xl">{system.status === "Online" ? "✅" : "⚠️"}</span>
+              <span className="text-xl font-bold text-gray-700">{system.status === "Online" ? "ON" : "AL"}</span>
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@ export default function Dashboard() {
           <div className="lg:col-span-2 space-y-8">
             {/* ENERGY DETAILS */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold mb-4">⚡ {t("dashboard.energyDetails")}</h2>
+              <h2 className="text-2xl font-bold mb-4">{t("dashboard.energyDetails")}</h2>
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div>
                   <p className="text-gray-500 text-sm">{t("dashboard.monthlyAverage")}</p>
@@ -180,7 +180,7 @@ export default function Dashboard() {
 
             {/* SAVINGS BREAKDOWN */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold mb-4">💰 {t("dashboard.savingsBreakdown")}</h2>
+              <h2 className="text-2xl font-bold mb-4">{t("dashboard.savingsBreakdown")}</h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-3 border-b">
                   <span className="text-gray-600">{t("dashboard.energyGenerated", "Energy Generated")}</span>
@@ -203,7 +203,7 @@ export default function Dashboard() {
 
             {/* ROI DETAILS */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold mb-4">📈 {t("dashboard.roiSection")}</h2>
+              <h2 className="text-2xl font-bold mb-4">{t("dashboard.roiSection")}</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-blue-50 p-4 rounded">
                   <p className="text-gray-600 text-sm">System Cost</p>
@@ -226,7 +226,7 @@ export default function Dashboard() {
           <div className="space-y-8">
             {/* CUSTOMER INFO */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-bold mb-4">🏠 {t("dashboard.systemInfo")}</h3>
+              <h3 className="text-lg font-bold mb-4">{t("dashboard.systemInfo")}</h3>
               <div className="space-y-3">
                 <div>
                   <p className="text-gray-500 text-sm">{t("dashboard.capacity", "System Capacity")}</p>
@@ -301,7 +301,7 @@ export default function Dashboard() {
             {/* ALERTS */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-bold mb-4">
-                ⚠️ {t("dashboard.alerts")} ({alerts.unresolvedCount ?? 0})
+                {t("dashboard.alerts")} ({alerts.unresolvedCount ?? 0})
               </h3>
               {alerts.recent?.length === 0 ? (
                 <div className="text-center py-6">

@@ -31,9 +31,20 @@ export default function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative hover:text-green-200 transition"
+        className="relative hover:text-blue-600 transition"
       >
-        🔔
+        <svg
+          viewBox="0 0 24 24"
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h11" />
+          <path d="M9 20a3 3 0 0 0 6 0" />
+        </svg>
         {unreadCount > 0 && (
           <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -71,7 +82,7 @@ export default function NotificationBell() {
                   }`}
                 >
                   <div className="flex items-start gap-2">
-                    <span className="text-lg">{notif.icon || "📢"}</span>
+                    <span className="text-lg">{notif.icon || "•"}</span>
                     <div className="flex-1">
                       <p className="font-semibold text-sm text-gray-800">
                         {notif.title}

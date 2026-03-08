@@ -153,17 +153,9 @@ export default function RoleManagement() {
       support: "bg-yellow-100 text-yellow-800 border-yellow-300",
       user: "bg-gray-100 text-gray-800 border-gray-300",
     };
-    const icons = {
-      admin: "👑",
-      sales: "💼",
-      engineer: "🔧",
-      technician: "🛠️",
-      support: "🎧",
-      user: "👤",
-    };
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${styles[role] || ""}`}>
-        {icons[role]} {role.charAt(0).toUpperCase() + role.slice(1)}
+        {role.charAt(0).toUpperCase() + role.slice(1)}
       </span>
     );
   };
@@ -185,7 +177,7 @@ export default function RoleManagement() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">👥 Role & User Management</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Role & User Management</h1>
             <p className="text-gray-600">Manage staff roles and permissions (In-house only)</p>
           </div>
           <button

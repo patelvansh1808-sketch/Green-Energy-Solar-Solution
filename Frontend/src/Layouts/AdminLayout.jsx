@@ -67,12 +67,15 @@ export default function AdminLayout() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
-        <div className="px-6 py-5 border-b border-gray-200 flex items-center gap-2">
-          <span className="text-xl">☀️</span>
-          <span className="text-lg font-bold text-gray-900">Solar CRM</span>
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-center relative">
+          <img
+            src="/brand-logo.png"
+            alt="Greenergy Solar Solutions"
+            className="h-10 w-auto object-contain"
+          />
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden ml-auto text-gray-600"
+            className="lg:hidden absolute right-4 text-gray-600"
             aria-label="Close sidebar"
           >
             ✕
@@ -131,7 +134,7 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main className="lg:ml-64 flex-1 overflow-y-auto min-h-screen flex flex-col">
+      <main className="lg:ml-64 flex-1 h-screen overflow-hidden flex flex-col">
         <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <button
@@ -218,7 +221,7 @@ export default function AdminLayout() {
             </div>
           </div>
         </div>
-        <div className="p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </div>
       </main>

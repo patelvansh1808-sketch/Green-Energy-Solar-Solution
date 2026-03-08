@@ -169,13 +169,16 @@ export default function Support() {
   };
 
   useEffect(() => {
+    const timersRef = suggestionTimerRef.current;
+    const abortControllersRef = suggestionAbortRef.current;
+
     return () => {
       ["currentLocation", "newLocation"].forEach((field) => {
-        if (suggestionTimerRef.current[field]) {
-          clearTimeout(suggestionTimerRef.current[field]);
+        if (timersRef[field]) {
+          clearTimeout(timersRef[field]);
         }
-        if (suggestionAbortRef.current[field]) {
-          suggestionAbortRef.current[field].abort();
+        if (abortControllersRef[field]) {
+          abortControllersRef[field].abort();
         }
       });
     };
@@ -188,7 +191,7 @@ export default function Support() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">🎫 Support & Help</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Support & Help</h1>
               <p className="text-gray-600 mt-1">
                 Create tickets and track your support requests
               </p>
@@ -197,7 +200,7 @@ export default function Support() {
               onClick={() => setShowChatModal(true)}
               className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
             >
-              ➕ New Ticket
+              New Ticket
             </button>
           </div>
         </div>

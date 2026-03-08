@@ -59,15 +59,15 @@ const BookingStatus = () => {
 
   const getStatusIcon = (status) => {
     const icons = {
-      Pending: "📋",
-      Approved: "✅",
-      Surveyed: "🔍",
-      Scheduled: "📅",
-      "In Progress": "⚙️",
-      Completed: "🎉",
-      Cancelled: "❌",
+      Pending: "P",
+      Approved: "A",
+      Surveyed: "S",
+      Scheduled: "SC",
+      "In Progress": "IP",
+      Completed: "C",
+      Cancelled: "X",
     };
-    return icons[status] || "📝";
+    return icons[status] || "-";
   };
 
   const getProgressPercentage = (status) => {
@@ -288,13 +288,15 @@ const BookingStatus = () => {
         </head>
         <body>
           <div class="header">
-            <h1>☀️ Solar Installation Booking Report</h1>
+            <h1>Solar Installation Booking Report</h1>
+            <h1>Solar Installation Booking Report</h1>
             <p>Booking ID: #${booking._id?.slice(-8).toUpperCase()}</p>
             <p>Generated on: ${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
           </div>
 
           <div class="section">
-            <h2>📋 Booking Information</h2>
+            <h2>Booking Information</h2>
+            <h2>Booking Information</h2>
             <div class="detail-row">
               <span class="detail-label">Full Booking ID:</span>
               <span class="detail-value">${booking._id}</span>
@@ -322,7 +324,8 @@ const BookingStatus = () => {
           </div>
 
           <div class="section">
-            <h2>💰 Financial Details</h2>
+            <h2>Financial Details</h2>
+            <h2>Financial Details</h2>
             <div class="detail-row">
               <span class="detail-label">Estimated Cost:</span>
               <span class="detail-value">₹${booking.estimatedCost?.toLocaleString("en-IN") || "0"}</span>
@@ -344,7 +347,7 @@ const BookingStatus = () => {
           </div>
 
           <div class="section">
-            <h2>📍 Installation Location</h2>
+            <h2>Installation Location</h2>
             ${booking.state ? `<div class="detail-row"><span class="detail-label">State:</span><span class="detail-value">${booking.state}</span></div>` : ''}
             ${booking.district ? `<div class="detail-row"><span class="detail-label">District:</span><span class="detail-value">${booking.district}</span></div>` : ''}
             ${booking.address ? `<div class="detail-row"><span class="detail-label">Address:</span><span class="detail-value">${booking.address}</span></div>` : ''}
@@ -353,38 +356,40 @@ const BookingStatus = () => {
 
           ${booking.contactPerson || booking.contactPhone ? `
           <div class="section">
-            <h2>📞 Contact Information</h2>
+            <h2>Contact Information</h2>
+            <h2>Contact Information</h2>
             ${booking.contactPerson ? `<div class="detail-row"><span class="detail-label">Contact Person:</span><span class="detail-value">${booking.contactPerson}</span></div>` : ''}
             ${booking.contactPhone ? `<div class="detail-row"><span class="detail-label">Phone:</span><span class="detail-value">${booking.contactPhone}</span></div>` : ''}
           </div>
           ` : ''}
 
           <div class="section">
-            <h2>📅 Installation Timeline</h2>
+            <h2>Installation Timeline</h2>
+            <h2>Installation Timeline</h2>
             <div class="timeline">
               <div class="timeline-item">
-                <div class="timeline-icon completed">✓</div>
+                <div class="timeline-icon completed">1</div>
                 <div>
                   <strong>Application Submitted</strong><br>
                   <small>${new Date(booking.createdAt).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</small>
                 </div>
               </div>
               <div class="timeline-item">
-                <div class="timeline-icon ${["Approved", "Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">${["Approved", "Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? '✓' : '2'}</div>
+                <div class="timeline-icon ${["Approved", "Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">2</div>
                 <div>
                   <strong>Under Review</strong><br>
                   <small>${booking.reviewedDate ? new Date(booking.reviewedDate).toLocaleDateString("en-IN") : 'Pending...'}</small>
                 </div>
               </div>
               <div class="timeline-item">
-                <div class="timeline-icon ${["Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">${["Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? '✓' : '3'}</div>
+                <div class="timeline-icon ${["Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">3</div>
                 <div>
                   <strong>Site Survey</strong><br>
                   <small>${booking.surveyDate ? new Date(booking.surveyDate).toLocaleDateString("en-IN") : 'Awaiting...'}</small>
                 </div>
               </div>
               <div class="timeline-item">
-                <div class="timeline-icon ${["Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">${["Scheduled", "In Progress", "Completed"].includes(booking.status) ? '✓' : '4'}</div>
+                <div class="timeline-icon ${["Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">4</div>
                 <div>
                   <strong>Installation</strong><br>
                   <small>${booking.expectedInstallationDate ? new Date(booking.expectedInstallationDate).toLocaleDateString("en-IN") : 'TBD'}</small>
@@ -395,7 +400,8 @@ const BookingStatus = () => {
 
           ${booking.remarks ? `
           <div class="section">
-            <h2>📝 Special Notes</h2>
+            <h2>Special Notes</h2>
+            <h2>Special Notes</h2>
             <p>${booking.remarks}</p>
           </div>
           ` : ''}
@@ -477,7 +483,6 @@ const BookingStatus = () => {
         {/* No Bookings State */}
         {bookings.length === 0 && !error && (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-16 text-center">
-            <p className="text-5xl mb-4">☀️</p>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">{t("bookingStatus.noBookingsYet")}</h2>
             <p className="text-gray-600 mb-6">{t("bookingStatus.startBooking")}</p>
             <a
@@ -564,13 +569,13 @@ const BookingStatus = () => {
                 {/* Enhanced Timeline */}
                 <div className="p-6 border-b border-gray-200">
                   <h3 className="font-bold text-gray-800 mb-6 text-lg flex items-center gap-2">
-                    <span>📅</span> Installation Timeline
+                    Installation Timeline
                   </h3>
                   <div className="space-y-4">
                     {/* Stage 1: Application */}
                     <div className="flex gap-4">
                       <div className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">
-                        ✓
+                        1
                       </div>
                       <div className="flex-1 pb-4 border-b border-gray-200">
                         <p className="font-semibold text-gray-800">Application Submitted</p>
@@ -589,7 +594,7 @@ const BookingStatus = () => {
                             : "bg-gray-200 text-gray-500"
                         }`}
                       >
-                        {["Approved", "Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? "✓" : "2"}
+                        2
                       </div>
                       <div className="flex-1 pb-4 border-b border-gray-200">
                         <p className="font-semibold text-gray-800">Under Review</p>
@@ -610,7 +615,7 @@ const BookingStatus = () => {
                             : "bg-gray-200 text-gray-500"
                         }`}
                       >
-                        {["Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? "✓" : "3"}
+                        3
                       </div>
                       <div className="flex-1 pb-4 border-b border-gray-200">
                         <p className="font-semibold text-gray-800">Site Survey & Quotation</p>
@@ -631,7 +636,7 @@ const BookingStatus = () => {
                             : "bg-gray-200 text-gray-500"
                         }`}
                       >
-                        {["Scheduled", "In Progress", "Completed"].includes(booking.status) ? "✓" : "4"}
+                        4
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800">Installation & Commission</p>
@@ -649,7 +654,7 @@ const BookingStatus = () => {
                 {(booking.state || booking.district || booking.remarks) && (
                   <div className="p-6 border-b border-gray-200">
                     <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <span>📍</span> Location & Details
+                      Location & Details
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {booking.state && (
@@ -678,7 +683,7 @@ const BookingStatus = () => {
                 {expandedDetails[booking._id] && (
                   <div className="p-6 bg-gray-50 border-t border-gray-200">
                     <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <span>🔍</span> Complete Booking Information
+                      Complete Booking Information
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-white rounded-lg p-4 space-y-3 border border-gray-200">
@@ -744,14 +749,14 @@ const BookingStatus = () => {
                       href="/contact"
                       className="h-12 bg-white border border-gray-300 hover:border-emerald-500 hover:bg-emerald-50 text-gray-800 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
                     >
-                      <span>📞</span> Contact Support
+                      Contact Support
                     </a>
 
                     <button
                       onClick={() => downloadBookingReport(booking)}
                       className="h-12 bg-white border border-gray-300 hover:border-violet-500 hover:bg-violet-50 text-gray-800 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
                     >
-                      <span>📄</span> Download Report
+                      Download Report
                     </button>
 
                     {canShowInitialPayment(booking) && (
@@ -760,7 +765,6 @@ const BookingStatus = () => {
                         disabled={payingBookingId === booking._id}
                         className="sm:col-span-2 lg:col-span-3 h-12 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 rounded-lg transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
                       >
-                        <span>💰</span>
                         {payingBookingId === booking._id ? "Processing..." : "Pay Booking Amount"}
                       </button>
                     )}
@@ -782,7 +786,6 @@ const BookingStatus = () => {
                           disabled={payingBookingId === booking._id}
                           className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 rounded-lg transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
                         >
-                          <span>💳</span>
                           {payingBookingId === booking._id ? "Processing..." : "Pay Remaining Amount"}
                         </button>
                       </div>
@@ -799,7 +802,7 @@ const BookingStatus = () => {
                         onClick={() => setDeleteConfirm(booking._id)}
                         className="h-12 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
                       >
-                        <span>🗑️</span> Delete
+                        Delete
                       </button>
                     )}
                   </div>
@@ -815,7 +818,7 @@ const BookingStatus = () => {
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
               <div className="text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                  <span className="text-2xl">⚠️</span>
+                  <span className="text-xl font-bold text-red-600">!</span>
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Booking</h3>
                 <p className="text-gray-600 mb-6">
@@ -847,7 +850,7 @@ const BookingStatus = () => {
               onClick={fetchBookings}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition flex items-center justify-center gap-2 mx-auto"
             >
-              <span>🔄</span> Refresh Status
+              Refresh Status
             </button>
           </div>
         )}

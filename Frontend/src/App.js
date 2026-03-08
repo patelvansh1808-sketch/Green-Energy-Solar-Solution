@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 
 /* ===== PUBLIC PAGES ===== */
 import LandingPage from "./Pages/Landing/LandingPage";
+import AboutPage from "./Pages/Landing/AboutPage";
+import PrivacyPage from "./Pages/Landing/PrivacyPage";
+import TermsPage from "./Pages/Landing/TermsPage";
+import CookiesPage from "./Pages/Landing/CookiesPage";
 import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Register";
 import ForgotPassword from "./Pages/Auth/ForgotPassword";
@@ -69,6 +73,10 @@ function AnimatedRoutes() {
       <Routes location={location}>
         {/* ===== PUBLIC ROUTES ===== */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/cookies" element={<CookiesPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

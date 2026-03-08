@@ -85,7 +85,7 @@ export default function ManageUsers() {
         {/* HEADER */}
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
-            👥 All Users Management
+            All Users Management
           </h1>
           <p className="text-gray-600">View and manage all system users</p>
         </div>
@@ -154,12 +154,12 @@ export default function ManageUsers() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Users</option>
-                <option value="admin">👑 Admin</option>
-                <option value="engineer">⚙️ Engineer</option>
-                <option value="technician">🔧 Technician</option>
-                <option value="sales">💼 Sales</option>
-                <option value="support">💬 Support</option>
-                <option value="customer">👤 Customer</option>
+                <option value="admin">Admin</option>
+                <option value="engineer">Engineer</option>
+                <option value="technician">Technician</option>
+                <option value="sales">Sales</option>
+                <option value="support">Support</option>
+                <option value="customer">Customer</option>
               </select>
             </div>
 
@@ -168,7 +168,7 @@ export default function ManageUsers() {
                 onClick={fetchUsers}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
               >
-                🔄 Refresh
+                Refresh
               </button>
             </div>
           </div>

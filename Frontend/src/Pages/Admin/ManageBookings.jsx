@@ -92,19 +92,6 @@ export default function ManageBookings() {
     return colors[status] || colors["Pending"];
   };
 
-  const getStatusIcon = (status) => {
-    const icons = {
-      "Pending": "⏳",
-      "Approved": "✅",
-      "Surveyed": "📐",
-      "Scheduled": "📅",
-      "In Progress": "⚙️",
-      "Completed": "🎉",
-      "Cancelled": "❌",
-    };
-    return icons[status] || "📋";
-  };
-
   const getPaymentTotals = (booking) => {
     const total =
       Number(booking?.quotation?.netCost) ||
@@ -183,7 +170,7 @@ export default function ManageBookings() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">📋 Booking Management</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Booking Management</h1>
           <p className="text-gray-600">CRM + Operations Bridge - Manage all solar installations</p>
         </div>
 
@@ -237,13 +224,13 @@ export default function ManageBookings() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="All">All Bookings</option>
-                <option value="Pending">⏳ Pending</option>
-                <option value="Approved">✅ Approved</option>
-                <option value="Surveyed">📐 Surveyed</option>
-                <option value="Scheduled">📅 Scheduled</option>
-                <option value="In Progress">⚙️ In Progress</option>
-                <option value="Completed">🎉 Completed</option>
-                <option value="Cancelled">❌ Cancelled</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Surveyed">Surveyed</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
               </select>
             </div>
 
@@ -252,7 +239,7 @@ export default function ManageBookings() {
                 onClick={fetchBookings}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
               >
-                🔄 Refresh
+                Refresh
               </button>
             </div>
           </div>
@@ -319,7 +306,7 @@ export default function ManageBookings() {
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(booking.status)}`}>
-                            {getStatusIcon(booking.status)} {booking.status}
+                            {booking.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
@@ -367,7 +354,7 @@ export default function ManageBookings() {
                             booking.status
                           )}`}
                         >
-                          {getStatusIcon(booking.status)} {booking.status}
+                          {booking.status}
                         </span>
                       </div>
 
@@ -387,10 +374,10 @@ export default function ManageBookings() {
 
                       <div className="bg-white p-3 rounded border border-gray-200 text-sm">
                         <p className="text-xs text-emerald-700 font-medium">
-                          ✓ Collected: ₹{paymentTotals.collectedAmount.toLocaleString()}
+                          Collected: ₹{paymentTotals.collectedAmount.toLocaleString()}
                         </p>
                         <p className="text-xs text-amber-700 font-medium mt-1">
-                          ⏳ Remaining: ₹{paymentTotals.remainingAmount.toLocaleString()}
+                          Remaining: ₹{paymentTotals.remainingAmount.toLocaleString()}
                         </p>
                         {(booking.quotation?.subsidyAmount || booking.subsidyAmount || 0) > 0 && (
                           <p className="text-xs text-green-600 font-medium mt-1">
@@ -427,7 +414,7 @@ export default function ManageBookings() {
               <div className="p-4 sm:p-6 md:p-8 space-y-6">
                 {/* Customer Details */}
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">👤 Customer Information</h3>
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Customer Information</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-600">Name</p>
@@ -459,7 +446,7 @@ export default function ManageBookings() {
 
                 {/* System Details */}
                 <div className="bg-blue-50 p-4 sm:p-6 rounded-lg border-l-4 border-blue-500">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">⚡ System Details</h3>
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">System Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-600">System Type</p>
@@ -482,7 +469,7 @@ export default function ManageBookings() {
 
                 {/* Cost Breakdown */}
                 <div className="bg-green-50 p-6 rounded-lg border-l-4 border-green-500">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">💰 Financial Summary</h3>
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Financial Summary</h3>
                   {(() => {
                     const paymentTotals = getPaymentTotals(selectedBooking);
                     return (
@@ -545,7 +532,7 @@ export default function ManageBookings() {
                   selectedBooking?.payment?.advancePaid &&
                   !selectedBooking?.payment?.finalPaid && (
                     <div className="bg-blue-50 p-4 sm:p-6 rounded-lg border-l-4 border-blue-500">
-                      <h3 className="text-lg font-bold text-gray-800 mb-3">💳 Remaining Payment Request</h3>
+                      <h3 className="text-lg font-bold text-gray-800 mb-3">Remaining Payment Request</h3>
                       <p className="text-sm text-gray-700 mb-4">
                         Ask customer to pay remaining amount via Razorpay once installation has started.
                       </p>
@@ -566,7 +553,7 @@ export default function ManageBookings() {
                 {/* Actual Cost Breakdown */}
                 <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-gray-800">🧾 Actual Cost Breakdown</h3>
+                    <h3 className="text-lg font-bold text-gray-800">Actual Cost Breakdown</h3>
                     <span className="text-xs text-gray-500">Used for profit analytics</span>
                   </div>
 
@@ -614,14 +601,14 @@ export default function ManageBookings() {
                       onClick={() => handleSaveCostBreakdown(selectedBooking._id)}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition"
                     >
-                      💾 Save Cost Breakdown
+                      Save Cost Breakdown
                     </button>
                   </div>
                 </div>
 
                 {/* Update Form */}
                 <div className="bg-gray-50 p-4 sm:p-6 rounded-lg space-y-4">
-                  <h3 className="text-lg font-bold text-gray-800">📝 Update Booking</h3>
+                  <h3 className="text-lg font-bold text-gray-800">Update Booking</h3>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
@@ -630,13 +617,13 @@ export default function ManageBookings() {
                       onChange={(e) => setUpdateData({ ...updateData, status: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="Pending">⏳ Pending</option>
-                      <option value="Approved">✅ Approved</option>
-                      <option value="Surveyed">📐 Surveyed</option>
-                      <option value="Scheduled">📅 Scheduled</option>
-                      <option value="In Progress">⚙️ In Progress</option>
-                      <option value="Completed">🎉 Completed</option>
-                      <option value="Cancelled">❌ Cancelled</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Approved">Approved</option>
+                      <option value="Surveyed">Surveyed</option>
+                      <option value="Scheduled">Scheduled</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Cancelled">Cancelled</option>
                     </select>
                   </div>
 
@@ -676,7 +663,7 @@ export default function ManageBookings() {
                 {/* Remarks */}
                 {selectedBooking.customerRemarks && (
                   <div className="bg-yellow-50 p-6 rounded-lg border-l-4 border-yellow-500">
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">📌 Customer Remarks</h3>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">Customer Remarks</h3>
                     <p className="text-gray-700">{selectedBooking.customerRemarks}</p>
                   </div>
                 )}
@@ -693,7 +680,7 @@ export default function ManageBookings() {
                     onClick={() => handleUpdateBooking(selectedBooking._id)}
                     className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 rounded-lg transition shadow-sm"
                   >
-                    💾 Save Updates
+                    Save Updates
                   </button>
                 </div>
               </div>

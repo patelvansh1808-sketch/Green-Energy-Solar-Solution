@@ -515,7 +515,6 @@ export default function MaintenanceOverview() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Maintenance Overview</h1>
-        <p className="text-gray-600 mt-1">Subscription and service snapshot for all customers</p>
       </div>
 
       <div className="inline-flex rounded-lg border border-gray-300 p-1 bg-gray-50">

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import bookingService from "../../services/bookingService";
 import financeService from "../../services/financeService";
+import api from "../../services/api";
 
 export default function ManageBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -24,9 +26,11 @@ export default function ManageBookings() {
     other: 0,
   });
   const [requestingPaymentId, setRequestingPaymentId] = useState("");
+  const [technicians, setTechnicians] = useState([]);
 
   useEffect(() => {
     fetchBookings();
+    fetchTechnicians();
   }, []);
 
   useEffect(() => {
@@ -55,14 +59,48 @@ export default function ManageBookings() {
     }
   };
 
+  const fetchTechnicians = async () => {
+    try {
+      const res = await api.get("/users/team-members");
+      const members = Array.isArray(res.data?.data) ? res.data.data : [];
+      const availableTechnicians = members.filter(
+        (member) => member.role === "engineer" || member.role === "technician"
+      );
+      setTechnicians(availableTechnicians);
+    } catch (err) {
+      setTechnicians([]);
+    }
+  };
+
   const handleUpdateBooking = async (bookingId) => {
     try {
-      await bookingService.updateBookingStatus(bookingId, updateData);
-      setBookings(bookings.map(b => b._id === bookingId ? { ...b, ...updateData } : b));
+      const currentBooking = bookings.find((item) => item._id === bookingId);
+      const effectiveStatus = updateData.status || currentBooking?.status || "Pending";
+
+      const res = await bookingService.updateBookingStatus(bookingId, {
+        ...updateData,
+        status: effectiveStatus,
+      });
+
+      const updatedBooking = res?.booking;
+      setBookings(
+        bookings.map((booking) =>
+          booking._id === bookingId
+            ? {
+                ...booking,
+                ...(updatedBooking || {}),
+                status: updatedBooking?.status || effectiveStatus,
+              }
+            : booking
+        )
+      );
       setSelectedBooking(null);
       setUpdateData({ status: "", installationDate: "", technician: "", notes: "" });
+      setError("");
+      setSuccess("Booking updated successfully");
     } catch (err) {
       setError(err.message || "Failed to update booking");
+      setSuccess("");
     }
   };
 
@@ -305,8 +343,8 @@ export default function ManageBookings() {
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(booking.status)}`}>
-                            {booking.status}
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(booking.status || "Pending")}`}>
+                            {booking.status || "Pending"}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
@@ -351,10 +389,10 @@ export default function ManageBookings() {
                         </div>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-semibold border whitespace-nowrap shrink-0 ${getStatusColor(
-                            booking.status
+                            booking.status || "Pending"
                           )}`}
                         >
-                          {booking.status}
+                          {booking.status || "Pending"}
                         </span>
                       </div>
 
@@ -639,13 +677,25 @@ export default function ManageBookings() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Assigned Technician</label>
-                    <input
-                      type="text"
+                    <select
                       value={updateData.technician}
                       onChange={(e) => setUpdateData({ ...updateData, technician: e.target.value })}
-                      placeholder="Technician name"
+                      disabled={technicians.length === 0}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    >
+                      <option value="">
+                        {technicians.length === 0 ? "No technicians available" : "Select technician"}
+                      </option>
+                      {technicians.map((tech) => {
+                        const fullName = [tech.firstName, tech.lastName].filter(Boolean).join(" ").trim();
+                        const displayName = fullName || tech.name || tech.email;
+                        return (
+                          <option key={tech._id} value={displayName}>
+                            {displayName}
+                          </option>
+                        );
+                      })}
+                    </select>
                   </div>
 
                   <div>
@@ -683,6 +733,24 @@ export default function ManageBookings() {
                     Save Updates
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {success && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Success</h3>
+              <p className="text-gray-700 mb-6">{success}</p>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setSuccess("")}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                >
+                  OK
+                </button>
               </div>
             </div>
           </div>

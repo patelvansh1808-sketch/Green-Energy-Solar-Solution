@@ -241,11 +241,11 @@ export default function TicketManagement() {
           <h1 className="text-3xl font-bold text-gray-900">
             {user?.role === "support" ? "My Assigned Tickets" : "Ticket Management"}
           </h1>
-          <p className="text-gray-600 mt-1">
-            {user?.role === "support" 
-              ? `Showing tickets assigned to you • ${user?.firstName} ${user?.lastName}`
-              : "Manage customer support tickets"}
-          </p>
+          {user?.role === "support" && (
+            <p className="text-gray-600 mt-1">
+              {`Showing tickets assigned to you • ${user?.firstName} ${user?.lastName}`}
+            </p>
+          )}
         </div>
 
         {/* Alerts */}

@@ -233,6 +233,13 @@ export default function AdminDashboard() {
             </button>
 
             <button
+              onClick={() => navigate("/admin/maintenance")}
+              className="flex items-center justify-center p-4 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 transition text-cyan-700 font-medium"
+            >
+              <span className="text-2xl mr-2">🛠️</span> Maintenance
+            </button>
+
+            <button
               onClick={() => navigate("/admin/notifications")}
               className="flex items-center justify-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition text-yellow-700 font-medium"
             >
@@ -270,80 +277,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* RECENT ACTIVITY */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Bookings */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Bookings</h2>
-            {stats.recentBookings && stats.recentBookings.length > 0 ? (
-              <div className="space-y-3">
-                {stats.recentBookings.map((booking, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">
-                        {booking.user?.name || "Unknown"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(booking.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        booking.status === "approved"
-                          ? "bg-green-100 text-green-800"
-                          : booking.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {booking.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500">No recent bookings</p>
-            )}
-          </div>
-
-          {/* Recent Customer Activity */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Customer Updates</h2>
-            {stats.recentCustomers && stats.recentCustomers.length > 0 ? (
-              <div className="space-y-3">
-                {stats.recentCustomers.map((customer, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{customer.fullName}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(customer.updatedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        customer.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : customer.status === "Inactive"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {customer.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500">No recent customer updates</p>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Add Team Member Modal */}

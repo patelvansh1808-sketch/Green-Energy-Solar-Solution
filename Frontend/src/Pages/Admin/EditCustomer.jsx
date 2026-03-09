@@ -8,6 +8,8 @@ export default function EditCustomer() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [discoms, setDiscoms] = useState([]);
@@ -73,7 +75,6 @@ export default function EditCustomer() {
         });
       } catch (error) {
         console.error("Failed to load customer:", error);
-        alert("Failed to load customer details");
         navigate("/admin/customers");
       } finally {
         setLoading(false);
@@ -84,6 +85,7 @@ export default function EditCustomer() {
   }, [id, navigate]);
 
   const handleChange = (e) => {
+    if (formError) setFormError("");
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -92,7 +94,7 @@ export default function EditCustomer() {
     
     // Validation
     if (!form.fullName.trim() || !form.phone.trim() || !form.address.trim() || !form.systemCapacityKW) {
-      alert("Please fill in all required fields");
+      setFormError("Please fill in all required fields");
       return;
     }
 
@@ -112,11 +114,10 @@ export default function EditCustomer() {
         installationDate: form.installationDate || null,
       });
 
-      alert("Customer updated successfully");
-      navigate("/admin/customers");
+      setShowSuccessModal(true);
     } catch (error) {
       console.error("Failed to update customer:", error);
-      alert(error.response?.data?.message || "Failed to update customer");
+      setFormError(error.response?.data?.message || "Failed to update customer");
     } finally {
       setSaving(false);
     }
@@ -131,6 +132,12 @@ export default function EditCustomer() {
       <h2 className="text-2xl font-bold mb-6 text-green-700">
         Edit Customer
       </h2>
+
+      {formError && (
+        <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {formError}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,6 +288,27 @@ export default function EditCustomer() {
           </button>
         </div>
       </form>
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Success</h3>
+            <p className="text-gray-700 mb-6">Customer updated successfully</p>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  navigate("/admin/customers");
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

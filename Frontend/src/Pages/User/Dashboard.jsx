@@ -89,10 +89,21 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-4">
         {/* HEADER */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">{t("dashboard.title")}</h1>
-          <p className="text-gray-600 mt-2">
-            {t("dashboard.welcomeBack", `Welcome back,` ).replace("{name}", userData.name )}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">{t("dashboard.title")}</h1>
+              <p className="text-gray-600 mt-2">
+                {t("dashboard.welcomeBack", `Welcome back,` ).replace("{name}", userData.name )}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/my-activity")}
+              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-semibold transition self-start"
+            >
+              My Activity
+            </button>
+          </div>
         </div>
 
         {/* QUICK STATS */}

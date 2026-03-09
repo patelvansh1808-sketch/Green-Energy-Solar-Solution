@@ -118,6 +118,7 @@ export default function Navbar() {
 
                 <div className="absolute right-0 top-full pt-2 hidden group-hover:block bg-white text-gray-700 rounded-lg shadow-lg w-56 z-50 py-2">
                   <NavItem to="/profile" label={t("nav.myProfile")} />
+                  <NavItem to="/my-activity" label="My Activity" />
 
                   {/* 🔐 ADMIN LINKS */}
                   {isAdmin && (
@@ -231,6 +232,7 @@ export default function Navbar() {
 
               <p className="text-xs uppercase text-gray-500 mt-3">{t("nav.profile")}</p>
               <MobileItem to="/profile" label={t("nav.myProfile")} />
+              <MobileItem to="/my-activity" label="My Activity" />
 
               {isAdmin && (
                 <>

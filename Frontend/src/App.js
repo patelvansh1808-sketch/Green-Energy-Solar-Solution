@@ -30,6 +30,7 @@ import Recommendations from "./Pages/User/Recommendations";
 import Notifications from "./Pages/User/Notifications";
 import Messages from "./Pages/User/Messages";
 import Support from "./Pages/User/Support";
+import MyActivity from "./Pages/User/MyActivity";
 
 /* ===== ADMIN PAGES ===== */
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
@@ -186,6 +187,14 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <Support />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-activity"
+          element={
+            <ProtectedRoute>
+              <MyActivity />
             </ProtectedRoute>
           }
         />

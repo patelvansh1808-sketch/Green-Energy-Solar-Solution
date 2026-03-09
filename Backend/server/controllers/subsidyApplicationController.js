@@ -1,5 +1,8 @@
 const SubsidyApplication = require("../models/SubsidyApplication");
 const Customer = require("../models/Customer");
+const fs = require("fs");
+const path = require("path");
+const { sendSubsidyApprovalEmail } = require("../services/emailService");
 
 // Get customer's subsidy application
 exports.getMyApplication = async (req, res) => {
@@ -143,13 +146,49 @@ exports.updateApplication = async (req, res) => {
         approvalDate: status === "Approved" ? new Date() : undefined,
       },
       { new: true }
-    );
+    )
+      .populate({
+        path: "customerId",
+        select: "fullName userId",
+        populate: {
+          path: "userId",
+          select: "email name",
+        },
+      });
 
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    res.json(application);
+    let emailSent = false;
+    let emailMessage = "";
+
+    if (status === "Approved") {
+      try {
+        const userEmail = application?.customerId?.userId?.email;
+        const userName = application?.customerId?.fullName || application?.customerId?.userId?.name || "Customer";
+        const finalApprovedAmount = Number(application.approvedAmount || approvedAmount || 0);
+
+        if (!userEmail) {
+          emailMessage = "Customer email not found";
+          console.warn("⚠️ Subsidy approval email skipped: customer email not found for application", application._id);
+        } else {
+          emailSent = await sendSubsidyApprovalEmail(userEmail, userName, {
+            amount: finalApprovedAmount,
+          });
+          emailMessage = emailSent ? "Approval email sent" : "Email send failed";
+        }
+      } catch (emailError) {
+        emailMessage = "Email send exception";
+        console.error("❌ Failed to send subsidy approval email:", emailError);
+      }
+    }
+
+    res.json({
+      ...application.toObject(),
+      emailSent,
+      emailMessage,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -170,5 +209,40 @@ exports.getApplicationById = async (req, res) => {
     res.json(application);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Download subsidy document (admin)
+exports.downloadDocument = async (req, res) => {
+  try {
+    const rawFilePath = decodeURIComponent(req.params[0] || "");
+    if (!rawFilePath) {
+      return res.status(400).json({ message: "File path is required" });
+    }
+
+    let normalizedPath = rawFilePath.replace(/\\/g, "/").replace(/^\/+/, "");
+
+    if (normalizedPath.startsWith("uploads/")) {
+      normalizedPath = normalizedPath.substring("uploads/".length);
+    }
+
+    if (normalizedPath.includes("..")) {
+      return res.status(400).json({ message: "Invalid file path" });
+    }
+
+    const uploadsRoot = path.resolve(__dirname, "../../uploads");
+    const absoluteFilePath = path.resolve(uploadsRoot, normalizedPath);
+
+    if (!absoluteFilePath.startsWith(uploadsRoot)) {
+      return res.status(400).json({ message: "Invalid file path" });
+    }
+
+    if (!fs.existsSync(absoluteFilePath)) {
+      return res.status(404).json({ message: "Document file not found" });
+    }
+
+    return res.download(absoluteFilePath, path.basename(absoluteFilePath));
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };

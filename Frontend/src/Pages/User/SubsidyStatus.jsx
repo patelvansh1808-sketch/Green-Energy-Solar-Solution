@@ -58,11 +58,11 @@ export default function SubsidyStatus() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 sm:p-6">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="bg-white rounded-lg shadow-lg p-5 sm:p-8 text-center">
             <div className="text-6xl mb-4">📋</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
               {t("subsidy.noApplication")}
             </h2>
             <p className="text-gray-600 mb-6">{error}</p>
@@ -79,11 +79,11 @@ export default function SubsidyStatus() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 sm:p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
             📊 {t("subsidy.statusTitle")}
           </h1>
           <p className="text-gray-600">
@@ -95,17 +95,17 @@ export default function SubsidyStatus() {
         <div
           className={`bg-gradient-to-r ${
             statusBgGradient[application.status] || "from-gray-50 to-gray-100"
-          } border-2 border-current rounded-lg shadow-lg p-8 mb-8`}
+          } border-2 border-current rounded-lg shadow-lg p-5 sm:p-8 mb-8`}
         >
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p className="text-gray-600 text-lg mb-2">{t("subsidy.currentStatus")}</p>
-              <h2 className="text-4xl font-bold text-gray-800">
+              <p className="text-gray-600 text-base sm:text-lg mb-2">{t("subsidy.currentStatus")}</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">
                 {statusIcons[application.status]} {application.status}
               </h2>
             </div>
             <div
-              className={`px-6 py-3 rounded-lg border-2 font-bold text-lg ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg border-2 font-bold text-base sm:text-lg ${
                 statusColors[application.status]
               }`}
             >
@@ -115,8 +115,8 @@ export default function SubsidyStatus() {
         </div>
 
         {/* Timeline */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">📅 {t("subsidy.statusTimeline")}</h3>
+        <div className="bg-white rounded-lg shadow-lg p-5 sm:p-8 mb-8">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">📅 {t("subsidy.statusTimeline")}</h3>
 
           <div className="space-y-4">
             {/* Applied Date */}
@@ -176,8 +176,8 @@ export default function SubsidyStatus() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Application Details */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6">
+          <div className="bg-white rounded-lg shadow-lg p-5 sm:p-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">
               📋 {t("subsidy.applicationDetails")}
             </h3>
 
@@ -221,8 +221,8 @@ export default function SubsidyStatus() {
           </div>
 
           {/* Bank Details */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6">
+          <div className="bg-white rounded-lg shadow-lg p-5 sm:p-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">
               🏦 Bank Details
             </h3>
 
@@ -260,8 +260,8 @@ export default function SubsidyStatus() {
 
         {/* Documents Section */}
         {application.documents && application.documents.length > 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-8 mt-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6">
+          <div className="bg-white rounded-lg shadow-lg p-5 sm:p-8 mt-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">
               📄 Uploaded Documents
             </h3>
 
@@ -269,12 +269,12 @@ export default function SubsidyStatus() {
               {application.documents.map((doc, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center min-w-0">
                     <div className="text-3xl mr-3">📋</div>
-                    <div>
-                      <p className="font-semibold text-gray-800">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-800 truncate">
                         {doc.filename}
                       </p>
                       <p className="text-xs text-gray-500">
@@ -298,7 +298,7 @@ export default function SubsidyStatus() {
         )}
 
         {/* Info Box */}
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg mt-8">
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 sm:p-6 rounded-lg mt-8">
           <h4 className="font-bold text-blue-900 mb-2">ℹ️ What's Next?</h4>
           <div className="text-blue-800 space-y-2">
             {application.status === "Applied" && (

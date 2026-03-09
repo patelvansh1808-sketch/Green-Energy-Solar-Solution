@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 
 /* ===== PUBLIC PAGES ===== */
 import LandingPage from "./Pages/Landing/LandingPage";
+import AboutPage from "./Pages/Landing/AboutPage";
+import PrivacyPage from "./Pages/Landing/PrivacyPage";
+import TermsPage from "./Pages/Landing/TermsPage";
+import CookiesPage from "./Pages/Landing/CookiesPage";
 import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Register";
 import ForgotPassword from "./Pages/Auth/ForgotPassword";
@@ -42,6 +46,7 @@ import FinancialAnalytics from "./Pages/Admin/FinancialAnalytics";
 import InventoryManagement from "./Pages/Admin/InventoryManagement";
 import AdminProfile from "./Pages/Admin/AdminProfile";
 import MaintenanceOverview from "./Pages/Admin/MaintenanceOverview";
+import ManageUsers from "./Pages/Admin/ManageUsers";
 
 /* ===== CRM PAGES ===== */
 import CRMDashboard from "./Pages/CRMDashboard";
@@ -68,6 +73,10 @@ function AnimatedRoutes() {
       <Routes location={location}>
         {/* ===== PUBLIC ROUTES ===== */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/cookies" element={<CookiesPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -192,6 +201,7 @@ function AnimatedRoutes() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfile />} />
+          <Route path="users" element={<ManageUsers />} />
           <Route path="bookings" element={<ManageBookings />} />
           <Route path="subsidy-applications" element={<ManageSubsidyApplications />} />
           <Route path="customers" element={<ManageCustomers />} />
@@ -268,11 +278,11 @@ function AppShell() {
     location.pathname.startsWith("/crm");
 
   return (
-    <>
+    <div className="min-h-screen overflow-x-hidden">
       {!isAdminRoute && <Navbar />}
       <AnimatedRoutes />
       {!isAdminRoute && <ChatWidget />}
       {!isAdminRoute && <Footer />}
-    </>
+    </div>
   );
 }

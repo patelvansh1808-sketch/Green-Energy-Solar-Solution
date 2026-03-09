@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../../Context/AuthContext";
 import ticketService from "../../services/ticketService";
 import ChatBoard from "../../Components/ChatBoard";
@@ -12,6 +12,13 @@ export default function Support() {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [responseMessage, setResponseMessage] = useState("");
+  const [mapsError, setMapsError] = useState("");
+  const [locationSuggestions, setLocationSuggestions] = useState({
+    currentLocation: [],
+    newLocation: [],
+  });
+  const suggestionTimerRef = useRef({ currentLocation: null, newLocation: null });
+  const suggestionAbortRef = useRef({ currentLocation: null, newLocation: null });
   
   // Chat support state
   const [showChatModal, setShowChatModal] = useState(false);
@@ -22,6 +29,9 @@ export default function Support() {
     category: "general",
     priority: "medium",
     description: "",
+    currentLocation: "",
+    newLocation: "",
+    expectedCapacityKW: "",
   });
 
   const fetchTickets = useCallback(async () => {
@@ -84,6 +94,96 @@ export default function Support() {
     return badges[priority] || "bg-gray-100 text-gray-800";
   };
 
+  const fetchLocationSuggestions = useCallback(async (field, query) => {
+    if (!query || query.trim().length < 3) {
+      setLocationSuggestions((prev) => ({ ...prev, [field]: [] }));
+      return;
+    }
+
+    if (suggestionAbortRef.current[field]) {
+      suggestionAbortRef.current[field].abort();
+    }
+
+    const controller = new AbortController();
+    suggestionAbortRef.current[field] = controller;
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&q=${encodeURIComponent(
+          query.trim()
+        )}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+          signal: controller.signal,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch location suggestions");
+      }
+
+      const data = await response.json();
+      const formattedSuggestions = Array.isArray(data)
+        ? data.map((item) => ({
+            id: String(item.place_id),
+            label: item.display_name,
+          }))
+        : [];
+
+      setLocationSuggestions((prev) => ({
+        ...prev,
+        [field]: formattedSuggestions,
+      }));
+      setMapsError("");
+    } catch (err) {
+      if (err.name === "AbortError") return;
+      setLocationSuggestions((prev) => ({ ...prev, [field]: [] }));
+      setMapsError("Location suggestions are currently unavailable. You can still enter location manually.");
+    }
+  }, []);
+
+  const handleLocationInputChange = (field, value) => {
+    setNewTicket((prev) => ({ ...prev, [field]: value }));
+
+    if (suggestionTimerRef.current[field]) {
+      clearTimeout(suggestionTimerRef.current[field]);
+    }
+
+    if (!value.trim() || value.trim().length < 3) {
+      setLocationSuggestions((prev) => ({ ...prev, [field]: [] }));
+      return;
+    }
+
+    suggestionTimerRef.current[field] = setTimeout(() => {
+      fetchLocationSuggestions(field, value);
+    }, 300);
+  };
+
+  const handleLocationSuggestionSelect = (field, suggestion) => {
+    const selectedAddress = suggestion?.label || "";
+    setNewTicket((prev) => ({ ...prev, [field]: selectedAddress }));
+    setLocationSuggestions((prev) => ({ ...prev, [field]: [] }));
+  };
+
+  useEffect(() => {
+    const timersRef = suggestionTimerRef.current;
+    const abortControllersRef = suggestionAbortRef.current;
+
+    return () => {
+      ["currentLocation", "newLocation"].forEach((field) => {
+        if (timersRef[field]) {
+          clearTimeout(timersRef[field]);
+        }
+        if (abortControllersRef[field]) {
+          abortControllersRef[field].abort();
+        }
+      });
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -91,7 +191,7 @@ export default function Support() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">🎫 Support & Help</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Support & Help</h1>
               <p className="text-gray-600 mt-1">
                 Create tickets and track your support requests
               </p>
@@ -100,7 +200,7 @@ export default function Support() {
               onClick={() => setShowChatModal(true)}
               className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
             >
-              ➕ New Ticket
+              New Ticket
             </button>
           </div>
         </div>
@@ -219,16 +319,16 @@ export default function Support() {
 
         {/* Chat Support Modal */}
         {showChatModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-hidden flex flex-col">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-3 sm:p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full h-[94vh] sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col">
               {!chatTicketData ? (
                 // Chat with form to create ticket
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col h-full min-h-0">
                   {/* Header */}
-                  <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-6 flex justify-between items-center">
+                  <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 sm:p-6 flex justify-between items-center gap-3">
                     <div>
-                      <h2 className="text-2xl font-bold">💬 Chat Support</h2>
-                      <p className="text-green-100 text-sm">
+                      <h2 className="text-xl sm:text-2xl font-bold">💬 Chat Support</h2>
+                      <p className="text-green-100 text-xs sm:text-sm">
                         Describe your issue and our team will help
                       </p>
                     </div>
@@ -237,14 +337,14 @@ export default function Support() {
                         setShowChatModal(false);
                         setChatTicketData(null);
                       }}
-                      className="text-white hover:bg-green-700 px-4 py-2 rounded-lg font-semibold transition"
+                      className="text-white hover:bg-green-700 px-3 py-1.5 rounded-lg font-semibold transition shrink-0"
                     >
                       ×
                     </button>
                   </div>
 
                   {/* Form */}
-                  <div className="flex-grow overflow-y-auto p-6">
+                  <div className="flex-grow min-h-0 overflow-y-auto p-4 sm:p-6">
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -252,15 +352,29 @@ export default function Support() {
                         </label>
                         <select
                           value={newTicket.category}
-                          onChange={(e) =>
-                            setNewTicket({ ...newTicket, category: e.target.value })
-                          }
+                          onChange={(e) => {
+                            const selectedCategory = e.target.value;
+                            setNewTicket({
+                              ...newTicket,
+                              category: selectedCategory,
+                              currentLocation:
+                                selectedCategory === "solar_upgrade" || selectedCategory === "solar_relocation"
+                                  ? newTicket.currentLocation
+                                  : "",
+                              newLocation:
+                                selectedCategory === "solar_relocation" ? newTicket.newLocation : "",
+                              expectedCapacityKW:
+                                selectedCategory === "solar_upgrade" ? newTicket.expectedCapacityKW : "",
+                            });
+                          }}
                           className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                         >
                           <option value="general">General Question</option>
                           <option value="technical">Technical Issue</option>
                           <option value="installation">Installation Problem</option>
                           <option value="maintenance">Maintenance Question</option>
+                          <option value="solar_upgrade">Solar Upgrade Request</option>
+                          <option value="solar_relocation">Solar Relocation Request</option>
                           <option value="billing">Billing Issue</option>
                           <option value="warranty">Warranty Question</option>
                           <option value="complaint">Complaint</option>
@@ -268,6 +382,131 @@ export default function Support() {
                           <option value="other">Other</option>
                         </select>
                       </div>
+
+                      {(newTicket.category === "solar_upgrade" ||
+                        newTicket.category === "solar_relocation") && (
+                        <div className="space-y-4">
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+                            <p className="text-sm font-semibold text-amber-800">
+                              This is a chargeable service request.
+                            </p>
+                            <p className="text-xs text-amber-700 mt-1">
+                              Our team will inspect your site and share quotation before execution.
+                            </p>
+                            <p className="text-xs text-emerald-700 mt-1">
+                              OpenStreetMap suggestions are enabled. Type at least 3 characters.
+                            </p>
+                            {mapsError && (
+                              <p className="text-xs text-amber-800 mt-1">{mapsError}</p>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="relative">
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Current Solar Location *
+                              </label>
+                              <input
+                                type="text"
+                                value={newTicket.currentLocation}
+                                onChange={(e) =>
+                                  handleLocationInputChange("currentLocation", e.target.value)
+                                }
+                                onBlur={() =>
+                                  setTimeout(
+                                    () =>
+                                      setLocationSuggestions((prev) => ({
+                                        ...prev,
+                                        currentLocation: [],
+                                      })),
+                                    120
+                                  )
+                                }
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                placeholder="Current installation city/address"
+                              />
+                              {locationSuggestions.currentLocation.length > 0 && (
+                                <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow max-h-48 overflow-y-auto">
+                                  {locationSuggestions.currentLocation.map((suggestion) => (
+                                    <button
+                                      key={suggestion.id}
+                                      type="button"
+                                      onMouseDown={() =>
+                                        handleLocationSuggestionSelect("currentLocation", suggestion)
+                                      }
+                                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                                    >
+                                      {suggestion.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {newTicket.category === "solar_relocation" && (
+                              <div className="relative">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                  New Installation Location *
+                                </label>
+                                <input
+                                  type="text"
+                                  value={newTicket.newLocation}
+                                  onChange={(e) =>
+                                    handleLocationInputChange("newLocation", e.target.value)
+                                  }
+                                  onBlur={() =>
+                                    setTimeout(
+                                      () =>
+                                        setLocationSuggestions((prev) => ({
+                                          ...prev,
+                                          newLocation: [],
+                                        })),
+                                      120
+                                    )
+                                  }
+                                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                  placeholder="New city/address where system will be shifted"
+                                />
+                                {locationSuggestions.newLocation.length > 0 && (
+                                  <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow max-h-48 overflow-y-auto">
+                                    {locationSuggestions.newLocation.map((suggestion) => (
+                                      <button
+                                        key={suggestion.id}
+                                        type="button"
+                                        onMouseDown={() =>
+                                          handleLocationSuggestionSelect("newLocation", suggestion)
+                                        }
+                                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                                      >
+                                        {suggestion.label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {newTicket.category === "solar_upgrade" && (
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                  Expected Capacity After Upgrade (kW) *
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.1"
+                                  value={newTicket.expectedCapacityKW}
+                                  onChange={(e) =>
+                                    setNewTicket({ ...newTicket, expectedCapacityKW: e.target.value })
+                                  }
+                                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                  placeholder="e.g. 8.5"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       {newTicket.category === "other" && (
                         <div>
@@ -322,7 +561,7 @@ export default function Support() {
                   </div>
 
                   {/* Actions */}
-                  <div className="border-t border-gray-200 p-6 bg-gray-50 flex gap-3">
+                  <div className="border-t border-gray-200 p-4 sm:p-6 bg-gray-50 flex flex-col sm:flex-row gap-3 shrink-0 sticky bottom-0">
                     <button
                       onClick={async () => {
                         // Validate subject only when category is "other"
@@ -335,6 +574,32 @@ export default function Support() {
                           setError("Please fill in all required fields");
                           return;
                         }
+
+                        if (
+                          (newTicket.category === "solar_upgrade" ||
+                            newTicket.category === "solar_relocation") &&
+                          !newTicket.currentLocation.trim()
+                        ) {
+                          setError("Please provide current solar location");
+                          return;
+                        }
+
+                        if (
+                          newTicket.category === "solar_relocation" &&
+                          !newTicket.newLocation.trim()
+                        ) {
+                          setError("Please provide new installation location");
+                          return;
+                        }
+
+                        if (
+                          newTicket.category === "solar_upgrade" &&
+                          (!newTicket.expectedCapacityKW || Number(newTicket.expectedCapacityKW) <= 0)
+                        ) {
+                          setError("Please provide expected upgraded capacity in kW");
+                          return;
+                        }
+
                         try {
                           // Generate default subject based on category if not provided
                           const categoryLabels = {
@@ -342,6 +607,8 @@ export default function Support() {
                             technical: "Technical Issue",
                             installation: "Installation Problem",
                             maintenance: "Maintenance Question",
+                            solar_upgrade: "Solar Upgrade Request",
+                            solar_relocation: "Solar Relocation Request",
                             billing: "Billing Issue",
                             warranty: "Warranty Question",
                             complaint: "Complaint",
@@ -351,6 +618,12 @@ export default function Support() {
                           const ticketToSubmit = {
                             customerId: customerProfile._id,
                             ...newTicket,
+                            description:
+                              newTicket.category === "solar_upgrade"
+                                ? `${newTicket.description}\n\n--- Service Details ---\nCurrent Location: ${newTicket.currentLocation}\nExpected Capacity (kW): ${newTicket.expectedCapacityKW}`
+                                : newTicket.category === "solar_relocation"
+                                ? `${newTicket.description}\n\n--- Service Details ---\nCurrent Location: ${newTicket.currentLocation}\nNew Location: ${newTicket.newLocation}`
+                                : newTicket.description,
                             subject: newTicket.subject || categoryLabels[newTicket.category] || newTicket.category,
                           };
                           
@@ -360,6 +633,13 @@ export default function Support() {
                             category: "general",
                             priority: "medium",
                             description: "",
+                            currentLocation: "",
+                            newLocation: "",
+                            expectedCapacityKW: "",
+                          });
+                          setLocationSuggestions({
+                            currentLocation: [],
+                            newLocation: [],
                           });
                           setSuccess("Ticket created successfully!");
                           setShowChatModal(false);
@@ -369,7 +649,7 @@ export default function Support() {
                           setError(err.response?.data?.message || "Failed to create ticket");
                         }
                       }}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+                      className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white px-6 rounded-lg font-semibold transition shadow-sm"
                     >
                       Submit Ticket
                     </button>
@@ -377,8 +657,12 @@ export default function Support() {
                       onClick={() => {
                         setShowChatModal(false);
                         setChatTicketData(null);
+                        setLocationSuggestions({
+                          currentLocation: [],
+                          newLocation: [],
+                        });
                       }}
-                      className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
+                      className="flex-1 h-12 bg-white border border-gray-300 text-gray-700 px-6 rounded-lg font-semibold hover:bg-gray-100 transition"
                     >
                       Cancel
                     </button>
@@ -403,18 +687,18 @@ export default function Support() {
 
         {/* Ticket Detail Modal */}
         {showDetailModal && selectedTicket && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-8 max-w-3xl w-full max-h-screen overflow-y-auto">
-              <div className="flex justify-between items-start mb-6">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-3 sm:p-4">
+            <div className="bg-white rounded-lg p-4 sm:p-8 max-w-3xl w-full max-h-[94vh] sm:max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-start gap-3 mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                     {selectedTicket.ticketNumber}
                   </h2>
-                  <p className="text-gray-600 mt-1">{selectedTicket.subject}</p>
+                  <p className="text-gray-600 mt-1 text-sm sm:text-base">{selectedTicket.subject}</p>
                 </div>
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="text-2xl text-gray-500 hover:text-gray-700"
+                  className="text-2xl text-gray-500 hover:text-gray-700 shrink-0"
                 >
                   ×
                 </button>

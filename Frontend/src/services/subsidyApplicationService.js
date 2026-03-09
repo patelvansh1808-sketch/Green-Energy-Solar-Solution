@@ -58,7 +58,7 @@ const subsidyApplicationService = {
   // Download document file
   downloadDocument: async (filePath) => {
     try {
-      const response = await api.get(`/subsidy-applications/download/${filePath}`, {
+      const response = await api.get(`/subsidy-applications/download/${encodeURIComponent(filePath)}`, {
         responseType: "blob",
       });
       return response.data;

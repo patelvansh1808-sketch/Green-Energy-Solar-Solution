@@ -397,12 +397,13 @@ export default function ProjectTracking() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900">Installation & Project Tracking</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Installation & Project Tracking</h1>
+            <p className="text-gray-600 mt-2">Manage projects from survey to go-live</p>
           </div>
           <div className="flex gap-3">
             <button
@@ -428,7 +429,7 @@ export default function ProjectTracking() {
 
         {/* Statistics */}
         {statistics && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white border border-gray-200 rounded-lg p-4 text-center shadow-sm">
               <div className="text-2xl font-bold text-gray-800">{statistics.total}</div>
               <div className="text-sm text-gray-600">Total Projects</div>
@@ -502,7 +503,8 @@ export default function ProjectTracking() {
 
         {/* Projects Table */}
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+          {/* DESKTOP VIEW */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -594,16 +596,95 @@ export default function ProjectTracking() {
               </tbody>
             </table>
           </div>
+
+          {/* MOBILE VIEW */}
+          <div className="md:hidden p-4 space-y-4">
+            {projects.length === 0 ? (
+              <div className="py-8 text-center text-gray-500 text-sm">
+                No projects found
+              </div>
+            ) : (
+              projects.map((project) => (
+                <div
+                  key={project._id}
+                  className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <p className="font-semibold text-gray-900">{project.projectName}</p>
+                      <p className="text-xs text-gray-600 mt-1">{project.location?.city || "—"}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap shrink-0 ${getStatusBadgeColor(project.status)}`}>
+                      {getStatusLabel(project.status)}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium">Customer</p>
+                      <p className="text-gray-800 mt-1 text-xs">{project.customerName}</p>
+                      <p className="text-xs text-gray-600 mt-1 break-all">{project.customerEmail}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium">Engineer</p>
+                      <p className="text-gray-800 mt-1 text-xs">
+                        {project.engineerAssignment?.engineerName || "Not assigned"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium">Capacity</p>
+                      <p className="text-gray-800 mt-1">{project.systemCapacity} kW</p>
+                      <p className="text-xs text-gray-600 mt-1">{project.panelCount} panels</p>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium">Priority</p>
+                      <p className={`text-sm font-semibold mt-1 ${getPriorityColor(project.priority)}`}>
+                        {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => openDetailModal(project)}
+                      className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-3 rounded font-semibold text-sm"
+                    >
+                      View
+                    </button>
+                    {project.status === "survey" && (
+                      <button
+                        onClick={() => openSurveyModal(project)}
+                        className="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 py-2 px-3 rounded font-semibold text-sm"
+                      >
+                        Survey
+                      </button>
+                    )}
+                    {project.status === "engineer_assigned" && !project.engineerAssignment?.engineerId && (
+                      <button
+                        onClick={() => openEngineerModal(project)}
+                        className="flex-1 bg-purple-100 hover:bg-purple-200 text-purple-700 py-2 px-3 rounded font-semibold text-sm"
+                      >
+                        Assign
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
       {/* CREATE PROJECT MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Project</h2>
             <form onSubmit={handleCreateProject} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Project Name*</label>
                   <input
@@ -668,7 +749,7 @@ export default function ProjectTracking() {
 
               <div className="border-t pt-4">
                 <h3 className="font-semibold text-gray-900 mb-3">Location Details</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input
                     type="text"
                     placeholder="Address"
@@ -702,7 +783,7 @@ export default function ProjectTracking() {
 
               <div className="border-t pt-4">
                 <h3 className="font-semibold text-gray-900 mb-3">Budget</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-gray-700 mb-1">Total Cost</label>
                     <input
@@ -746,11 +827,11 @@ export default function ProjectTracking() {
 
       {/* SITE SURVEY MODAL */}
       {showSurveyModal && selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-2xl w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 md:p-8 max-w-2xl w-full">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Complete Site Survey</h2>
             <form onSubmit={handleUpdateSurvey} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Survey Date*</label>
                   <input
@@ -835,8 +916,8 @@ export default function ProjectTracking() {
 
       {/* ASSIGN ENGINEER MODAL */}
       {showEngineerModal && selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 md:p-8 max-w-md w-full">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Assign Engineer</h2>
             <form onSubmit={handleAssignEngineer} className="space-y-4">
               <div>

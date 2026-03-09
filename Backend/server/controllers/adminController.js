@@ -3,6 +3,7 @@ const Booking = require("../models/Booking");
 const Energy = require("../models/Energy");
 const Subsidy = require("../models/Subsidy");
 const Customer = require("../models/Customer");
+const Notification = require("../models/Notification");
 
 /**
  * ================================
@@ -118,5 +119,61 @@ exports.updateBookingStatus = async (req, res) => {
   } catch (err) {
     console.error("UPDATE BOOKING ERROR:", err.message);
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.requestRemainingPayment = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { note } = req.body || {};
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (!booking.payment?.advancePaid) {
+      return res.status(400).json({
+        message: "Advance payment is not completed yet",
+      });
+    }
+
+    if (booking.payment?.finalPaid) {
+      return res.status(409).json({ message: "Final payment already completed" });
+    }
+
+    if (booking.status !== "In Progress") {
+      return res.status(400).json({
+        message: "Remaining payment request is allowed when installation is In Progress",
+      });
+    }
+
+    booking.payment = {
+      ...(booking.payment || {}),
+      finalPaymentRequested: true,
+      finalPaymentRequestedAt: new Date(),
+      finalPaymentRequestNote: String(note || "Please complete remaining payment to continue installation.").trim(),
+    };
+
+    await booking.save();
+
+    await Notification.create({
+      userId: booking.user,
+      type: "booking",
+      title: "Remaining Payment Request",
+      message: `Please complete your remaining payment for booking ${booking.bookingId || booking._id}.`,
+      relatedId: booking._id,
+      actionUrl: "/booking-status",
+      icon: "💳",
+      priority: "high",
+    });
+
+    return res.json({
+      message: "Remaining payment request sent to customer",
+      booking,
+    });
+  } catch (err) {
+    console.error("REQUEST REMAINING PAYMENT ERROR:", err.message);
+    return res.status(500).json({ message: err.message });
   }
 };

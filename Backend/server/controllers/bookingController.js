@@ -4,6 +4,448 @@ const Notification = require("../models/Notification");
 const User = require("../models/User");
 const Subsidy = require("../models/Subsidy");
 const { sendBookingConfirmationEmail } = require("../services/emailService");
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
+
+const getRazorpayInstance = () => {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+    throw new Error("Razorpay credentials are not configured");
+  }
+
+  return new Razorpay({
+    key_id: keyId,
+    key_secret: keySecret,
+  });
+};
+
+const getBookingAmountBreakdown = (booking) => {
+  const fullAmount = Number(
+    booking?.quotation?.netCost ||
+      booking?.finalCost ||
+      booking?.quotation?.totalCost ||
+      booking?.baseCost ||
+      0
+  );
+
+  const configuredAdvance = Number(booking?.payment?.advanceAmount || 0);
+  const advanceAmount = configuredAdvance > 0 ? configuredAdvance : Number((fullAmount * 0.2).toFixed(2));
+  const finalAmount = Number((fullAmount - advanceAmount).toFixed(2));
+
+  return {
+    fullAmount,
+    advanceAmount,
+    finalAmount,
+  };
+};
+
+/* =====================================================
+   CREATE BOOKING PAYMENT ORDER
+   POST /api/bookings/:id/payment/create-order
+===================================================== */
+exports.createBookingPaymentOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (String(booking.user) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (booking.status === "Cancelled") {
+      return res.status(400).json({ message: "Cannot pay for cancelled booking" });
+    }
+
+    if (booking.payment?.paymentCaptured) {
+      return res.status(409).json({
+        message: "Payment already completed for this booking",
+      });
+    }
+
+    const amountBreakdown = getBookingAmountBreakdown(booking);
+    const highAmountThreshold = 100000;
+    const transactionCap = Number(process.env.RAZORPAY_BOOKING_TXN_CAP || 20000);
+    const isHighAmount = amountBreakdown.fullAmount >= highAmountThreshold;
+
+    const requestedAmount = isHighAmount
+      ? amountBreakdown.advanceAmount
+      : amountBreakdown.fullAmount;
+    const amount = Math.min(requestedAmount, transactionCap);
+    const isCappedCharge = amount < requestedAmount;
+    const paymentStage = isHighAmount || isCappedCharge ? "advance" : "full";
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ message: "Invalid booking amount for payment" });
+    }
+
+    const amountInPaise = Math.round(amount * 100);
+    const razorpay = getRazorpayInstance();
+    const receipt = `book_${Date.now()}_${String(booking._id).slice(-6)}`;
+
+    const order = await razorpay.orders.create({
+      amount: amountInPaise,
+      currency: "INR",
+      receipt,
+      notes: {
+        bookingId: String(booking._id),
+        bookingCode: booking.bookingId || "",
+        userId: String(req.user.id),
+      },
+    });
+
+    booking.payment = {
+      ...(booking.payment || {}),
+      advanceAmount: paymentStage === "advance" ? amount : amountBreakdown.fullAmount,
+      finalAmount: paymentStage === "advance" ? Number((amountBreakdown.fullAmount - amount).toFixed(2)) : 0,
+      razorpayOrderId: order.id,
+      paymentMethod: "Razorpay",
+      pendingOrderStage: paymentStage,
+    };
+    await booking.save();
+
+    return res.json({
+      message: "Booking payment order created",
+      bookingId: booking._id,
+      bookingCode: booking.bookingId,
+      amount,
+      fullAmount: amountBreakdown.fullAmount,
+      advanceAmount: amountBreakdown.advanceAmount,
+      finalAmount: amountBreakdown.finalAmount,
+      paymentStage,
+      requestedAmount,
+      isCappedCharge,
+      transactionCap,
+      amountInPaise,
+      orderId: order.id,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      recommendedMethod: amount > highAmountThreshold ? "non_upi" : "any",
+      enableUpi: amount <= highAmountThreshold,
+      upiLimitHint: amount > highAmountThreshold
+        ? "Amount exceeds ₹1,00,000. Prefer netbanking/card/emi/bank transfer options."
+        : "",
+      highAmountThreshold,
+    });
+  } catch (error) {
+    console.error("CREATE BOOKING PAYMENT ORDER ERROR:", error);
+    return res.status(500).json({
+      message: "Failed to create booking payment order",
+      error: error.message,
+    });
+  }
+};
+
+/* =====================================================
+   VERIFY BOOKING PAYMENT
+   POST /api/bookings/:id/payment/verify
+===================================================== */
+exports.verifyBookingPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      razorpay_order_id: razorpayOrderId,
+      razorpay_payment_id: razorpayPaymentId,
+      razorpay_signature: razorpaySignature,
+    } = req.body || {};
+
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return res.status(400).json({ message: "Missing payment verification fields" });
+    }
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (String(booking.user) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (booking.payment?.paymentCaptured) {
+      return res.json({
+        message: "Payment already verified",
+        booking,
+      });
+    }
+
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+      return res.status(500).json({ message: "Razorpay credentials are not configured" });
+    }
+
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .digest("hex");
+
+    if (generatedSignature !== razorpaySignature) {
+      return res.status(400).json({ message: "Payment verification failed" });
+    }
+
+    const pendingOrderStage = booking.payment?.pendingOrderStage || "advance";
+
+    booking.payment = {
+      ...(booking.payment || {}),
+      razorpayOrderId: razorpayOrderId,
+      razorpayPaymentId: razorpayPaymentId,
+      razorpaySignature: razorpaySignature,
+      paymentMethod: "Razorpay",
+      paymentCaptured: true,
+      paymentCapturedAt: new Date(),
+      advancePaid:
+        pendingOrderStage === "advance" || pendingOrderStage === "full"
+          ? true
+          : Boolean(booking.payment?.advancePaid),
+      advancePaidDate:
+        pendingOrderStage === "advance" || pendingOrderStage === "full"
+          ? new Date()
+          : booking.payment?.advancePaidDate,
+      finalPaid:
+        pendingOrderStage === "full"
+          ? true
+          : Boolean(booking.payment?.finalPaid),
+      finalPaidDate:
+        pendingOrderStage === "full"
+          ? new Date()
+          : booking.payment?.finalPaidDate,
+      pendingOrderStage: "",
+    };
+
+    booking.activityLog.push({
+      action: "Booking Payment Completed",
+      performedBy: req.user.id,
+      notes: `Razorpay payment captured: ${razorpayPaymentId}`,
+    });
+
+    await booking.save();
+
+    return res.json({
+      message: "Booking payment verified successfully",
+      booking,
+    });
+  } catch (error) {
+    console.error("VERIFY BOOKING PAYMENT ERROR:", error);
+    return res.status(500).json({
+      message: "Failed to verify booking payment",
+      error: error.message,
+    });
+  }
+};
+
+/* =====================================================
+   CREATE REMAINING PAYMENT ORDER
+   POST /api/bookings/:id/payment/create-final-order
+===================================================== */
+exports.createBookingFinalPaymentOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (String(booking.user) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (!booking.payment?.finalPaymentRequested) {
+      return res.status(400).json({
+        message: "Final payment request not raised by admin yet",
+      });
+    }
+
+    if (!booking.payment?.advancePaid) {
+      return res.status(400).json({ message: "Advance payment is not completed" });
+    }
+
+    if (booking.payment?.finalPaid) {
+      return res.status(409).json({ message: "Final payment already completed" });
+    }
+
+    const amountBreakdown = getBookingAmountBreakdown(booking);
+    const remainingAmount = Number(
+      booking.payment?.finalAmount || amountBreakdown.finalAmount || 0
+    );
+
+    if (remainingAmount <= 0) {
+      return res.status(400).json({ message: "No remaining amount to collect" });
+    }
+
+    // Dynamic cap based on payment method
+    // Domestic card/UPI: ₹15,000 (as per Razorpay limits)
+    // International card: ₹5,00,000 (as per Razorpay limits)
+    // Default safe cap: ₹15,000
+    const transactionCap = Number(process.env.RAZORPAY_BOOKING_TXN_CAP || 15000);
+    const internationalCardCap = 500000;
+    
+    // For now, use safe domestic cap. Customer can pay multiple times for high amounts.
+    // If they have international card, Razorpay will allow higher amount in single txn
+    const transactionAmount = Math.min(remainingAmount, transactionCap);
+    const isSplitPayment = remainingAmount > transactionCap;
+    const totalTransactionsNeeded = isSplitPayment 
+      ? Math.ceil(remainingAmount / transactionCap)
+      : 1;
+
+    const razorpay = getRazorpayInstance();
+    const amountInPaise = Math.round(transactionAmount * 100);
+    const receipt = `book_final_${Date.now()}_${String(booking._id).slice(-6)}`;
+
+    const order = await razorpay.orders.create({
+      amount: amountInPaise,
+      currency: "INR",
+      receipt,
+      notes: {
+        bookingId: String(booking._id),
+        bookingCode: booking.bookingId || "",
+        userId: String(req.user.id),
+        stage: "final",
+        remainingTotal: remainingAmount,
+        isSplitPayment,
+      },
+    });
+
+    booking.payment = {
+      ...(booking.payment || {}),
+      finalRazorpayOrderId: order.id,
+      paymentMethod: "Razorpay",
+      pendingOrderStage: "final",
+    };
+    await booking.save();
+
+    return res.json({
+      message: "Remaining payment order created",
+      bookingId: booking._id,
+      bookingCode: booking.bookingId,
+      remainingTotal: remainingAmount,
+      amount: transactionAmount,
+      amountInPaise,
+      orderId: order.id,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      paymentStage: "final",
+      enableUpi: transactionAmount <= 100000,
+      isSplitPayment,
+      totalTransactionsNeeded,
+      transactionCap,
+      internationalCardCap,
+      hint: isSplitPayment 
+        ? `This is transaction 1 of ${totalTransactionsNeeded}. Using international card can complete full payment in 1 transaction.`
+        : "Pay full remaining amount in this transaction",
+    });
+  } catch (error) {
+    console.error("CREATE FINAL BOOKING PAYMENT ORDER ERROR:", error);
+    return res.status(500).json({
+      message: "Failed to create remaining payment order",
+      error: error.message,
+    });
+  }
+};
+
+/* =====================================================
+   VERIFY REMAINING PAYMENT
+   POST /api/bookings/:id/payment/verify-final
+===================================================== */
+exports.verifyBookingFinalPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      razorpay_order_id: razorpayOrderId,
+      razorpay_payment_id: razorpayPaymentId,
+      razorpay_signature: razorpaySignature,
+    } = req.body || {};
+
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return res.status(400).json({ message: "Missing payment verification fields" });
+    }
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (String(booking.user) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (booking.payment?.finalPaid) {
+      return res.json({ message: "Final payment already verified", booking });
+    }
+
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .digest("hex");
+
+    if (generatedSignature !== razorpaySignature) {
+      return res.status(400).json({ message: "Final payment verification failed" });
+    }
+
+    // Get the current payment details
+    const previousFinalAmount = Number(booking.payment?.finalAmount || 0);
+    const previousCollected = Number(booking.payment?.finalCollectedAmount || 0);
+    
+    // Calculate collected and remaining amounts
+    // Need to get the transaction amount from notes or calculate from order
+    const transactionAmount = Math.round(booking.payment?.finalRazorpayOrderId ? 
+      (booking.payment?.finalRazorpayOrderId ? previousFinalAmount : previousFinalAmount) : 0);
+    
+    // Simplified: amountBreakdown already has totalAmount calculated
+    const amountBreakdown = getBookingAmountBreakdown(booking);
+    const totalFinalAmount = amountBreakdown.finalAmount;
+    const currentCollected = previousCollected + (previousFinalAmount > 0 ? 
+      Math.min(previousFinalAmount, Number(process.env.RAZORPAY_BOOKING_TXN_CAP || 15000)) : 0);
+    const newRemainingAmount = Math.max(0, totalFinalAmount - currentCollected);
+    
+    const isFinalPaymentComplete = newRemainingAmount <= 0;
+
+    booking.payment = {
+      ...(booking.payment || {}),
+      finalRazorpayOrderId: razorpayOrderId,
+      finalRazorpayPaymentId: razorpayPaymentId,
+      finalRazorpaySignature: razorpaySignature,
+      finalCollectedAmount: currentCollected,
+      finalAmount: newRemainingAmount,
+      finalPaid: isFinalPaymentComplete,
+      finalPaidDate: isFinalPaymentComplete ? new Date() : booking.payment?.finalPaidDate,
+      finalPaymentRequested: !isFinalPaymentComplete, // Keep requesting if amount remaining
+      pendingOrderStage: "",
+      paymentMethod: "Razorpay",
+    };
+
+    booking.activityLog.push({
+      action: "Final Payment Received",
+      performedBy: req.user.id,
+      notes: `Razorpay final payment captured: ${razorpayPaymentId}. Remaining: ₹${newRemainingAmount.toLocaleString("en-IN")}`,
+    });
+
+    await booking.save();
+
+    return res.json({
+      message: isFinalPaymentComplete 
+        ? "Final payment completed successfully" 
+        : "Partial payment received. Please pay remaining amount.",
+      booking,
+      paymentStatus: {
+        isFinalPaymentComplete,
+        totalAmount: totalFinalAmount,
+        collectedAmount: currentCollected,
+        remainingAmount: newRemainingAmount,
+      },
+    });
+  } catch (error) {
+    console.error("VERIFY FINAL BOOKING PAYMENT ERROR:", error);
+    return res.status(500).json({
+      message: "Failed to verify remaining payment",
+      error: error.message,
+    });
+  }
+};
 
 /* =====================================================
    GENERATE QUOTATION

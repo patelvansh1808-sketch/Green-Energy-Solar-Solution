@@ -202,6 +202,37 @@ export default function TicketManagement() {
     return badges[priority] || "bg-gray-100 text-gray-800";
   };
 
+  const isChargeableServiceCategory = (category) =>
+    category === "solar_upgrade" || category === "solar_relocation";
+
+  const parseServiceDetailsFromDescription = (description = "") => {
+    const marker = "--- Service Details ---";
+    if (!description.includes(marker)) {
+      return { baseDescription: description, details: {} };
+    }
+
+    const [baseDescriptionRaw, detailsRaw] = description.split(marker);
+    const detailLines = (detailsRaw || "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const details = {};
+    detailLines.forEach((line) => {
+      const separatorIndex = line.indexOf(":");
+      if (separatorIndex > 0) {
+        const key = line.slice(0, separatorIndex).trim();
+        const value = line.slice(separatorIndex + 1).trim();
+        details[key] = value;
+      }
+    });
+
+    return {
+      baseDescription: (baseDescriptionRaw || "").trim(),
+      details,
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -317,6 +348,8 @@ export default function TicketManagement() {
                 <option value="billing">Billing</option>
                 <option value="installation">Installation</option>
                 <option value="maintenance">Maintenance</option>
+                <option value="solar_upgrade">Solar Upgrade</option>
+                <option value="solar_relocation">Solar Relocation</option>
                 <option value="warranty">Warranty</option>
                 <option value="complaint">Complaint</option>
                 <option value="feedback">Feedback</option>
@@ -384,120 +417,197 @@ export default function TicketManagement() {
               <p className="text-gray-600">No tickets found</p>
             </div>
           ) : (
-            <div>
-              <table className="w-full table-fixed text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="w-[12%] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                      Ticket #
-                    </th>
-                    <th className="w-[16%] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                      Customer
-                    </th>
-                    <th className="w-[16%] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                      Subject
-                    </th>
-                    <th className="w-[10%] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                      Category
-                    </th>
-                    <th className="w-[10%] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                      Priority
-                    </th>
-                    <th className="w-[10%] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                      Status
-                    </th>
-                    {user?.role === "admin" && (
-                      <th className="w-[14%] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                        Assigned To
+            <>
+              {/* DESKTOP VIEW */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                        Ticket #
                       </th>
-                    )}
-                    <th className="w-[12%] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {tickets.map((ticket) => (
-                    <tr key={ticket._id} className="hover:bg-gray-50">
-                      <td className="px-3 py-3 align-top">
-                        <p className="font-semibold text-sm text-gray-900 break-all">
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                        Customer
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                        Subject
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                        Category
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                        Priority
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                        Status
+                      </th>
+                      {user?.role === "admin" && (
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                          Assigned To
+                        </th>
+                      )}
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {tickets.map((ticket) => (
+                      <tr key={ticket._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <p className="font-semibold text-gray-900">
+                            {ticket.ticketNumber}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="font-medium text-gray-900">
+                            {ticket.customerName}
+                          </p>
+                          <p className="text-sm text-gray-600">{ticket.customerEmail}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="font-medium text-gray-900">{ticket.subject}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-600 capitalize">
+                            {ticket.category.replace("_", " ")}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${getPriorityBadge(
+                              ticket.priority
+                            )}`}
+                          >
+                            {ticket.priority.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
+                              ticket.status
+                            )}`}
+                          >
+                            {ticket.status.replace("_", " ").toUpperCase()}
+                          </span>
+                        </td>
+                        {user?.role === "admin" && (
+                          <td className="px-6 py-4">
+                            <select
+                              value={ticket.assignedTo?._id || ""}
+                              onChange={(e) => handleAssign(ticket._id, e.target.value)}
+                              className="w-full border border-gray-300 rounded px-3 py-1 text-sm"
+                            >
+                              <option value="">Unassigned</option>
+                              {supportUsers.map((u) => (
+                                <option key={u._id} value={u._id}>
+                                  {u.firstName} {u.lastName}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        )}
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedTicket(ticket);
+                                setShowDetailModal(true);
+                              }}
+                              className="bg-white border border-gray-300 hover:border-blue-500 hover:bg-blue-50 text-gray-800 px-4 py-2 rounded text-sm font-semibold transition"
+                            >
+                              Manage
+                            </button>
+                            {user?.role === "admin" && (
+                              <button
+                                onClick={() => handleDeleteTicket(ticket._id)}
+                                className="bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 px-4 py-2 rounded text-sm font-semibold transition"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE VIEW */}
+              <div className="md:hidden p-4 space-y-4">
+                {tickets.map((ticket) => (
+                  <div
+                    key={ticket._id}
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
                           {ticket.ticketNumber}
                         </p>
-                      </td>
-                      <td className="px-3 py-3 align-top">
-                        <p className="font-medium text-gray-900 break-words">
+                        <p className="text-xs text-gray-600 mt-1">
                           {ticket.customerName}
                         </p>
-                        <p className="text-xs text-gray-600 break-all">{ticket.customerEmail}</p>
-                      </td>
-                      <td className="px-3 py-3 align-top">
-                        <p className="font-medium text-gray-900 break-words">{ticket.subject}</p>
-                      </td>
-                      <td className="px-3 py-3 align-top">
-                        <span className="text-xs text-gray-600 capitalize">
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${getStatusBadge(
+                          ticket.status
+                        )}`}
+                      >
+                        {ticket.status.replace("_", " ").toUpperCase()}
+                      </span>
+                    </div>
+
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium">Subject</p>
+                      <p className="font-medium text-gray-900 mt-1 text-sm">
+                        {ticket.subject}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p className="text-xs text-gray-600 font-medium">Category</p>
+                        <p className="text-gray-700 mt-1 capitalize text-xs">
                           {ticket.category.replace("_", " ")}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 align-top">
+                        </p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p className="text-xs text-gray-600 font-medium">Priority</p>
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${getPriorityBadge(
+                          className={`inline-block px-2 py-1 rounded-full text-xs font-semibold mt-1 ${getPriorityBadge(
                             ticket.priority
                           )}`}
                         >
                           {ticket.priority.toUpperCase()}
                         </span>
-                      </td>
-                      <td className="px-3 py-3 align-top">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
-                            ticket.status
-                          )}`}
-                        >
-                          {ticket.status.replace("_", " ").toUpperCase()}
-                        </span>
-                      </td>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedTicket(ticket);
+                          setShowDetailModal(true);
+                        }}
+                        className="flex-1 bg-white border border-gray-300 hover:border-blue-500 hover:bg-blue-50 text-gray-800 px-3 py-2 rounded text-sm font-semibold transition"
+                      >
+                        Manage
+                      </button>
                       {user?.role === "admin" && (
-                        <td className="px-3 py-3 align-top">
-                          <select
-                            value={ticket.assignedTo?._id || ""}
-                            onChange={(e) => handleAssign(ticket._id, e.target.value)}
-                            className="w-full min-w-0 border border-gray-300 rounded px-2 py-1 text-xs"
-                          >
-                            <option value="">Unassigned</option>
-                            {supportUsers.map((u) => (
-                              <option key={u._id} value={u._id}>
-                                {u.firstName} {u.lastName}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
+                        <button
+                          onClick={() => handleDeleteTicket(ticket._id)}
+                          className="flex-1 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 px-3 py-2 rounded text-sm font-semibold transition"
+                        >
+                          Delete
+                        </button>
                       )}
-                      <td className="px-3 py-3 align-top whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 whitespace-nowrap">
-                          <button
-                            onClick={() => {
-                              setSelectedTicket(ticket);
-                              setShowDetailModal(true);
-                            }}
-                            className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs font-semibold transition"
-                          >
-                            Manage
-                          </button>
-                          {user?.role === "admin" && (
-                            <button
-                              onClick={() => handleDeleteTicket(ticket._id)}
-                              className="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs font-semibold transition"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
@@ -577,8 +687,50 @@ export default function TicketManagement() {
                 {/* Description */}
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm font-semibold text-gray-700 mb-2">Description</p>
-                  <p className="text-gray-900">{selectedTicket.description}</p>
+                  <p className="text-gray-900 whitespace-pre-line">
+                    {parseServiceDetailsFromDescription(selectedTicket.description).baseDescription ||
+                      selectedTicket.description}
+                  </p>
                 </div>
+
+                {/* Chargeable Service Details */}
+                {isChargeableServiceCategory(selectedTicket.category) && (() => {
+                  const parsed = parseServiceDetailsFromDescription(selectedTicket.description);
+                  const details = parsed.details || {};
+                  const currentLocation = details["Current Location"];
+                  const newLocation = details["New Location"];
+                  const expectedCapacity = details["Expected Capacity (kW)"];
+
+                  if (!currentLocation && !newLocation && !expectedCapacity) return null;
+
+                  return (
+                    <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                      <p className="text-sm font-semibold text-amber-800 mb-3">
+                        Chargeable Service Request Details
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {currentLocation && (
+                          <div className="bg-white border border-amber-200 rounded p-3">
+                            <p className="text-xs text-gray-600">Current Location</p>
+                            <p className="text-gray-900 font-medium mt-1">{currentLocation}</p>
+                          </div>
+                        )}
+                        {newLocation && (
+                          <div className="bg-white border border-amber-200 rounded p-3">
+                            <p className="text-xs text-gray-600">New Location</p>
+                            <p className="text-gray-900 font-medium mt-1">{newLocation}</p>
+                          </div>
+                        )}
+                        {expectedCapacity && (
+                          <div className="bg-white border border-amber-200 rounded p-3">
+                            <p className="text-xs text-gray-600">Expected Capacity (kW)</p>
+                            <p className="text-gray-900 font-medium mt-1">{expectedCapacity}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Conversation */}
                 {selectedTicket.responses && selectedTicket.responses.length > 0 && (

@@ -7,6 +7,7 @@ export default function ManageSubsidyApplications() {
   const [selectedApp, setSelectedApp] = useState(null);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState("All");
   const [updateData, setUpdateData] = useState({
     status: "",
@@ -41,13 +42,24 @@ export default function ManageSubsidyApplications() {
     }
   };
 
-  const handleSelectApp = (app) => {
-    setSelectedApp(app);
+  const handleSelectApp = async (app) => {
+    let selectedApplication = app;
+
+    try {
+      const detailedApplication = await subsidyApplicationService.getSubsidyApplicationById(app._id);
+      if (detailedApplication?._id) {
+        selectedApplication = detailedApplication;
+      }
+    } catch (error) {
+      console.error("Error fetching application details:", error);
+    }
+
+    setSelectedApp(selectedApplication);
     setUpdateData({
-      status: app.status,
-      approvedAmount: app.approvedAmount || "",
-      creditDate: app.creditDate ? app.creditDate.split("T")[0] : "",
-      remarks: app.remarks || "",
+      status: selectedApplication.status,
+      approvedAmount: selectedApplication.approvedAmount || "",
+      creditDate: selectedApplication.creditDate ? selectedApplication.creditDate.split("T")[0] : "",
+      remarks: selectedApplication.remarks || "",
     });
   };
 
@@ -85,6 +97,22 @@ export default function ManageSubsidyApplications() {
     }
   };
 
+  const handleDownloadDocument = async (doc) => {
+    try {
+      const fileBlob = await subsidyApplicationService.downloadDocument(doc.path);
+      const objectUrl = window.URL.createObjectURL(fileBlob);
+      const tempLink = document.createElement("a");
+      tempLink.href = objectUrl;
+      tempLink.download = doc.filename || "document";
+      document.body.appendChild(tempLink);
+      tempLink.click();
+      tempLink.remove();
+      window.URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      setMessage("❌ Failed to download document");
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-IN", {
@@ -94,15 +122,33 @@ export default function ManageSubsidyApplications() {
     });
   };
 
-  // Filter applications
-  const filteredApplications = applications.filter((app) => {
-    const matchesStatus = filterStatus === "All" || app.status === filterStatus;
-    const matchesSearch = 
-      app.customerId?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.customerId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.customerId?.phone?.includes(searchTerm);
-    return matchesStatus && matchesSearch;
-  });
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+
+  // Search dropdown should show customer-name matches regardless of status filter
+  const dropdownApplications = applications.filter((app) =>
+    app.customerId?.fullName?.toLowerCase().includes(normalizedSearchTerm)
+  );
+  const showSearchDropdown = isSearchDropdownOpen && searchTerm.trim().length > 0;
+  const selectedDocuments = Array.isArray(selectedApp?.documents)
+    ? selectedApp.documents
+        .filter(Boolean)
+        .map((doc) => {
+          if (typeof doc === "string") {
+            return {
+              filename: doc.split("/").pop() || "Document",
+              path: doc,
+              uploadedAt: null,
+            };
+          }
+
+          return {
+            filename: doc.filename || doc.originalname || doc.name || "Document",
+            path: doc.path || doc.filePath || "",
+            uploadedAt: doc.uploadedAt || null,
+          };
+        })
+        .filter((doc) => Boolean(doc.path))
+    : [];
 
   if (loading) {
     return (
@@ -156,15 +202,54 @@ export default function ManageSubsidyApplications() {
         {/* SEARCH & FILTER */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="relative">
               <label className="block text-sm font-semibold text-gray-700 mb-2">🔍 Search Customer</label>
               <input
                 type="text"
                 placeholder="Search by name, email, or phone..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setIsSearchDropdownOpen(true);
+                }}
+                onFocus={() => {
+                  if (searchTerm.trim()) {
+                    setIsSearchDropdownOpen(true);
+                  }
+                }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+
+              {showSearchDropdown && (
+                <div className="absolute z-20 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-72 overflow-y-auto">
+                  {dropdownApplications.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-gray-500">No matching customer found</div>
+                  ) : (
+                    dropdownApplications.map((app) => (
+                      <button
+                        key={app._id}
+                        type="button"
+                        onClick={() => {
+                          handleSelectApp(app);
+                          setSearchTerm(app.customerId?.fullName || "");
+                          setIsSearchDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-gray-900 truncate">{app.customerId?.fullName || "N/A"}</p>
+                            <p className="text-xs text-gray-500 truncate">{app.customerId?.email || "N/A"}</p>
+                          </div>
+                          <span className={`inline-block px-2 py-1 rounded text-xs font-bold whitespace-nowrap ${statusColors[app.status]}`}>
+                            {app.status}
+                          </span>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
@@ -192,50 +277,9 @@ export default function ManageSubsidyApplications() {
         </div>
 
         {/* MAIN CONTENT */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* APPLICATIONS LIST */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow h-96 overflow-hidden flex flex-col">
-              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
-                <h2 className="text-lg font-semibold text-white">Applications</h2>
-              </div>
-
-              <div className="divide-y overflow-y-auto flex-1">
-                {filteredApplications.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500 flex items-center justify-center h-full">
-                    <p>No applications found</p>
-                  </div>
-                ) : (
-                  filteredApplications.map((app) => (
-                    <button
-                      key={app._id}
-                      onClick={() => handleSelectApp(app)}
-                      className={`w-full text-left p-4 hover:bg-gray-50 transition border-l-4 ${
-                        selectedApp?._id === app._id 
-                          ? "bg-blue-50 border-l-blue-600 border-b-2 border-b-blue-600" 
-                          : "border-l-gray-300"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{app.customerId?.fullName || "N/A"}</p>
-                          <p className="text-xs text-gray-500 mt-1">{app.customerId?.email || "N/A"}</p>
-                        </div>
-                      </div>
-                      <div className="mt-2">
-                        <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${statusColors[app.status]}`}>
-                          {app.status}
-                        </span>
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
+        <div>
           {/* APPLICATION DETAILS & UPDATE FORM */}
-          <div className="lg:col-span-2">
+          <div>
             {selectedApp ? (
               <div className="bg-white rounded-lg shadow p-6 space-y-6 max-h-screen overflow-y-auto">
                 {message && (
@@ -253,7 +297,7 @@ export default function ManageSubsidyApplications() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     👤 Customer Details
                   </h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-gray-500">Name</p>
                       <p className="font-semibold text-gray-800">{selectedApp.customerId?.fullName || "N/A"}</p>
@@ -278,7 +322,7 @@ export default function ManageSubsidyApplications() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     📊 Application Status
                   </h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className={`p-3 rounded-lg ${statusColors[selectedApp.status]}`}>
                       <p className="text-xs font-semibold opacity-75">Current Status</p>
                       <p className="text-lg font-bold">{selectedApp.status}</p>
@@ -295,7 +339,7 @@ export default function ManageSubsidyApplications() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     💰 Subsidy Amount
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4\">
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <p className="text-gray-600 text-sm">Applied Amount</p>
                       <p className="text-2xl font-bold text-blue-600 mt-1">
@@ -390,7 +434,7 @@ export default function ManageSubsidyApplications() {
                     <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       🏦 Bank Details
                     </h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded\">
                       <div>
                         <p className="text-gray-500">Account Holder</p>
                         <p className="font-semibold text-gray-800">{selectedApp.bankDetails.accountHolder}</p>
@@ -412,34 +456,41 @@ export default function ManageSubsidyApplications() {
                 )}
 
                 {/* DOCUMENTS */}
-                {selectedApp.documents && selectedApp.documents.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                      📄 Submitted Documents ({selectedApp.documents.length})
-                    </h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    📄 Submitted Documents ({selectedDocuments.length})
+                  </h3>
+                  {selectedDocuments.length === 0 ? (
+                    <div className="p-4 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500">
+                      No documents available for this application.
+                    </div>
+                  ) : (
                     <div className="grid grid-cols-1 gap-2">
-                      {selectedApp.documents.map((doc, idx) => (
-                        <a
-                          key={idx}
-                          href={`http://localhost:5000/${doc.path}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                      {selectedDocuments.map((doc, idx) => (
+                        <button
+                          key={`${doc.path}-${idx}`}
+                          type="button"
+                          onClick={() => handleDownloadDocument(doc)}
                           className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition"
                         >
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-800 truncate">{doc.filename}</p>
-                            <p className="text-xs text-gray-500">{new Date(doc.uploadedAt).toLocaleDateString("en-IN")}</p>
+                            <p className="text-xs text-gray-500">
+                              {doc.uploadedAt
+                                ? new Date(doc.uploadedAt).toLocaleDateString("en-IN")
+                                : "Upload date not available"}
+                            </p>
                           </div>
                           <span className="ml-2 text-blue-600 font-semibold text-sm">↓</span>
-                        </a>
+                        </button>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow p-12 text-center h-96 flex items-center justify-center">
-                <p className="text-gray-500 text-lg">👈 Select an application to view and manage details</p>
+                <p className="text-gray-500 text-lg">Search customer and select from dropdown to view details</p>
               </div>
             )}
           </div>

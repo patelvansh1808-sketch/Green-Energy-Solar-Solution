@@ -9,6 +9,7 @@ const {
   getAllBookings,
   getAdminStats,
   updateBookingStatus,
+  requestRemainingPayment,
 } = require("../controllers/adminController");
 
 const {
@@ -19,6 +20,12 @@ router.get("/stats", auth, role("admin"), getAdminStats);
 router.get("/users", auth, role("admin"), getAllUsers);
 router.get("/bookings", auth, role("admin"), getAllBookings);
 router.patch("/bookings/:bookingId", auth, role("admin"), updateBookingStatus);
+router.post(
+  "/bookings/:bookingId/request-remaining-payment",
+  auth,
+  role("admin"),
+  requestRemainingPayment
+);
 
 router.post(
   "/create-customer",

@@ -37,6 +37,7 @@ router.post("/", authMiddleware, upload.array("documents", 10), subsidyApplicati
 
 // Admin routes
 router.get("/", authMiddleware, roleMiddleware("admin"), subsidyApplicationController.getAllApplications);
+router.get("/download/*", authMiddleware, roleMiddleware("admin"), subsidyApplicationController.downloadDocument);
 router.get("/:id", authMiddleware, roleMiddleware("admin"), subsidyApplicationController.getApplicationById);
 router.patch("/:id", authMiddleware, roleMiddleware("admin"), subsidyApplicationController.updateApplication);
 

@@ -4,6 +4,21 @@ import { LocationService } from "../../services/locationService";
 import { useAuth } from "../../Context/AuthContext";
 import { useI18n } from "../../Context/I18nContext";
 
+const loadRazorpaySdk = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+
 export default function Booking() {
   const { user } = useAuth();
   const { t } = useI18n();
@@ -143,8 +158,109 @@ export default function Booking() {
 
       const response = await bookingService.createBooking(bookingPayload);
 
-      setSuccess(`✅ Booking ${response.booking?.bookingId || '#' + response.booking?._id?.slice(-8)} submitted successfully! We will contact you within 24 hours.`);
-      setActiveStep(3);
+      const bookingId = response?.booking?._id;
+      if (!bookingId) {
+        throw new Error("Booking created but payment could not be initialized");
+      }
+
+      const sdkLoaded = await loadRazorpaySdk();
+      if (!sdkLoaded) {
+        throw new Error("Razorpay SDK failed to load. Please try again.");
+      }
+
+      const orderData = await bookingService.createBookingPaymentOrder(bookingId);
+
+      const amountValue = Number(orderData?.amount || 0);
+      const fullAmountValue = Number(orderData?.fullAmount || amountValue);
+      const isHighAmount = fullAmountValue >= 100000;
+      const isAdvanceStage = orderData?.paymentStage === "advance";
+
+      const checkoutOptions = {
+        key: orderData.keyId,
+        amount: orderData.amountInPaise,
+        currency: orderData.currency || "INR",
+        name: "SuryaUrja Solar Solutions",
+        description: `${isAdvanceStage ? "Booking Advance Payment" : "Booking Payment"} ${orderData.bookingCode || ""}`,
+        order_id: orderData.orderId,
+        prefill: {
+          name: formData.contactPerson || user?.name || "",
+          email: user?.email || "",
+          contact: formData.contactPhone || "",
+        },
+        notes: {
+          bookingId,
+          bookingCode: orderData.bookingCode || "",
+        },
+        theme: {
+          color: "#2563eb",
+        },
+        config: {
+          display: {
+            blocks: isHighAmount
+              ? {
+                  preferred: {
+                    name: "Preferred Methods for Large Amount",
+                    instruments: [
+                      { method: "netbanking" },
+                      { method: "card" },
+                      { method: "emi" },
+                    ],
+                  },
+                }
+              : undefined,
+            sequence: isHighAmount ? ["block.preferred"] : undefined,
+            preferences: {
+              show_default_blocks: true,
+            },
+          },
+        },
+        handler: async (paymentResponse) => {
+          try {
+            await bookingService.verifyBookingPayment(bookingId, paymentResponse);
+            setSuccess(
+              isAdvanceStage
+                ? `Booking ${response.booking?.bookingId || ""} created and advance payment completed successfully. Remaining amount can be collected before installation.`
+                : `Booking ${response.booking?.bookingId || ""} created and payment completed successfully.`
+            );
+            setActiveStep(3);
+          } catch (verifyError) {
+            setError(
+              verifyError?.response?.data?.message ||
+                "Payment received, but verification failed. Please contact support with transaction details."
+            );
+            setActiveStep(2);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setError(
+              "Payment was cancelled. Your booking is created in pending state; you can retry payment from booking status page."
+            );
+            setActiveStep(2);
+          },
+        },
+      };
+
+      if (isHighAmount) {
+        checkoutOptions.method = {
+          upi: false,
+        };
+      }
+
+      const razorpay = new window.Razorpay(checkoutOptions);
+      razorpay.on("payment.failed", (failureResponse) => {
+        setError(
+          failureResponse?.error?.description ||
+            "Payment failed. Please try again with Card/NetBanking/EMI."
+        );
+      });
+      razorpay.open();
+
+      if (isHighAmount) {
+        setSuccess(
+          `Booking ${response.booking?.bookingId || ""} created. Since total exceeds ₹1,00,000, checkout is collecting only advance amount ₹${amountValue.toLocaleString("en-IN")} with non-UPI methods prioritized.`
+        );
+      }
       
       // Reset form after 3 seconds
       setTimeout(() => {
@@ -185,17 +301,17 @@ export default function Booking() {
     Residential: {
       desc: t("booking.residentialDesc", "For homes and apartments (1-10 kW)"),
       pricePerKW: 50000,
-      icon: "🏠",
+      icon: "R",
     },
     Commercial: {
       desc: t("booking.commercialDesc", "For small businesses and offices (10-50 kW)"),
       pricePerKW: 40000,
-      icon: "🏢",
+      icon: "C",
     },
     Industrial: {
       desc: t("booking.industrialDesc", "For factories and large facilities (50+ kW)"),
       pricePerKW: 35000,
-      icon: "🏭",
+      icon: "I",
     },
   };
 
@@ -205,7 +321,7 @@ export default function Booking() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
-            ☀️ {t("booking.title", "Solar Installation Booking")}
+            {t("booking.title", "Solar Installation Booking")}
           </h1>
           <p className="text-gray-600">{t("booking.subtitle", "Professional CRM + Operations Management")}</p>
         </div>
@@ -213,14 +329,14 @@ export default function Booking() {
         {/* Alerts */}
         {error && (
           <div className="mb-6 p-4 bg-red-900 border-l-4 border-red-500 text-red-100 rounded-lg shadow-lg">
-            <p className="font-semibold">⚠️ Error</p>
+            <p className="font-semibold">Error</p>
             <p>{error}</p>
           </div>
         )}
 
         {success && (
           <div className="mb-6 p-4 bg-gray-800 border-l-4 border-blue-500 text-gray-100 rounded-lg shadow-lg">
-            <p className="font-semibold">✅ Success</p>
+            <p className="font-semibold">Success</p>
             <p>{success}</p>
           </div>
         )}
@@ -228,9 +344,9 @@ export default function Booking() {
         {/* Step Indicator */}
         <div className="mb-8 flex justify-between items-center max-w-3xl mx-auto">
           {[
-            { step: 1, label: "Project Details", icon: "📋" },
-            { step: 2, label: "Quotation Review", icon: "📊" },
-            { step: 3, label: "Confirmation", icon: "✅" },
+            { step: 1, label: "Project Details", icon: "1" },
+            { step: 2, label: "Quotation Review", icon: "2" },
+            { step: 3, label: "Confirmation", icon: "3" },
           ].map((item) => (
             <div key={item.step} className="flex flex-col items-center flex-1">
               <div
@@ -270,9 +386,9 @@ export default function Booking() {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition"
                   >
-                    <option value="Residential">🏠 Residential</option>
-                    <option value="Commercial">🏢 Commercial</option>
-                    <option value="Industrial">🏭 Industrial</option>
+                    <option value="Residential">Residential</option>
+                    <option value="Commercial">Commercial</option>
+                    <option value="Industrial">Industrial</option>
                   </select>
                   <p className="text-xs text-gray-500 mt-2">{systemInfo[formData.systemType].desc}</p>
                 </div>
@@ -481,7 +597,7 @@ export default function Booking() {
                 disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
-                {loading ? "⏳ " + t("booking.loading") : "📋 " + t("booking.generateQuotation")}
+                {loading ? t("booking.loading") : t("booking.generateQuotation")}
               </button>
             </form>
           </div>
@@ -518,7 +634,7 @@ export default function Booking() {
 
               {/* Cost Breakdown */}
               <div className="mb-8">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">💰 {t("booking.costBreakdown")}</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-4">{t("booking.costBreakdown")}</h3>
 
                 <div className="space-y-3 bg-gray-50 p-6 rounded-lg">
                   <div className="flex justify-between items-center pb-3 border-b">
@@ -573,7 +689,7 @@ export default function Booking() {
 
               {/* Installation Timeline */}
               <div className="bg-purple-50 p-6 rounded-lg border-l-4 border-purple-400 mb-8">
-                <h4 className="font-bold text-gray-800 mb-3">📅 Installation Timeline</h4>
+                <h4 className="font-bold text-gray-800 mb-3">Installation Timeline</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="text-gray-600">Application</p>
@@ -592,7 +708,7 @@ export default function Booking() {
                     <p className="font-bold text-gray-800">3-5 days</p>
                   </div>
                 </div>
-                <p className="text-xs text-gray-600 mt-3">📌 Total: 15-25 days from booking confirmation</p>
+                <p className="text-xs text-gray-600 mt-3">Total: 15-25 days from booking confirmation</p>
               </div>
 
               {/* Action Buttons */}
@@ -612,7 +728,7 @@ export default function Booking() {
                   disabled={loading}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >
-                  {loading ? "⏳ Processing..." : "✅ Confirm & Book Now"}
+                  {loading ? "Processing..." : "Confirm & Book Now"}
                 </button>
               </div>
             </div>
@@ -624,7 +740,7 @@ export default function Booking() {
           <div className="bg-white rounded-lg shadow-2xl p-12 text-center">
             <div className="mb-6">
               <div className="inline-block bg-green-100 p-4 rounded-full mb-6">
-                <span className="text-6xl">✅</span>
+                <span className="text-3xl font-bold text-green-700">Done</span>
               </div>
               <h2 className="text-3xl font-bold text-gray-800 mb-2">Booking Confirmed!</h2>
               <p className="text-gray-600 mb-4">Your solar installation booking has been successfully submitted.</p>
@@ -633,10 +749,10 @@ export default function Booking() {
             <div className="bg-blue-50 p-6 rounded-lg mb-8 border-2 border-blue-200">
               <p className="text-gray-600 text-sm mb-2">Next Steps:</p>
               <ol className="text-left space-y-2 text-gray-700">
-                <li>✓ We will contact you within 24 hours to confirm details</li>
-                <li>✓ Site survey will be scheduled at your convenience</li>
-                <li>✓ Final quotation and installation timeline will be provided</li>
-                <li>✓ Installation will commence upon your approval</li>
+                <li>We will contact you within 24 hours to confirm details</li>
+                <li>Site survey will be scheduled at your convenience</li>
+                <li>Final quotation and installation timeline will be provided</li>
+                <li>Installation will commence upon your approval</li>
               </ol>
             </div>
 
@@ -644,7 +760,7 @@ export default function Booking() {
               href="/booking-status"
               className="inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition hover:bg-blue-700"
             >
-              📊 Track Your Booking
+              Track Your Booking
             </a>
           </div>
         )}

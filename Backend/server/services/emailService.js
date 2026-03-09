@@ -1,13 +1,21 @@
 const nodemailer = require("nodemailer");
 
+const getEmailCredentials = () => {
+  const user = String(process.env.EMAIL_USER || "").trim();
+  const rawPassword = String(process.env.EMAIL_PASSWORD || "");
+  const pass = rawPassword.replace(/\s+/g, "").trim();
+  return { user, pass };
+};
+
 // Create email transporter
+const emailCredentials = getEmailCredentials();
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587, // Use port 587 instead of 465
   secure: false, // Use STARTTLS
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
+    user: emailCredentials.user,
+    pass: emailCredentials.pass,
   },
   tls: {
     rejectUnauthorized: false, // Allow self-signed certificates in development
@@ -20,6 +28,11 @@ const transporter = nodemailer.createTransport({
 // Send booking confirmation email
 exports.sendBookingConfirmationEmail = async (userEmail, userName, bookingDetails) => {
   try {
+    if (!emailCredentials.user || !emailCredentials.pass) {
+      console.warn("⚠️ Booking confirmation email skipped: EMAIL_USER or EMAIL_PASSWORD not configured");
+      return false;
+    }
+
     const mailOptions = {
       from: process.env.EMAIL_USER || "noreply@suryaurja.com",
       to: userEmail,
@@ -114,7 +127,16 @@ exports.sendBookingConfirmationEmail = async (userEmail, userName, bookingDetail
     console.log("✅ Booking confirmation email sent:", info.messageId);
     return true;
   } catch (error) {
-    console.error("❌ Failed to send booking confirmation email:", error);
+    console.error(
+      "❌ Failed to send booking confirmation email:",
+      error?.code || "EMAIL_ERROR",
+      "-",
+      error?.responseCode || "",
+      error?.message || "Unknown error"
+    );
+    if (error?.code === "EAUTH") {
+      console.error("👉 Check Gmail App Password in .env (16 chars, no spaces) and ensure 2-Step Verification is enabled.");
+    }
     return false;
   }
 };
@@ -413,6 +435,8 @@ exports.sendTicketNotificationEmail = async (ticketData) => {
       billing: "#8b5cf6",
       installation: "#3b82f6",
       maintenance: "#10b981",
+      solar_upgrade: "#0ea5e9",
+      solar_relocation: "#14b8a6",
       warranty: "#06b6d4",
       general: "#6b7280",
       feedback: "#ec4899",

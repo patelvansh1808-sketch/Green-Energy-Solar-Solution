@@ -38,6 +38,8 @@ const ticketSchema = new mongoose.Schema(
         "billing",
         "installation",
         "maintenance",
+        "solar_upgrade",
+        "solar_relocation",
         "warranty",
         "general",
         "complaint",

@@ -2,6 +2,21 @@ import React, { useState, useEffect } from "react";
 import { useI18n } from "../../Context/I18nContext";
 import bookingService from "../../services/bookingService";
 
+const loadRazorpaySdk = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+
 const BookingStatus = () => {
   const { t } = useI18n();
   const [bookings, setBookings] = useState([]);
@@ -9,6 +24,7 @@ const BookingStatus = () => {
   const [error, setError] = useState("");
   const [expandedDetails, setExpandedDetails] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [payingBookingId, setPayingBookingId] = useState("");
 
   useEffect(() => {
     fetchBookings();
@@ -43,15 +59,15 @@ const BookingStatus = () => {
 
   const getStatusIcon = (status) => {
     const icons = {
-      Pending: "📋",
-      Approved: "✅",
-      Surveyed: "🔍",
-      Scheduled: "📅",
-      "In Progress": "⚙️",
-      Completed: "🎉",
-      Cancelled: "❌",
+      Pending: "P",
+      Approved: "A",
+      Surveyed: "S",
+      Scheduled: "SC",
+      "In Progress": "IP",
+      Completed: "C",
+      Cancelled: "X",
     };
-    return icons[status] || "📝";
+    return icons[status] || "-";
   };
 
   const getProgressPercentage = (status) => {
@@ -83,6 +99,156 @@ const BookingStatus = () => {
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete booking");
       setDeleteConfirm(null);
+    }
+  };
+
+  const isTruthyFlag = (value) => {
+    return value === true || value === "true" || value === 1 || value === "1";
+  };
+
+  const canShowInitialPayment = (booking) => {
+    const advancePaid = isTruthyFlag(booking?.payment?.advancePaid);
+    const paymentCaptured = isTruthyFlag(booking?.payment?.paymentCaptured);
+    const finalPaid = isTruthyFlag(booking?.payment?.finalPaid);
+    return !advancePaid && !paymentCaptured && !finalPaid && booking?.status !== "Cancelled";
+  };
+
+  const canShowFinalPayment = (booking) => {
+    const finalPaymentRequested = isTruthyFlag(booking?.payment?.finalPaymentRequested);
+    const finalPaid = isTruthyFlag(booking?.payment?.finalPaid);
+    return finalPaymentRequested && !finalPaid && Number(booking?.payment?.finalAmount || 0) > 0;
+  };
+
+  const getPaymentHint = (booking) => {
+    if (booking?.status === "Cancelled") {
+      return "Payment is unavailable for cancelled bookings.";
+    }
+
+    const advancePaid = isTruthyFlag(booking?.payment?.advancePaid);
+    const paymentCaptured = isTruthyFlag(booking?.payment?.paymentCaptured);
+    const finalPaymentRequested = isTruthyFlag(booking?.payment?.finalPaymentRequested);
+    const finalPaid = isTruthyFlag(booking?.payment?.finalPaid);
+
+    if (finalPaid) {
+      return "All payments are completed for this booking.";
+    }
+
+    if (advancePaid || paymentCaptured) {
+      if (finalPaymentRequested) {
+        return "Remaining payment request is active. Use Pay Remaining Amount.";
+      }
+      return "Advance payment is completed. Remaining payment button appears after admin starts installation and sends request.";
+    }
+
+    return "Initial booking payment is pending. Use Pay Booking Amount.";
+  };
+
+  const handlePayRemaining = async (booking) => {
+    try {
+      setPayingBookingId(booking._id);
+      setError("");
+
+      const sdkLoaded = await loadRazorpaySdk();
+      if (!sdkLoaded) {
+        throw new Error("Razorpay SDK failed to load");
+      }
+
+      const orderData = await bookingService.createFinalPaymentOrder(booking._id);
+
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amountInPaise,
+        currency: orderData.currency || "INR",
+        name: "SuryaUrja Solar Solutions",
+        description: `Remaining Payment ${orderData.bookingCode || ""}${orderData.isSplitPayment ? ` (${orderData.totalTransactionsNeeded} payments needed)` : ""}`,
+        order_id: orderData.orderId,
+        prefill: {
+          name: booking.contactPerson || booking.customer?.fullName || "",
+          contact: booking.contactPhone || booking.customer?.phone || "",
+        },
+        theme: { color: "#2563eb" },
+        method: {
+          upi: orderData.enableUpi !== false,
+        },
+        handler: async (paymentResponse) => {
+          try {
+            const verifyResponse = await bookingService.verifyFinalPayment(booking._id, paymentResponse);
+            
+            // Show success message with remaining amount info
+            const paymentStatus = verifyResponse?.paymentStatus;
+            if (paymentStatus?.remainingAmount > 0) {
+              setError(`Payment successful! Remaining amount: ₹${paymentStatus.remainingAmount.toLocaleString("en-IN")}. Click "Pay Remaining Amount" again to complete payment.`);
+            }
+            
+            await fetchBookings();
+          } catch (err) {
+            setError(err.response?.data?.message || err.message || "Payment verification failed");
+          }
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", (failure) => {
+        setError(failure?.error?.description || "Remaining payment failed. Please try again.");
+      });
+      razorpay.open();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || "Failed to process remaining payment"
+      );
+    } finally {
+      setPayingBookingId("");
+    }
+  };
+
+  const handlePayBooking = async (booking) => {
+    try {
+      setPayingBookingId(booking._id);
+      setError("");
+
+      const sdkLoaded = await loadRazorpaySdk();
+      if (!sdkLoaded) {
+        throw new Error("Razorpay SDK failed to load");
+      }
+
+      const orderData = await bookingService.createBookingPaymentOrder(booking._id);
+
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amountInPaise,
+        currency: orderData.currency || "INR",
+        name: "SuryaUrja Solar Solutions",
+        description: `Booking Payment ${orderData.bookingCode || ""}`,
+        order_id: orderData.orderId,
+        prefill: {
+          name: booking.contactPerson || booking.customer?.fullName || "",
+          contact: booking.contactPhone || booking.customer?.phone || "",
+        },
+        theme: { color: "#2563eb" },
+        method: {
+          upi: orderData.enableUpi !== false,
+        },
+        handler: async (paymentResponse) => {
+          try {
+            await bookingService.verifyBookingPayment(booking._id, paymentResponse);
+            await fetchBookings();
+          } catch (err) {
+            setError(err.response?.data?.message || err.message || "Payment verification failed");
+          }
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", (failure) => {
+        setError(failure?.error?.description || "Booking payment failed. Please try again.");
+      });
+      razorpay.open();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || "Failed to process booking payment"
+      );
+    } finally {
+      setPayingBookingId("");
     }
   };
 
@@ -122,13 +288,15 @@ const BookingStatus = () => {
         </head>
         <body>
           <div class="header">
-            <h1>☀️ Solar Installation Booking Report</h1>
+            <h1>Solar Installation Booking Report</h1>
+            <h1>Solar Installation Booking Report</h1>
             <p>Booking ID: #${booking._id?.slice(-8).toUpperCase()}</p>
             <p>Generated on: ${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
           </div>
 
           <div class="section">
-            <h2>📋 Booking Information</h2>
+            <h2>Booking Information</h2>
+            <h2>Booking Information</h2>
             <div class="detail-row">
               <span class="detail-label">Full Booking ID:</span>
               <span class="detail-value">${booking._id}</span>
@@ -156,7 +324,8 @@ const BookingStatus = () => {
           </div>
 
           <div class="section">
-            <h2>💰 Financial Details</h2>
+            <h2>Financial Details</h2>
+            <h2>Financial Details</h2>
             <div class="detail-row">
               <span class="detail-label">Estimated Cost:</span>
               <span class="detail-value">₹${booking.estimatedCost?.toLocaleString("en-IN") || "0"}</span>
@@ -178,7 +347,7 @@ const BookingStatus = () => {
           </div>
 
           <div class="section">
-            <h2>📍 Installation Location</h2>
+            <h2>Installation Location</h2>
             ${booking.state ? `<div class="detail-row"><span class="detail-label">State:</span><span class="detail-value">${booking.state}</span></div>` : ''}
             ${booking.district ? `<div class="detail-row"><span class="detail-label">District:</span><span class="detail-value">${booking.district}</span></div>` : ''}
             ${booking.address ? `<div class="detail-row"><span class="detail-label">Address:</span><span class="detail-value">${booking.address}</span></div>` : ''}
@@ -187,38 +356,40 @@ const BookingStatus = () => {
 
           ${booking.contactPerson || booking.contactPhone ? `
           <div class="section">
-            <h2>📞 Contact Information</h2>
+            <h2>Contact Information</h2>
+            <h2>Contact Information</h2>
             ${booking.contactPerson ? `<div class="detail-row"><span class="detail-label">Contact Person:</span><span class="detail-value">${booking.contactPerson}</span></div>` : ''}
             ${booking.contactPhone ? `<div class="detail-row"><span class="detail-label">Phone:</span><span class="detail-value">${booking.contactPhone}</span></div>` : ''}
           </div>
           ` : ''}
 
           <div class="section">
-            <h2>📅 Installation Timeline</h2>
+            <h2>Installation Timeline</h2>
+            <h2>Installation Timeline</h2>
             <div class="timeline">
               <div class="timeline-item">
-                <div class="timeline-icon completed">✓</div>
+                <div class="timeline-icon completed">1</div>
                 <div>
                   <strong>Application Submitted</strong><br>
                   <small>${new Date(booking.createdAt).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</small>
                 </div>
               </div>
               <div class="timeline-item">
-                <div class="timeline-icon ${["Approved", "Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">${["Approved", "Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? '✓' : '2'}</div>
+                <div class="timeline-icon ${["Approved", "Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">2</div>
                 <div>
                   <strong>Under Review</strong><br>
                   <small>${booking.reviewedDate ? new Date(booking.reviewedDate).toLocaleDateString("en-IN") : 'Pending...'}</small>
                 </div>
               </div>
               <div class="timeline-item">
-                <div class="timeline-icon ${["Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">${["Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? '✓' : '3'}</div>
+                <div class="timeline-icon ${["Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">3</div>
                 <div>
                   <strong>Site Survey</strong><br>
                   <small>${booking.surveyDate ? new Date(booking.surveyDate).toLocaleDateString("en-IN") : 'Awaiting...'}</small>
                 </div>
               </div>
               <div class="timeline-item">
-                <div class="timeline-icon ${["Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">${["Scheduled", "In Progress", "Completed"].includes(booking.status) ? '✓' : '4'}</div>
+                <div class="timeline-icon ${["Scheduled", "In Progress", "Completed"].includes(booking.status) ? 'completed' : 'pending'}">4</div>
                 <div>
                   <strong>Installation</strong><br>
                   <small>${booking.expectedInstallationDate ? new Date(booking.expectedInstallationDate).toLocaleDateString("en-IN") : 'TBD'}</small>
@@ -229,7 +400,8 @@ const BookingStatus = () => {
 
           ${booking.remarks ? `
           <div class="section">
-            <h2>📝 Special Notes</h2>
+            <h2>Special Notes</h2>
+            <h2>Special Notes</h2>
             <p>${booking.remarks}</p>
           </div>
           ` : ''}
@@ -311,7 +483,6 @@ const BookingStatus = () => {
         {/* No Bookings State */}
         {bookings.length === 0 && !error && (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-16 text-center">
-            <p className="text-5xl mb-4">☀️</p>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">{t("bookingStatus.noBookingsYet")}</h2>
             <p className="text-gray-600 mb-6">{t("bookingStatus.startBooking")}</p>
             <a
@@ -398,13 +569,13 @@ const BookingStatus = () => {
                 {/* Enhanced Timeline */}
                 <div className="p-6 border-b border-gray-200">
                   <h3 className="font-bold text-gray-800 mb-6 text-lg flex items-center gap-2">
-                    <span>📅</span> Installation Timeline
+                    Installation Timeline
                   </h3>
                   <div className="space-y-4">
                     {/* Stage 1: Application */}
                     <div className="flex gap-4">
                       <div className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">
-                        ✓
+                        1
                       </div>
                       <div className="flex-1 pb-4 border-b border-gray-200">
                         <p className="font-semibold text-gray-800">Application Submitted</p>
@@ -423,7 +594,7 @@ const BookingStatus = () => {
                             : "bg-gray-200 text-gray-500"
                         }`}
                       >
-                        {["Approved", "Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? "✓" : "2"}
+                        2
                       </div>
                       <div className="flex-1 pb-4 border-b border-gray-200">
                         <p className="font-semibold text-gray-800">Under Review</p>
@@ -444,7 +615,7 @@ const BookingStatus = () => {
                             : "bg-gray-200 text-gray-500"
                         }`}
                       >
-                        {["Surveyed", "Scheduled", "In Progress", "Completed"].includes(booking.status) ? "✓" : "3"}
+                        3
                       </div>
                       <div className="flex-1 pb-4 border-b border-gray-200">
                         <p className="font-semibold text-gray-800">Site Survey & Quotation</p>
@@ -465,7 +636,7 @@ const BookingStatus = () => {
                             : "bg-gray-200 text-gray-500"
                         }`}
                       >
-                        {["Scheduled", "In Progress", "Completed"].includes(booking.status) ? "✓" : "4"}
+                        4
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800">Installation & Commission</p>
@@ -483,7 +654,7 @@ const BookingStatus = () => {
                 {(booking.state || booking.district || booking.remarks) && (
                   <div className="p-6 border-b border-gray-200">
                     <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <span>📍</span> Location & Details
+                      Location & Details
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {booking.state && (
@@ -512,7 +683,7 @@ const BookingStatus = () => {
                 {expandedDetails[booking._id] && (
                   <div className="p-6 bg-gray-50 border-t border-gray-200">
                     <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <span>🔍</span> Complete Booking Information
+                      Complete Booking Information
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-white rounded-lg p-4 space-y-3 border border-gray-200">
@@ -564,34 +735,77 @@ const BookingStatus = () => {
                 )}
 
                 {/* Action Buttons */}
-                <div className="p-6 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={() => toggleDetails(booking._id)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
-                  >
-                    <span>{expandedDetails[booking._id] ? "Hide Details" : "View Details"}</span>
-                    <span className="text-lg">{expandedDetails[booking._id] ? "▲" : "▼"}</span>
-                  </button>
-                  <a
-                    href="/contact"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
-                  >
-                    <span>📞</span> Contact Support
-                  </a>
-                  <button
-                    onClick={() => downloadBookingReport(booking)}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
-                  >
-                    <span>📄</span> Download Report
-                  </button>
-                  {["Pending", "Cancelled"].includes(booking.status) && (
+                <div className="p-4 sm:p-6 bg-gray-50 border-t border-gray-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <button
-                      onClick={() => setDeleteConfirm(booking._id)}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
+                      onClick={() => toggleDetails(booking._id)}
+                      className="h-12 bg-white border border-gray-300 hover:border-blue-500 hover:bg-blue-50 text-gray-800 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
                     >
-                      <span>🗑️</span> Delete
+                      <span>{expandedDetails[booking._id] ? "Hide Details" : "View Details"}</span>
+                      <span className="text-xs">{expandedDetails[booking._id] ? "▲" : "▼"}</span>
                     </button>
-                  )}
+
+                    <a
+                      href="/contact"
+                      className="h-12 bg-white border border-gray-300 hover:border-emerald-500 hover:bg-emerald-50 text-gray-800 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
+                    >
+                      Contact Support
+                    </a>
+
+                    <button
+                      onClick={() => downloadBookingReport(booking)}
+                      className="h-12 bg-white border border-gray-300 hover:border-violet-500 hover:bg-violet-50 text-gray-800 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
+                    >
+                      Download Report
+                    </button>
+
+                    {canShowInitialPayment(booking) && (
+                      <button
+                        onClick={() => handlePayBooking(booking)}
+                        disabled={payingBookingId === booking._id}
+                        className="sm:col-span-2 lg:col-span-3 h-12 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 rounded-lg transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
+                      >
+                        {payingBookingId === booking._id ? "Processing..." : "Pay Booking Amount"}
+                      </button>
+                    )}
+
+                    {canShowFinalPayment(booking) && (
+                      <div className="sm:col-span-2 lg:col-span-3 bg-white border border-indigo-200 rounded-lg p-3 space-y-3">
+                        <div className="bg-indigo-50 border border-indigo-100 rounded-md p-3">
+                          <p className="text-indigo-900 font-semibold text-sm">
+                            Remaining Amount: ₹{Number(booking?.payment?.finalAmount || 0).toLocaleString("en-IN")}
+                          </p>
+                          <p className="text-indigo-700 text-xs mt-1">
+                            {booking?.payment?.isSplitPayment
+                              ? `(Using domestic card: Transactions needed: ${Math.ceil(Number(booking?.payment?.finalAmount || 0) / 15000)})`
+                              : ""}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handlePayRemaining(booking)}
+                          disabled={payingBookingId === booking._id}
+                          className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 rounded-lg transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
+                        >
+                          {payingBookingId === booking._id ? "Processing..." : "Pay Remaining Amount"}
+                        </button>
+                      </div>
+                    )}
+
+                    {!canShowInitialPayment(booking) && !canShowFinalPayment(booking) && booking?.status !== "Cancelled" && (
+                      <div className="sm:col-span-2 lg:col-span-3 bg-gray-100 border border-gray-200 rounded-lg p-3">
+                        <p className="text-gray-700 text-sm font-medium">{getPaymentHint(booking)}</p>
+                      </div>
+                    )}
+
+                    {["Pending", "Cancelled"].includes(booking.status) && (
+                      <button
+                        onClick={() => setDeleteConfirm(booking._id)}
+                        className="h-12 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 font-medium px-4 rounded-lg transition flex items-center justify-center gap-2"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -604,7 +818,7 @@ const BookingStatus = () => {
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
               <div className="text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                  <span className="text-2xl">⚠️</span>
+                  <span className="text-xl font-bold text-red-600">!</span>
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Booking</h3>
                 <p className="text-gray-600 mb-6">
@@ -636,7 +850,7 @@ const BookingStatus = () => {
               onClick={fetchBookings}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition flex items-center justify-center gap-2 mx-auto"
             >
-              <span>🔄</span> Refresh Status
+              Refresh Status
             </button>
           </div>
         )}

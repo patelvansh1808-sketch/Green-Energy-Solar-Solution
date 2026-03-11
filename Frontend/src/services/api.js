@@ -1,7 +1,12 @@
 import axios from "axios";
 
+const rawBaseUrl = (process.env.REACT_APP_API_BASE_URL || "http://localhost:5000")
+  .trim()
+  .replace(/\/+$/, "");
+const baseURL = rawBaseUrl.endsWith("/api") ? rawBaseUrl : `${rawBaseUrl}/api`;
+
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL,
 });
 
 api.interceptors.request.use(
@@ -63,7 +68,7 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        const res = await axios.post("http://localhost:5000/api/auth/refresh-token", {
+        const res = await axios.post(`${baseURL}/auth/refresh-token`, {
           refreshToken,
         });
 

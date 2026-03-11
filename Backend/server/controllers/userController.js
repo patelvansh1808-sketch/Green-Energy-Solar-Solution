@@ -18,8 +18,7 @@ exports.getProfile = async (req, res) => {
 exports.getTeamMembers = async (req, res) => {
   try {
     const teamMembers = await User.find({ 
-      role: { $in: ['engineer', 'technician', 'sales', 'support'] },
-      isActive: true,
+      role: { $in: ['engineer', 'sales', 'support'] } 
     }).select('-password');
     
     // Ensure firstName and lastName are populated from name if needed

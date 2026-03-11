@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import API from "../../services/api";
 
 export default function Alerts() {
   const { user } = useAuth();
@@ -14,21 +15,11 @@ export default function Alerts() {
     try {
       setLoading(true);
       const resolved = filter === "all" ? "all" : filter === "unresolved" ? "false" : "true";
-      const response = await fetch(
-        `http://localhost:5000/api/dashboard/alerts?resolved=${resolved}&limit=50`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to fetch alerts");
-      const data = await response.json();
-      setAlerts(data.alerts);
+      const response = await API.get(`/dashboard/alerts?resolved=${resolved}&limit=50`);
+      setAlerts(response.data.alerts);
       setError(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || "Failed to fetch alerts");
       console.error("Fetch alerts error:", err);
     } finally {
       setLoading(false);
@@ -50,17 +41,7 @@ export default function Alerts() {
 
   const handleResolve = async (alertId) => {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/dashboard/alerts/${alertId}/resolve`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to resolve alert");
+      await API.patch(`/dashboard/alerts/${alertId}/resolve`);
       
       // Remove from list or refresh
       setAlerts(alerts.filter((a) => a._id !== alertId));
@@ -68,7 +49,7 @@ export default function Alerts() {
       // Show success message
       alert("Alert marked as resolved");
     } catch (err) {
-      alert("Error: " + err.message);
+      alert("Error: " + (err.response?.data?.message || err.message));
     }
   };
 

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../Context/I18nContext";
+import API from "../../services/api";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -13,18 +14,11 @@ export default function Dashboard() {
 
   const fetchDashboard = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/dashboard", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch dashboard data");
-      const data = await response.json();
-      setDashboardData(data);
+      const response = await API.get("/dashboard");
+      setDashboardData(response.data);
       setError(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || "Failed to fetch dashboard data");
       console.error("Dashboard fetch error:", err);
     } finally {
       setLoading(false);

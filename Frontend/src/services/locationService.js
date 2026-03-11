@@ -1283,6 +1283,214 @@ export const LocationService = {
   },
 
   // Get DISCOMs (Discoms are state electricity boards) by state and district
+  getPincodeByDistrict: (state, district) => {
+    const districtPincodeMapping = {
+      "Andhra Pradesh": {
+        Anantapur: "515001",
+        Chittoor: "517001",
+        Guntur: "522001",
+        Krishna: "520001",
+        Kurnool: "518001",
+        Nellore: "524001",
+        Prakasam: "523001",
+        Srikakulam: "532001",
+        Visakhapatnam: "530001",
+        Vizianagaram: "535001",
+        "West Godavari": "534001",
+      },
+      Assam: {
+        Dibrugarh: "786001",
+        Golaghat: "785621",
+        Jorhat: "785001",
+        Kamrup: "781001",
+        Nagaon: "782001",
+        Sonitpur: "784001",
+        Tinsukia: "786125",
+      },
+      Bihar: {
+        Bhagalpur: "812001",
+        Darbhanga: "846004",
+        Gaya: "823001",
+        Muzaffarpur: "842001",
+        Patna: "800001",
+        Purnia: "854301",
+      },
+      Gujarat: {
+        Ahmedabad: "380001",
+        Anand: "388001",
+        Bharuch: "392001",
+        Bhavnagar: "364001",
+        Gandhinagar: "382010",
+        Godhra: "389001",
+        Jamnagar: "361001",
+        Junagadh: "362001",
+        Kutch: "370001",
+        Rajkot: "360001",
+        Surat: "395001",
+        Vadodara: "390001",
+      },
+      Haryana: {
+        Ambala: "133001",
+        Faridabad: "121001",
+        Gurgaon: "122001",
+        Hisar: "125001",
+        Karnal: "132001",
+        Panipat: "132103",
+        Rohtak: "124001",
+        Sonipat: "131001",
+      },
+      Karnataka: {
+        Bangalore: "560001",
+        Bengaluru: "560001",
+        Belgaum: "590001",
+        Dharwad: "580001",
+        Gulbarga: "585101",
+        Hubli: "580020",
+        Mangalore: "575001",
+        Mysore: "570001",
+        Udupi: "576101",
+      },
+      Kerala: {
+        Ernakulam: "682011",
+        Kannur: "670001",
+        Kollam: "691001",
+        Kottayam: "686001",
+        Kozhikode: "673001",
+        Palakkad: "678001",
+        Thiruvananthapuram: "695001",
+        Thrissur: "680001",
+      },
+      "Madhya Pradesh": {
+        Bhopal: "462001",
+        Gwalior: "474001",
+        Indore: "452001",
+        Jabalpur: "482001",
+        Rewa: "486001",
+        Sagar: "470001",
+        Ujjain: "456001",
+      },
+      Maharashtra: {
+        Mumbai: "400001",
+        Nagpur: "440001",
+        Nashik: "422001",
+        Pune: "411001",
+        Solapur: "413001",
+        Thane: "400601",
+      },
+      Odisha: {
+        Balasore: "756001",
+        Cuttack: "753001",
+        Ganjam: "760001",
+        Khordha: "751001",
+        Sambalpur: "768001",
+      },
+      Punjab: {
+        Amritsar: "143001",
+        Bathinda: "151001",
+        Jalandhar: "144001",
+        Ludhiana: "141001",
+        Patiala: "147001",
+      },
+      Rajasthan: {
+        Ajmer: "305001",
+        Alwar: "301001",
+        Bikaner: "334001",
+        Jaipur: "302001",
+        Jodhpur: "342001",
+        Kota: "324001",
+        Udaipur: "313001",
+      },
+      "Tamil Nadu": {
+        Chennai: "600001",
+        Coimbatore: "641001",
+        Madurai: "625001",
+        Salem: "636001",
+        Tiruchirappalli: "620001",
+      },
+      Telangana: {
+        Hyderabad: "500001",
+        Karimnagar: "505001",
+        Nizamabad: "503001",
+        Warangal: "506002",
+      },
+      "Uttar Pradesh": {
+        Agra: "282001",
+        Aligarh: "202001",
+        Allahabad: "211001",
+        Ghaziabad: "201001",
+        Gorakhpur: "273001",
+        Kanpur: "208001",
+        Lucknow: "226001",
+        Meerut: "250001",
+        Noida: "201301",
+        Varanasi: "221001",
+      },
+      Uttarakhand: {
+        Dehradun: "248001",
+        Haldwani: "263139",
+        Haridwar: "249401",
+        Nainital: "263001",
+      },
+      "West Bengal": {
+        Asansol: "713301",
+        Durgapur: "713201",
+        Howrah: "711101",
+        Kolkata: "700001",
+        Siliguri: "734001",
+      },
+    };
+
+    if (!state || !district) return "";
+    return districtPincodeMapping[state]?.[district] || "";
+  },
+
+  getPincodeByDistrictAsync: async (state, district) => {
+    if (!district) return "";
+
+    // First use local deterministic mapping.
+    const mapped = LocationService.getPincodeByDistrict(state, district);
+    if (mapped) return mapped;
+
+    try {
+      const response = await fetch(
+        `https://api.postalpincode.in/postoffice/${encodeURIComponent(district)}`
+      );
+      const data = await response.json();
+
+      const firstResult = Array.isArray(data) ? data[0] : null;
+      const postOffices = firstResult?.PostOffice || [];
+      if (!Array.isArray(postOffices) || postOffices.length === 0) return "";
+
+      const normalize = (value) =>
+        String(value || "")
+          .toLowerCase()
+          .replace(/district/g, "")
+          .replace(/[^a-z0-9]/g, "")
+          .trim();
+
+      const normalizedState = String(state || "").toLowerCase().trim();
+
+      const stateMatchedOffices = postOffices.filter(
+        (office) =>
+          String(office?.State || "").toLowerCase().trim() === normalizedState
+      );
+
+      const normalizedDistrict = normalize(district);
+
+      const exactNameMatch = stateMatchedOffices.find(
+        (office) => normalize(office?.Name) === normalizedDistrict
+      );
+      const exactDistrictMatch = stateMatchedOffices.find(
+        (office) => normalize(office?.District) === normalizedDistrict
+      );
+
+      const selectedOffice = exactNameMatch || exactDistrictMatch;
+      return String(selectedOffice?.Pincode || "");
+    } catch (error) {
+      return "";
+    }
+  },
+
   getDISCOMs: (state, district) => {
     const discomMapping = {
       "Andhra Pradesh": {

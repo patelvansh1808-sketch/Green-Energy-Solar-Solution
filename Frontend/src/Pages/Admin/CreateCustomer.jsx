@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../services/api";
 import LocationService from "../../services/locationService";
+import OSMAddressInput from "../../Components/OSMAddressInput";
 
 export default function CreateCustomer() {
   const navigate = useNavigate();
@@ -27,8 +28,18 @@ export default function CreateCustomer() {
 
   /* 🔹 Fetch users (admin only) */
   useEffect(() => {
-    API.get("/admin/users").then((res) => {
-      setUsers(res.data);
+    Promise.all([API.get("/admin/users"), API.get("/customers")]).then(
+      ([usersRes, customersRes]) => {
+        const customerUserIds = new Set(
+          (customersRes.data || []).map((c) => String(c.userId?._id || c.userId || ""))
+        );
+        const availableUsers = (usersRes.data || []).filter(
+          (u) => !customerUserIds.has(String(u._id))
+        );
+        setUsers(availableUsers);
+      }
+    ).catch(() => {
+      setUsers([]);
     });
   }, []);
 
@@ -66,7 +77,45 @@ export default function CreateCustomer() {
   }, [form.state, form.district]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "userId") {
+      const selectedUser = users.find((u) => String(u._id) === String(value));
+      setForm({
+        ...form,
+        userId: value,
+        fullName: selectedUser?.name || form.fullName,
+        phone: selectedUser?.phone || form.phone,
+        address: selectedUser?.address || form.address,
+        city: selectedUser?.city || form.city,
+        state: selectedUser?.state || form.state,
+        district: selectedUser?.district || form.district,
+        discom: selectedUser?.discom || form.discom,
+        pincode: selectedUser?.pincode || form.pincode,
+        systemCapacityKW:
+          selectedUser?.systemCapacityKW != null
+            ? String(selectedUser.systemCapacityKW)
+            : form.systemCapacityKW,
+      });
+
+      if (selectedUser?.state) {
+        setDistricts(LocationService.getDistricts(selectedUser.state));
+        setDiscoms(
+          LocationService.getDISCOMs(selectedUser.state, selectedUser.district || "")
+        );
+      }
+      return;
+    }
+
+    if (name === "district") {
+      setForm({
+        ...form,
+        district: value,
+      });
+      return;
+    }
+
+    setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -110,15 +159,34 @@ export default function CreateCustomer() {
               <option value="">-- Select User --</option>
               {users.map((u) => (
                 <option key={u._id} value={u._id}>
-                  {u.email}
+                  {u.email} {u.name ? `- ${u.name}` : ""}
                 </option>
               ))}
             </select>
+            {users.length === 0 && (
+              <p className="text-xs text-gray-500 mt-2">
+                All users already have customer profiles.
+              </p>
+            )}
           </div>
 
           <Input name="fullName" label="Full Name" onChange={handleChange} required />
           <Input name="phone" label="Phone" onChange={handleChange} required />
-          <Input name="address" label="Address" onChange={handleChange} required />
+          <div>
+            <label className="text-sm text-gray-600">Address</label>
+            <OSMAddressInput
+              value={form.address}
+              onChange={(nextAddress) =>
+                setForm((prev) => ({
+                  ...prev,
+                  address: nextAddress,
+                }))
+              }
+              placeholder="Address"
+              required
+              className="w-full border rounded px-3 py-2"
+            />
+          </div>
 
           {/* State Dropdown */}
           <div>
@@ -179,7 +247,7 @@ export default function CreateCustomer() {
             </select>
           </div>
 
-          <Input name="pincode" label="Pincode" onChange={handleChange} />
+          <Input name="pincode" label="Pincode" onChange={handleChange} maxLength="6" />
           <Input
             name="systemCapacityKW"
             label="System Capacity (kW)"
@@ -201,11 +269,15 @@ export default function CreateCustomer() {
   );
 }
 
-function Input({ label, ...props }) {
+function Input({ label, maxLength, ...props }) {
   return (
     <div>
       <label className="text-sm text-gray-600">{label}</label>
-      <input {...props} className="w-full border rounded px-3 py-2" />
+      <input
+        {...props}
+        maxLength={maxLength}
+        className="w-full border rounded px-3 py-2"
+      />
     </div>
   );
 }

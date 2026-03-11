@@ -198,13 +198,6 @@ export default function AdminDashboard() {
           <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <button
-              onClick={() => navigate("/admin/create-customer")}
-              className="flex items-center justify-center p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition text-green-700 font-medium"
-            >
-              <span className="text-2xl mr-2">➕</span> Create Customer
-            </button>
-
-            <button
               onClick={() => navigate("/admin/customers")}
               className="flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition text-blue-700 font-medium"
             >

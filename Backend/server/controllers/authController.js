@@ -1,8 +1,55 @@
 const User = require("../models/User");
+const Customer = require("../models/Customer");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const { generateToken, generateAccessToken, generateRefreshToken, verifyRefreshToken } = require("../config/jwt");
 const { sendPasswordResetEmail } = require("../services/emailService");
+
+const upsertCustomerProfile = async (user, profile) => {
+  if (!user?._id) return;
+
+  const fullName = (profile.fullName || user.name || "").trim();
+  const phone = (profile.phone || user.phone || "").trim();
+  const address = (profile.address || user.address || "").trim();
+  const state = (profile.state || user.state || "").trim();
+  const district = (profile.district || user.district || "").trim();
+  const discom = (profile.discom || user.discom || "").trim();
+  const city = (profile.city || user.city || user.location || "").trim();
+  const pincode = (profile.pincode || user.pincode || "").trim();
+  const systemCapacityKW = Number(profile.systemCapacityKW ?? user.systemCapacityKW ?? 0);
+
+  // Ensure online-registered users are visible in admin customers even with partial profile data.
+  if (!fullName) {
+    return;
+  }
+
+  const safePhone = phone || "Not Provided";
+  const safeAddress = address || "Not Provided";
+  const safeCapacity = Number.isFinite(systemCapacityKW) ? systemCapacityKW : 0;
+
+  await Customer.findOneAndUpdate(
+    { userId: user._id },
+    {
+      $set: {
+        userId: user._id,
+        fullName,
+        phone: safePhone,
+        address: safeAddress,
+        city,
+        state,
+        district,
+        discom,
+        pincode,
+        systemCapacityKW: safeCapacity,
+        status: "Active",
+      },
+      $setOnInsert: {
+        source: "online",
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+};
 
 /* =========================
    REGISTER USER
@@ -12,7 +59,24 @@ exports.register = async (req, res) => {
     console.log('=== REGISTER REQUEST ===');
     console.log('req.body:', req.body);
     
-    const { name, firstName, lastName, email, password, location, connectionType, phone, role } = req.body;
+    const {
+      name,
+      firstName,
+      lastName,
+      email,
+      password,
+      location,
+      connectionType,
+      phone,
+      role,
+      address,
+      city,
+      state,
+      district,
+      discom,
+      pincode,
+      systemCapacityKW,
+    } = req.body;
 
     // Build full name from firstName/lastName or use name field
     const fullName = name || `${firstName} ${lastName}`.trim();
@@ -26,6 +90,12 @@ exports.register = async (req, res) => {
     if (!fullName || !email || !password) {
       console.log('Validation failed - missing required fields');
       return res.status(400).json({ message: "Name, email and password are required" });
+    }
+
+    if (!phone || !address || !state || !district || !discom || !systemCapacityKW) {
+      return res.status(400).json({
+        message: "Phone, address, state, district, DISCOM, and system capacity are required",
+      });
     }
 
     // Check existing user
@@ -47,10 +117,29 @@ exports.register = async (req, res) => {
       location,
       connectionType: connectionType || 'Residential',
       phone,
+      address,
+      city,
+      state,
+      district,
+      discom,
+      pincode,
+      systemCapacityKW: Number(systemCapacityKW),
       role: role || 'user',
     });
 
     console.log('User created successfully:', user.email);
+
+    await upsertCustomerProfile(user, {
+      fullName,
+      phone,
+      address,
+      city: city || location || "",
+      state,
+      district,
+      discom,
+      pincode: pincode || "",
+      systemCapacityKW,
+    });
 
     // Generate tokens
     const accessToken = generateAccessToken(user._id, user.role, user.email);
@@ -92,6 +181,9 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+
+    // Repair missing customer profile automatically for users registered with full profile data.
+    await upsertCustomerProfile(user, {});
 
     // Generate tokens
     const accessToken = generateAccessToken(user._id, user.role, user.email);

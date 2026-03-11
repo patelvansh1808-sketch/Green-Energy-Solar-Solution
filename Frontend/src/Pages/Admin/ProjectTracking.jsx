@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import projectService from "../../services/projectService";
 import roleService from "../../services/roleService";
 import inventoryService from "../../services/inventoryService";
+import OSMAddressInput from "../../Components/OSMAddressInput";
 
 export default function ProjectTracking() {
   const [projects, setProjects] = useState([]);
@@ -750,11 +751,15 @@ export default function ProjectTracking() {
               <div className="border-t pt-4">
                 <h3 className="font-semibold text-gray-900 mb-3">Location Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    placeholder="Address"
+                  <OSMAddressInput
                     value={createForm.location.address}
-                    onChange={(e) => setCreateForm({ ...createForm, location: { ...createForm.location, address: e.target.value } })}
+                    onChange={(nextAddress) =>
+                      setCreateForm({
+                        ...createForm,
+                        location: { ...createForm.location, address: nextAddress },
+                      })
+                    }
+                    placeholder="Address"
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                   <input

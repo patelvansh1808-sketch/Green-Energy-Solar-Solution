@@ -153,7 +153,19 @@ const BookingStatus = () => {
         throw new Error("Razorpay SDK failed to load");
       }
 
-      const orderData = await bookingService.createFinalPaymentOrder(booking._id);
+      let orderData = await bookingService.createFinalPaymentOrder(booking._id);
+
+      if (orderData?.isSplitPayment) {
+        const wantsInternationalCard = window.confirm(
+          "This payment is split due to domestic transaction cap. If you are using an international card, click OK to create a full-amount order."
+        );
+
+        if (wantsInternationalCard) {
+          orderData = await bookingService.createFinalPaymentOrder(booking._id, {
+            paymentMethod: "international_card",
+          });
+        }
+      }
 
       const options = {
         key: orderData.keyId,
@@ -211,7 +223,19 @@ const BookingStatus = () => {
         throw new Error("Razorpay SDK failed to load");
       }
 
-      const orderData = await bookingService.createBookingPaymentOrder(booking._id);
+      let orderData = await bookingService.createBookingPaymentOrder(booking._id);
+
+      if (orderData?.isCappedCharge) {
+        const wantsInternationalCard = window.confirm(
+          "Domestic cap is active for this payment. If you are using an international card, click OK to pay full amount in one order."
+        );
+
+        if (wantsInternationalCard) {
+          orderData = await bookingService.createBookingPaymentOrder(booking._id, {
+            paymentMethod: "international_card",
+          });
+        }
+      }
 
       const options = {
         key: orderData.keyId,

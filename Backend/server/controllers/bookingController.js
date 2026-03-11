@@ -48,6 +48,7 @@ const getBookingAmountBreakdown = (booking) => {
 exports.createBookingPaymentOrder = async (req, res) => {
   try {
     const { id } = req.params;
+    const paymentMethod = req.body?.paymentMethod;
     const booking = await Booking.findById(id);
 
     if (!booking) {
@@ -70,15 +71,20 @@ exports.createBookingPaymentOrder = async (req, res) => {
 
     const amountBreakdown = getBookingAmountBreakdown(booking);
     const highAmountThreshold = 100000;
-    const transactionCap = Number(process.env.RAZORPAY_BOOKING_TXN_CAP || 20000);
+    const domesticCap = Number(process.env.RAZORPAY_BOOKING_TXN_CAP || 20000);
+    const internationalCardCap = Number(process.env.RAZORPAY_INTERNATIONAL_CARD_CAP || 500000);
+    const isInternationalCard = paymentMethod === "international_card";
+    const transactionCap = isInternationalCard ? internationalCardCap : domesticCap;
     const isHighAmount = amountBreakdown.fullAmount >= highAmountThreshold;
 
-    const requestedAmount = isHighAmount
-      ? amountBreakdown.advanceAmount
-      : amountBreakdown.fullAmount;
+    const requestedAmount = isInternationalCard
+      ? amountBreakdown.fullAmount
+      : (isHighAmount ? amountBreakdown.advanceAmount : amountBreakdown.fullAmount);
     const amount = Math.min(requestedAmount, transactionCap);
     const isCappedCharge = amount < requestedAmount;
-    const paymentStage = isHighAmount || isCappedCharge ? "advance" : "full";
+    const paymentStage = isInternationalCard
+      ? (isCappedCharge ? "advance" : "full")
+      : (isHighAmount || isCappedCharge ? "advance" : "full");
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: "Invalid booking amount for payment" });
@@ -103,6 +109,7 @@ exports.createBookingPaymentOrder = async (req, res) => {
       ...(booking.payment || {}),
       advanceAmount: paymentStage === "advance" ? amount : amountBreakdown.fullAmount,
       finalAmount: paymentStage === "advance" ? Number((amountBreakdown.fullAmount - amount).toFixed(2)) : 0,
+      pendingOrderAmount: amount,
       razorpayOrderId: order.id,
       paymentMethod: "Razorpay",
       pendingOrderStage: paymentStage,
@@ -121,6 +128,9 @@ exports.createBookingPaymentOrder = async (req, res) => {
       requestedAmount,
       isCappedCharge,
       transactionCap,
+      isInternationalCard,
+      domesticCap,
+      internationalCardCap,
       amountInPaise,
       orderId: order.id,
       currency: order.currency,
@@ -244,6 +254,7 @@ exports.verifyBookingPayment = async (req, res) => {
 exports.createBookingFinalPaymentOrder = async (req, res) => {
   try {
     const { id } = req.params;
+    const paymentMethod = req.body?.paymentMethod;
     const booking = await Booking.findById(id);
 
     if (!booking) {
@@ -281,8 +292,10 @@ exports.createBookingFinalPaymentOrder = async (req, res) => {
     // Domestic card/UPI: ₹15,000 (as per Razorpay limits)
     // International card: ₹5,00,000 (as per Razorpay limits)
     // Default safe cap: ₹15,000
-    const transactionCap = Number(process.env.RAZORPAY_BOOKING_TXN_CAP || 15000);
-    const internationalCardCap = 500000;
+    const domesticCap = Number(process.env.RAZORPAY_BOOKING_TXN_CAP || 15000);
+    const internationalCardCap = Number(process.env.RAZORPAY_INTERNATIONAL_CARD_CAP || 500000);
+    const isInternationalCard = paymentMethod === "international_card";
+    const transactionCap = isInternationalCard ? internationalCardCap : domesticCap;
     
     // For now, use safe domestic cap. Customer can pay multiple times for high amounts.
     // If they have international card, Razorpay will allow higher amount in single txn
@@ -313,6 +326,7 @@ exports.createBookingFinalPaymentOrder = async (req, res) => {
     booking.payment = {
       ...(booking.payment || {}),
       finalRazorpayOrderId: order.id,
+      pendingFinalOrderAmount: transactionAmount,
       paymentMethod: "Razorpay",
       pendingOrderStage: "final",
     };
@@ -333,7 +347,9 @@ exports.createBookingFinalPaymentOrder = async (req, res) => {
       isSplitPayment,
       totalTransactionsNeeded,
       transactionCap,
+      domesticCap,
       internationalCardCap,
+      isInternationalCard,
       hint: isSplitPayment 
         ? `This is transaction 1 of ${totalTransactionsNeeded}. Using international card can complete full payment in 1 transaction.`
         : "Pay full remaining amount in this transaction",
@@ -389,17 +405,15 @@ exports.verifyBookingFinalPayment = async (req, res) => {
     // Get the current payment details
     const previousFinalAmount = Number(booking.payment?.finalAmount || 0);
     const previousCollected = Number(booking.payment?.finalCollectedAmount || 0);
-    
-    // Calculate collected and remaining amounts
-    // Need to get the transaction amount from notes or calculate from order
-    const transactionAmount = Math.round(booking.payment?.finalRazorpayOrderId ? 
-      (booking.payment?.finalRazorpayOrderId ? previousFinalAmount : previousFinalAmount) : 0);
+    const transactionAmount = Number(
+      booking.payment?.pendingFinalOrderAmount ||
+      Math.min(previousFinalAmount, Number(process.env.RAZORPAY_BOOKING_TXN_CAP || 15000))
+    );
     
     // Simplified: amountBreakdown already has totalAmount calculated
     const amountBreakdown = getBookingAmountBreakdown(booking);
     const totalFinalAmount = amountBreakdown.finalAmount;
-    const currentCollected = previousCollected + (previousFinalAmount > 0 ? 
-      Math.min(previousFinalAmount, Number(process.env.RAZORPAY_BOOKING_TXN_CAP || 15000)) : 0);
+    const currentCollected = previousCollected + (transactionAmount > 0 ? transactionAmount : 0);
     const newRemainingAmount = Math.max(0, totalFinalAmount - currentCollected);
     
     const isFinalPaymentComplete = newRemainingAmount <= 0;
@@ -414,6 +428,7 @@ exports.verifyBookingFinalPayment = async (req, res) => {
       finalPaid: isFinalPaymentComplete,
       finalPaidDate: isFinalPaymentComplete ? new Date() : booking.payment?.finalPaidDate,
       finalPaymentRequested: !isFinalPaymentComplete, // Keep requesting if amount remaining
+      pendingFinalOrderAmount: 0,
       pendingOrderStage: "",
       paymentMethod: "Razorpay",
     };
@@ -669,6 +684,14 @@ exports.createBooking = async (req, res) => {
     });
   } catch (error) {
     console.error("CREATE BOOKING ERROR:", error);
+
+    if (error?.code === 11000 && error?.keyPattern?.bookingId) {
+      return res.status(409).json({
+        message: "Booking reference generation conflict. Please retry once.",
+        error: "Duplicate bookingId",
+      });
+    }
+
     return res.status(500).json({
       message: "Failed to create booking",
       error: error.message,

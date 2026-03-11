@@ -11,8 +11,8 @@ const bookingService = {
     return res.data;
   },
 
-  createBookingPaymentOrder: async (bookingId) => {
-    const res = await api.post(`/bookings/${bookingId}/payment/create-order`);
+  createBookingPaymentOrder: async (bookingId, options = {}) => {
+    const res = await api.post(`/bookings/${bookingId}/payment/create-order`, options);
     return res.data;
   },
 
@@ -21,8 +21,8 @@ const bookingService = {
     return res.data;
   },
 
-  createFinalPaymentOrder: async (bookingId) => {
-    const res = await api.post(`/bookings/${bookingId}/payment/create-final-order`);
+  createFinalPaymentOrder: async (bookingId, options = {}) => {
+    const res = await api.post(`/bookings/${bookingId}/payment/create-final-order`, options);
     return res.data;
   },
 

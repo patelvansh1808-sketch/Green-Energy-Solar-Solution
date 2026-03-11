@@ -168,7 +168,19 @@ export default function Booking() {
         throw new Error("Razorpay SDK failed to load. Please try again.");
       }
 
-      const orderData = await bookingService.createBookingPaymentOrder(bookingId);
+      let orderData = await bookingService.createBookingPaymentOrder(bookingId);
+
+      if (orderData?.isCappedCharge) {
+        const wantsInternationalCard = window.confirm(
+          "Domestic payment cap is applied. If you are using an international card, click OK to create a full-amount payment order."
+        );
+
+        if (wantsInternationalCard) {
+          orderData = await bookingService.createBookingPaymentOrder(bookingId, {
+            paymentMethod: "international_card",
+          });
+        }
+      }
 
       const amountValue = Number(orderData?.amount || 0);
       const fullAmountValue = Number(orderData?.fullAmount || amountValue);

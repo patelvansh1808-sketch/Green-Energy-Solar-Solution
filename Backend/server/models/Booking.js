@@ -324,21 +324,71 @@ const bookingSchema = new mongoose.Schema(
 
 // Auto-generate booking ID before saving
 bookingSchema.pre("save", async function (next) {
-  if (!this.bookingId) {
-    const year = new Date().getFullYear();
-    const MongoDB = require("mongoose").connection.collection("booking_counters");
-    
-    // Use findOneAndUpdate to atomically increment counter (prevents race conditions)
-    const result = await MongoDB.findOneAndUpdate(
-      { _id: `booking_${year}` },
-      { $inc: { seq: 1 } },
-      { upsert: true, returnDocument: "after" }
-    );
-    
-    const seq = result.value?.seq || 1;
-    this.bookingId = `BK-${year}-${String(seq).padStart(4, "0")}`;
+  try {
+    if (!this.bookingId) {
+      const year = new Date().getFullYear();
+      const counters = mongoose.connection.collection("booking_counters");
+      const BookingModel = mongoose.models.Booking;
+
+      const getNextSeq = async () => {
+        const result = await counters.findOneAndUpdate(
+          { _id: `booking_${year}` },
+          { $inc: { seq: 1 }, $setOnInsert: { createdAt: new Date() } },
+          {
+            upsert: true,
+            returnDocument: "after",
+            returnOriginal: false,
+          }
+        );
+
+        const counterDoc = result?.value || result;
+        const seq = Number(counterDoc?.seq);
+
+        if (!Number.isFinite(seq) || seq <= 0) {
+          throw new Error("Failed to generate unique bookingId sequence");
+        }
+
+        return seq;
+      };
+
+      let seq = await getNextSeq();
+      let candidateBookingId = `BK-${year}-${String(seq).padStart(4, "0")}`;
+
+      // Recovery path for legacy/out-of-sync counters.
+      if (BookingModel) {
+        const duplicateExists = await BookingModel.exists({ bookingId: candidateBookingId });
+
+        if (duplicateExists) {
+          const prefixRegex = new RegExp(`^BK-${year}-\\d+$`);
+          const latestBooking = await BookingModel.findOne({ bookingId: prefixRegex })
+            .sort({ bookingId: -1 })
+            .select("bookingId")
+            .lean();
+
+          const maxSeqInBookings = Number(latestBooking?.bookingId?.split("-")?.[2] || 0);
+
+          await counters.findOneAndUpdate(
+            { _id: `booking_${year}` },
+            { $max: { seq: maxSeqInBookings } },
+            {
+              upsert: true,
+              returnDocument: "after",
+              returnOriginal: false,
+            }
+          );
+
+          seq = await getNextSeq();
+          candidateBookingId = `BK-${year}-${String(seq).padStart(4, "0")}`;
+        }
+      }
+
+      this.bookingId = candidateBookingId;
+    }
+
+    next();
+  } catch (error) {
+    next(error);
   }
-  next();
 });
 
 module.exports = mongoose.model("Booking", bookingSchema);

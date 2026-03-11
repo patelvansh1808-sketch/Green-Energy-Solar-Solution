@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 export default function OSMAddressInput({
   value,
   onChange,
+  onBlur,
   placeholder = "Address",
   className = "",
   required = false,
@@ -96,6 +97,7 @@ export default function OSMAddressInput({
   const inputProps = {
     value: query,
     onChange: handleInputChange,
+    onBlur,
     placeholder,
     required,
     disabled,

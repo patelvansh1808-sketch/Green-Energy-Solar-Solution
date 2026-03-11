@@ -120,22 +120,18 @@ export default function ApplyForSubsidy() {
     {
       key: "aadhaarCard",
       label: "Aadhaar Card",
-      icon: "🪪",
     },
     {
       key: "electricityBill",
       label: "Electricity Bill",
-      icon: "⚡",
     },
     {
       key: "bankStatement",
       label: "Bank Statement/Passbook",
-      icon: "🏦",
     },
     {
       key: "propertyDocument",
       label: "Property Document/Tax Receipt",
-      icon: "🏠",
     },
   ];
 
@@ -155,7 +151,7 @@ export default function ApplyForSubsidy() {
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
-            <span className="text-red-500 mr-2">✕</span>
+            <span className="text-red-500 mr-2">Error</span>
             <span className="text-red-700">{error}</span>
           </div>
         )}
@@ -163,7 +159,7 @@ export default function ApplyForSubsidy() {
         {/* Important Information */}
         <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
           <div className="flex items-start">
-            <span className="text-2xl mr-3">📋</span>
+            <span className="text-sm font-semibold text-blue-700 mr-3 mt-1">Info</span>
             <div>
               <h3 className="font-semibold text-blue-900 mb-1">Important Information</h3>
               <p className="text-blue-800 text-sm">
@@ -177,7 +173,7 @@ export default function ApplyForSubsidy() {
           {/* Required Documents */}
           <div>
             <h2 className="text-xl font-semibold text-gray-700 mb-1 flex items-center">
-              <span className="mr-2">📄</span> {t("subsidy.documents")} <span className="text-red-500 ml-1">*</span>
+              {t("subsidy.documents")} <span className="text-red-500 ml-1">*</span>
             </h2>
             <p className="text-gray-600 text-sm mb-4">Please upload clear copies of the following documents:</p>
 
@@ -189,7 +185,6 @@ export default function ApplyForSubsidy() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center">
-                      <span className="text-2xl mr-2">{field.icon}</span>
                       <h3 className="font-semibold text-gray-700">{field.label}</h3>
                     </div>
                     {documents[field.key] && (
@@ -215,7 +210,7 @@ export default function ApplyForSubsidy() {
 
                   {documents[field.key] && (
                     <p className="text-green-600 text-xs mt-2">
-                      ✓ {documents[field.key].name}
+                      Uploaded: {documents[field.key].name}
                     </p>
                   )}
 
@@ -230,7 +225,7 @@ export default function ApplyForSubsidy() {
           {/* Bank Account Details */}
           <div className="bg-blue-50 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-gray-700 mb-1 flex items-center">
-              <span className="mr-2">💳</span> {t("subsidy.bankDetails")}
+              {t("subsidy.bankDetails")}
             </h2>
             <p className="text-gray-600 text-sm mb-4">For transferring the approved subsidy amount</p>
 

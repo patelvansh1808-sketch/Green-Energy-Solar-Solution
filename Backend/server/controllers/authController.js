@@ -80,6 +80,17 @@ exports.register = async (req, res) => {
 
     // Build full name from firstName/lastName or use name field
     const fullName = name || `${firstName} ${lastName}`.trim();
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const normalizedPhone = String(phone || "").trim();
+    const normalizedAddress = String(address || "").trim();
+    const normalizedCity = String(city || "").trim();
+    const normalizedState = String(state || "").trim();
+    const normalizedDistrict = String(district || "").trim();
+    const normalizedDiscom = String(discom || "").trim();
+    const normalizedPincode = String(pincode || "").trim();
+    const normalizedConnectionType = String(connectionType || "Residential").trim();
+    const normalizedRole = String(role || "user").trim();
+    const numericCapacity = Number(systemCapacityKW);
     
     console.log('Processed fullName:', fullName);
     console.log('Email:', email);
@@ -87,19 +98,65 @@ exports.register = async (req, res) => {
     console.log('ConnectionType:', connectionType);
 
     // Validation
-    if (!fullName || !email || !password) {
+    if (!fullName || !normalizedEmail || !password) {
       console.log('Validation failed - missing required fields');
       return res.status(400).json({ message: "Name, email and password are required" });
     }
 
-    if (!phone || !address || !state || !district || !discom || !systemCapacityKW) {
+    if (!normalizedPhone || !normalizedAddress || !normalizedState || !normalizedDistrict || !normalizedDiscom || !systemCapacityKW) {
       return res.status(400).json({
         message: "Phone, address, state, district, DISCOM, and system capacity are required",
       });
     }
 
+    if (!/^[A-Za-z]+(?:[A-Za-z .'-]*[A-Za-z])?$/.test(fullName) || fullName.length < 3) {
+      return res.status(400).json({ message: "Enter a valid full name" });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({ message: "Enter a valid email address" });
+    }
+
+    if (String(password).length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters long" });
+    }
+
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return res.status(400).json({
+        message: "Password must include uppercase, lowercase, number, and special character",
+      });
+    }
+
+    if (!/^[6-9]\d{9}$/.test(normalizedPhone)) {
+      return res.status(400).json({ message: "Enter a valid 10-digit mobile number" });
+    }
+
+    if (normalizedAddress.length < 10) {
+      return res.status(400).json({ message: "Address must be at least 10 characters long" });
+    }
+
+    if (normalizedCity && !/^[A-Za-z]+(?:[A-Za-z .'-]*[A-Za-z])?$/.test(normalizedCity)) {
+      return res.status(400).json({ message: "Enter a valid city name" });
+    }
+
+    if (!/^\d{6}$/.test(normalizedPincode)) {
+      return res.status(400).json({ message: "Pincode must be exactly 6 digits" });
+    }
+
+    if (!Number.isFinite(numericCapacity) || numericCapacity <= 0 || numericCapacity > 10000) {
+      return res.status(400).json({ message: "Enter a valid system capacity" });
+    }
+
+    if (!["Residential", "Commercial", "Industrial"].includes(normalizedConnectionType)) {
+      return res.status(400).json({ message: "Select a valid connection type" });
+    }
+
+    if (!["user", "admin", "sales", "engineer", "technician", "support"].includes(normalizedRole)) {
+      return res.status(400).json({ message: "Invalid role selected" });
+    }
+
     // Check existing user
-    const exists = await User.findOne({ email });
+    const exists = await User.findOne({ email: normalizedEmail });
     if (exists) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -112,33 +169,33 @@ exports.register = async (req, res) => {
       firstName: firstName || fullName.split(' ')[0],
       lastName: lastName || fullName.split(' ').slice(1).join(' '),
       name: fullName,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       location,
-      connectionType: connectionType || 'Residential',
-      phone,
-      address,
-      city,
-      state,
-      district,
-      discom,
-      pincode,
-      systemCapacityKW: Number(systemCapacityKW),
-      role: role || 'user',
+      connectionType: normalizedConnectionType,
+      phone: normalizedPhone,
+      address: normalizedAddress,
+      city: normalizedCity,
+      state: normalizedState,
+      district: normalizedDistrict,
+      discom: normalizedDiscom,
+      pincode: normalizedPincode,
+      systemCapacityKW: numericCapacity,
+      role: normalizedRole,
     });
 
     console.log('User created successfully:', user.email);
 
     await upsertCustomerProfile(user, {
       fullName,
-      phone,
-      address,
-      city: city || location || "",
-      state,
-      district,
-      discom,
-      pincode: pincode || "",
-      systemCapacityKW,
+      phone: normalizedPhone,
+      address: normalizedAddress,
+      city: normalizedCity || location || "",
+      state: normalizedState,
+      district: normalizedDistrict,
+      discom: normalizedDiscom,
+      pincode: normalizedPincode,
+      systemCapacityKW: numericCapacity,
     });
 
     // Generate tokens

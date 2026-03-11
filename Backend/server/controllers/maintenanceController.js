@@ -58,6 +58,26 @@ const getUserDisplayName = (user) =>
   user?.email ||
   "";
 
+const ensureActiveCustomerProfile = async (userId) => {
+  const customer = await Customer.findOne({ userId }).select("status").lean();
+
+  if (!customer) {
+    const error = new Error(
+      "Customer profile not found. Please complete your profile before subscribing."
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (customer.status === "Inactive") {
+    const error = new Error(
+      "Your account is inactive. Please contact support to reactivate your account."
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+};
+
 const getOrCreateMaintenanceSettings = async () => {
   let settings = await MaintenanceSetting.findOne({ settingsKey: "default" });
   if (!settings) {
@@ -1425,6 +1445,8 @@ exports.createMaintenancePaymentOrder = async (req, res) => {
     const userId = req.user.id;
     const { planType } = req.body || {};
 
+    await ensureActiveCustomerProfile(userId);
+
     if (!planType || !PLAN_DEFAULTS[planType]) {
       return res.status(400).json({ message: "Invalid plan type" });
     }
@@ -1488,9 +1510,16 @@ exports.createMaintenancePaymentOrder = async (req, res) => {
       displayAmount: planConfig.totalAmount,
     });
   } catch (error) {
-    console.error("CREATE MAINTENANCE PAYMENT ORDER ERROR:", error);
-    return res.status(500).json({
-      message: "Failed to create payment order",
+    const statusCode = error.statusCode || 500;
+
+    if (statusCode >= 500) {
+      console.error("CREATE MAINTENANCE PAYMENT ORDER ERROR:", error);
+    } else {
+      console.warn("CREATE MAINTENANCE PAYMENT ORDER BLOCKED:", error.message);
+    }
+
+    return res.status(statusCode).json({
+      message: error.message || "Failed to create payment order",
       error: error.message,
     });
   }
@@ -1509,6 +1538,8 @@ exports.verifyMaintenancePaymentAndCreatePlan = async (req, res) => {
       razorpay_payment_id: razorpayPaymentId,
       razorpay_signature: razorpaySignature,
     } = req.body || {};
+
+    await ensureActiveCustomerProfile(userId);
 
     if (!planType || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
       return res.status(400).json({
@@ -1617,6 +1648,9 @@ exports.createPlan = async (req, res) => {
   try {
     const userId = req.user.id;
     const { planType, startDate, nextServiceDate, servicesTotal } = req.body;
+
+    await ensureActiveCustomerProfile(userId);
+
     const { plan } = await createMaintenancePlanForUser({
       userId,
       planType,

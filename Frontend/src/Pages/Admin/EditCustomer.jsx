@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "../../services/api";
 import LocationService from "../../services/locationService";
+import OSMAddressInput from "../../Components/OSMAddressInput";
 
 export default function EditCustomer() {
   const { id } = useParams();
@@ -86,7 +87,17 @@ export default function EditCustomer() {
 
   const handleChange = (e) => {
     if (formError) setFormError("");
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "district") {
+      setForm({
+        ...form,
+        district: value,
+      });
+      return;
+    }
+
+    setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -167,10 +178,14 @@ export default function EditCustomer() {
 
           <div>
             <label className="block text-sm font-semibold mb-2">Address *</label>
-            <input
-              name="address"
+            <OSMAddressInput
               value={form.address}
-              onChange={handleChange}
+              onChange={(nextAddress) =>
+                setForm((prev) => ({
+                  ...prev,
+                  address: nextAddress,
+                }))
+              }
               placeholder="Address"
               required
               className="w-full border rounded px-3 py-2"
@@ -240,6 +255,7 @@ export default function EditCustomer() {
               value={form.pincode}
               onChange={handleChange}
               placeholder="Pincode"
+              maxLength="6"
               className="w-full border rounded px-3 py-2"
             />
           </div>

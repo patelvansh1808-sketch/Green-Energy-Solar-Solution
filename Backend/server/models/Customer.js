@@ -26,6 +26,8 @@ const customerSchema = new mongoose.Schema(
     },
     city: String,
     state: String,
+    district: String,
+    discom: String,
     pincode: String,
 
     // Solar System Details
@@ -40,6 +42,12 @@ const customerSchema = new mongoose.Schema(
       type: String,
       enum: ["Active", "Inactive"],
       default: "Active",
+    },
+
+    source: {
+      type: String,
+      enum: ["online", "admin"],
+      default: "online",
     },
   },
   { timestamps: true }

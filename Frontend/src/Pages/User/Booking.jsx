@@ -3,6 +3,7 @@ import bookingService from "../../services/bookingService";
 import { LocationService } from "../../services/locationService";
 import { useAuth } from "../../Context/AuthContext";
 import { useI18n } from "../../Context/I18nContext";
+import OSMAddressInput from "../../Components/OSMAddressInput";
 
 const loadRazorpaySdk = () =>
   new Promise((resolve) => {
@@ -36,7 +37,6 @@ export default function Booking() {
     contactPerson: user?.email?.split("@")[0] || "",
     contactPhone: "",
     remarks: "",
-    financingOption: "Full Payment",
   });
 
   // UI State
@@ -68,6 +68,13 @@ export default function Booking() {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleDistrictChange = (district) => {
+    setFormData((prev) => ({
+      ...prev,
+      district,
     }));
   };
 
@@ -290,7 +297,6 @@ export default function Booking() {
           contactPerson: user?.email?.split("@")[0] || "",
           contactPhone: "",
           remarks: "",
-          financingOption: "Full Payment",
         });
       }, 3000);
     } catch (err) {
@@ -486,12 +492,7 @@ export default function Booking() {
                   </label>
                   <select
                     value={formData.district}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        district: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => handleDistrictChange(e.target.value)}
                     disabled={!formData.state}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition disabled:bg-gray-100"
                   >
@@ -542,18 +543,24 @@ export default function Booking() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {t("booking.address")} <span className="text-red-500">*</span>
                 </label>
-                <textarea
-                  name="address"
+                <OSMAddressInput
                   value={formData.address}
-                  onChange={handleInputChange}
+                  onChange={(nextAddress) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      address: nextAddress,
+                    }))
+                  }
                   placeholder="Complete address with house no., street, area"
-                  rows="3"
+                  required
+                  multiline
+                  rows={3}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition"
-                ></textarea>
+                />
               </div>
 
-              {/* Row 6: Pincode & Financing */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Row 6: Pincode */}
+              <div className="grid grid-cols-1 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t("booking.pincode")} <span className="text-red-500">*</span>
@@ -567,24 +574,6 @@ export default function Booking() {
                     maxLength="6"
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t("booking.financingOption")}
-                  </label>
-                  <select
-                    name="financingOption"
-                    value={formData.financingOption}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition"
-                  >
-                    <option value="Full Payment">{t("booking.fullPayment")}</option>
-                    <option value="3-Year EMI">{t("booking.threeYearEMI")}</option>
-                    <option value="5-Year EMI">{t("booking.fiveYearEMI")}</option>
-                    <option value="7-Year EMI">{t("booking.sevenYearEMI")}</option>
-                    <option value="MNRE Subsidy">{t("booking.mnreSubsidy")}</option>
-                  </select>
                 </div>
               </div>
 

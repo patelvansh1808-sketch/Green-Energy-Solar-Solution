@@ -7,10 +7,17 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String },
+  address: { type: String },
+  city: { type: String },
+  state: { type: String },
+  district: { type: String },
+  discom: { type: String },
+  pincode: { type: String },
+  systemCapacityKW: { type: Number },
 
   connectionType: {
     type: String,
-    enum: ["Residential", "Commercial"], // ✅ FIXED
+    enum: ["Residential", "Commercial", "Industrial"],
     required: true,
   },
 

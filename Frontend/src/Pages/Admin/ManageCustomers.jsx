@@ -89,12 +89,11 @@ export default function ManageCustomers() {
           Manage Customers ({filteredCustomers.length})
         </h2>
 
-        {/* Redirect to Create Customer page */}
         <button
           onClick={() => navigate("/admin/create-customer")}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold"
         >
-          ➕ Create Customer
+          + Create Customer
         </button>
       </div>
 
@@ -144,7 +143,12 @@ export default function ManageCustomers() {
               ) : (
                 filteredCustomers.map((c) => (
                   <tr key={c._id} className="border-t hover:bg-gray-50">
-                    <td className="p-3 font-semibold">{c.fullName}</td>
+                    <td className="p-3 font-semibold">
+                      {c.fullName}
+                      {c.userId?.email && (
+                        <p className="text-xs font-normal text-gray-500 mt-1">{c.userId.email}</p>
+                      )}
+                    </td>
                     <td className="p-3 text-center">{c.phone || "—"}</td>
                     <td className="p-3 text-center">{c.systemCapacityKW} kW</td>
                     <td className="p-3 text-center">
@@ -218,6 +222,9 @@ export default function ManageCustomers() {
                 <div className="flex justify-between items-start gap-2">
                   <div>
                     <p className="font-semibold text-gray-800">{c.fullName}</p>
+                    {c.userId?.email && (
+                      <p className="text-xs text-gray-500 mt-1">{c.userId.email}</p>
+                    )}
                     <p className="text-xs text-gray-600 mt-1">{c.phone || "—"}</p>
                   </div>
                   <span

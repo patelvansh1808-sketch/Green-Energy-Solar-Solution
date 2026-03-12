@@ -4,6 +4,11 @@ import api from "../../services/api";
 import { useAuth } from "../../Context/AuthContext";
 import { useI18n } from "../../Context/I18nContext";
 
+const rawBaseUrl = (process.env.REACT_APP_API_BASE_URL || "http://localhost:5000")
+  .trim()
+  .replace(/\/+$/, "");
+const authBaseUrl = rawBaseUrl.endsWith("/api") ? rawBaseUrl : `${rawBaseUrl}/api`;
+
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -50,7 +55,7 @@ export default function Login() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5000/api/auth/google";
+    window.location.href = `${authBaseUrl}/auth/google`;
   };
 
   return (

@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
-import api from "../../services/api";
 
 export default function GoogleAuthSuccess() {
   const navigate = useNavigate();
@@ -28,56 +27,37 @@ export default function GoogleAuthSuccess() {
       console.log("✅ Tokens stored successfully");
       console.log("Access Token:", token.substring(0, 20) + "...");
       
-      // Fetch user profile using the api instance (which includes auth header)
-      api
-        .get("/users/profile")
-        .then((res) => {
-          console.log("✅ User profile fetched:", res.data);
-          login(token, res.data, refreshToken);
-          const role = String(res.data?.role || "")
-            .toLowerCase()
-            .replace(/[\s-]/g, "_");
-          if (role === "admin") {
-            navigate("/admin");
-          } else if (role === "support") {
-            navigate("/admin/tickets");
-          } else if (role === "engineer" || role === "technician") {
-            navigate("/engineer/dashboard");
-          } else if (role.includes("sales")) {
-            navigate("/team/my-leads");
-          } else {
-            navigate("/");
-          }
-        })
-        .catch((error) => {
-          console.error("❌ Error fetching user profile:", error.response?.data || error.message);
-          // Try decoding token if profile fetch fails
-          try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const payload = JSON.parse(window.atob(base64));
-            
-            const user = { _id: payload.id, role: payload.role };
-            login(token, user, refreshToken);
-            const normalizedRole = String(user.role || "")
-              .toLowerCase()
-              .replace(/[\s-]/g, "_");
-            if (normalizedRole === "admin") {
-              navigate("/admin");
-            } else if (normalizedRole === "support") {
-              navigate("/admin/tickets");
-            } else if (normalizedRole === "engineer" || normalizedRole === "technician") {
-              navigate("/engineer/dashboard");
-            } else if (normalizedRole.includes("sales")) {
-              navigate("/team/my-leads");
-            } else {
-              navigate("/");
-            }
-          } catch (err) {
-            console.error("❌ Token decode failed:", err);
-            navigate("/login?error=authentication_failed");
-          }
-        });
+      // Decode token immediately without API call to avoid delays/errors
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64));
+        
+        console.log("✅ Token decoded:", payload);
+        const user = { _id: payload.id, role: payload.role, email: payload.email };
+        login(token, user, refreshToken);
+        
+        const normalizedRole = String(payload.role || "")
+          .toLowerCase()
+          .replace(/[\s-]/g, "_");
+        
+        console.log("✅ Redirecting user with role:", normalizedRole);
+        
+        if (normalizedRole === "admin") {
+          navigate("/admin");
+        } else if (normalizedRole === "support") {
+          navigate("/admin/tickets");
+        } else if (normalizedRole === "engineer" || normalizedRole === "technician") {
+          navigate("/engineer/dashboard");
+        } else if (normalizedRole.includes("sales")) {
+          navigate("/team/my-leads");
+        } else {
+          navigate("/dashboard");
+        }
+      } catch (err) {
+        console.error("❌ Token decode failed:", err);
+        navigate("/login?error=authentication_failed");
+      }
     } else {
       console.error("❌ No token found in URL");
       navigate("/login?error=no_token");

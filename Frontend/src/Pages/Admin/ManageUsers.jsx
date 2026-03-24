@@ -7,6 +7,7 @@ export default function ManageUsers() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [changingPasswordUserId, setChangingPasswordUserId] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -62,11 +63,86 @@ export default function ManageUsers() {
       : "bg-red-100 text-red-800 border-red-300";
   };
 
+  const getDisplayName = (user) => {
+    const fullName = [user?.firstName, user?.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    if (fullName) return fullName;
+    if (user?.name) return user.name;
+    if (user?.email) return user.email.split("@")[0];
+    return "Unknown User";
+  };
+
+  const formatJoinedDate = (value) => {
+    if (!value) return "N/A";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "N/A";
+    return parsed.toLocaleDateString("en-GB");
+  };
+
   const stats = {
     total: users.length,
     customers: users.filter((u) => ["user", "customer"].includes(String(u.role || "").toLowerCase())).length,
     active: users.filter((u) => u.isActive !== false).length,
     inactive: users.filter((u) => u.isActive === false).length,
+  };
+
+  const handleChangePassword = async (user) => {
+    const enteredPassword = window.prompt(
+      `Enter new password for ${getDisplayName(user)}:`
+    );
+
+    if (!enteredPassword) return;
+
+    const newPassword = enteredPassword.trim();
+
+    if (newPassword.length < 8) {
+      window.alert("Password must be at least 8 characters long");
+      return;
+    }
+
+    if (
+      !/[A-Z]/.test(newPassword) ||
+      !/[a-z]/.test(newPassword) ||
+      !/\d/.test(newPassword) ||
+      !/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)
+    ) {
+      window.alert(
+        "Password must include uppercase, lowercase, number, and special character"
+      );
+      return;
+    }
+
+    try {
+      setChangingPasswordUserId(user._id);
+      await api.patch(`/admin/users/${user._id}/password`, { newPassword });
+      window.alert("Password updated successfully");
+    } catch (err) {
+      window.alert(err.response?.data?.message || "Failed to update password");
+    } finally {
+      setChangingPasswordUserId("");
+    }
+  };
+
+  const handleDeleteUser = async (user) => {
+    const displayName = getDisplayName(user);
+    const confirmation = window.prompt(
+      `Type DELETE to permanently remove ${displayName} and all related data:`
+    );
+
+    if (confirmation !== "DELETE") {
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/users/${user._id}`);
+      window.alert("User and related data deleted successfully");
+      await fetchUsers();
+    } catch (err) {
+      window.alert(err.response?.data?.message || "Failed to delete user");
+    }
   };
 
   if (loading) {
@@ -200,6 +276,9 @@ export default function ManageUsers() {
                       <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
                         Status
                       </th>
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -211,10 +290,10 @@ export default function ManageUsers() {
                         <td className="px-4 sm:px-6 py-3">
                           <div>
                             <p className="font-semibold text-gray-800">
-                              {user.firstName} {user.lastName}
+                              {getDisplayName(user)}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {new Date(user.createdAt).toLocaleDateString()}
+                              {formatJoinedDate(user.createdAt)}
                             </p>
                           </div>
                         </td>
@@ -244,6 +323,27 @@ export default function ManageUsers() {
                             {user.isActive !== false ? "Active" : "Inactive"}
                           </span>
                         </td>
+                        <td className="px-4 sm:px-6 py-3">
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleChangePassword(user)}
+                              disabled={changingPasswordUserId === user._id}
+                              className="px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                            >
+                              {changingPasswordUserId === user._id
+                                ? "Updating..."
+                                : "Change Password"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(user)}
+                              className="px-3 py-1.5 text-xs font-semibold rounded-md bg-red-600 text-white hover:bg-red-700"
+                            >
+                              Delete User
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -266,10 +366,10 @@ export default function ManageUsers() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="text-base font-semibold text-gray-800">
-                        {user.firstName} {user.lastName}
+                        {getDisplayName(user)}
                       </h3>
                       <p className="text-xs text-gray-500 mt-1">
-                        {new Date(user.createdAt).toLocaleDateString()}
+                        {formatJoinedDate(user.createdAt)}
                       </p>
                     </div>
                     <span
@@ -305,6 +405,27 @@ export default function ManageUsers() {
                       >
                         {getRoleLabel(user.role)}
                       </span>
+                    </div>
+                    <div className="pt-1">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleChangePassword(user)}
+                          disabled={changingPasswordUserId === user._id}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                        >
+                          {changingPasswordUserId === user._id
+                            ? "Updating..."
+                            : "Change Password"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(user)}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-md bg-red-600 text-white hover:bg-red-700"
+                        >
+                          Delete User
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

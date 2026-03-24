@@ -64,7 +64,14 @@ exports.getAdminStats = async (req, res) => {
  */
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const { scope } = req.query || {};
+    const query = {};
+
+    if (scope === "customers") {
+      query.role = { $in: ["user", "customer"] };
+    }
+
+    const users = await User.find(query).select("-password");
     res.json(users);
   } catch (err) {
     console.error("GET USERS ERROR:", err.message);

@@ -15,7 +15,7 @@ export default function ManageUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/admin/users");
+      const response = await api.get("/admin/users?scope=customers");
       setUsers(response.data || []);
       setError("");
     } catch (err) {
@@ -28,7 +28,11 @@ export default function ManageUsers() {
 
   // Filter users by role
   const filteredUsers = users.filter((user) => {
-    const matchRole = filter === "all" || user.role === filter;
+    const normalizedRole = String(user.role || "").toLowerCase();
+    const effectiveRole = ["user", "customer"].includes(normalizedRole)
+      ? "user"
+      : normalizedRole;
+    const matchRole = filter === "all" || effectiveRole === filter;
     const matchSearch =
       user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,14 +43,17 @@ export default function ManageUsers() {
 
   const getRoleBadgeColor = (role) => {
     const colors = {
-      admin: "bg-purple-100 text-purple-800 border-purple-300",
-      engineer: "bg-blue-100 text-blue-800 border-blue-300",
-      technician: "bg-cyan-100 text-cyan-800 border-cyan-300",
-      sales: "bg-green-100 text-green-800 border-green-300",
-      support: "bg-orange-100 text-orange-800 border-orange-300",
+      user: "bg-gray-100 text-gray-800 border-gray-300",
       customer: "bg-gray-100 text-gray-800 border-gray-300",
     };
-    return colors[role] || colors.customer;
+    return colors[String(role || "").toLowerCase()] || colors.user;
+  };
+
+  const getRoleLabel = (role) => {
+    const normalizedRole = String(role || "").toLowerCase();
+    return normalizedRole === "customer" || normalizedRole === "user"
+      ? "Customer"
+      : normalizedRole.charAt(0).toUpperCase() + normalizedRole.slice(1);
   };
 
   const getStatusBadgeColor = (isActive) => {
@@ -57,13 +64,9 @@ export default function ManageUsers() {
 
   const stats = {
     total: users.length,
-    admins: users.filter((u) => u.role === "admin").length,
-    engineers: users.filter((u) => u.role === "engineer").length,
-    technicians: users.filter((u) => u.role === "technician").length,
-    sales: users.filter((u) => u.role === "sales").length,
-    support: users.filter((u) => u.role === "support").length,
-    customers: users.filter((u) => u.role === "customer").length,
+    customers: users.filter((u) => ["user", "customer"].includes(String(u.role || "").toLowerCase())).length,
     active: users.filter((u) => u.isActive !== false).length,
+    inactive: users.filter((u) => u.isActive === false).length,
   };
 
   if (loading) {
@@ -85,9 +88,9 @@ export default function ManageUsers() {
         {/* HEADER */}
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
-            All Users Management
+            Customer Users Management
           </h1>
-          <p className="text-gray-600">View and manage all system users</p>
+          <p className="text-gray-600">View and manage customer/user accounts</p>
         </div>
 
         {/* ERROR ALERT */}
@@ -107,16 +110,16 @@ export default function ManageUsers() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-4 sm:p-6 border-l-4 border-purple-500">
-            <p className="text-sm text-gray-500 font-medium">Admins</p>
+            <p className="text-sm text-gray-500 font-medium">Customers</p>
             <p className="text-2xl sm:text-3xl font-bold text-purple-600 mt-2">
-              {stats.admins}
+              {stats.customers}
             </p>
           </div>
 
           <div className="bg-white rounded-lg shadow p-4 sm:p-6 border-l-4 border-green-500">
-            <p className="text-sm text-gray-500 font-medium">Engineers</p>
+            <p className="text-sm text-gray-500 font-medium">Inactive Users</p>
             <p className="text-2xl sm:text-3xl font-bold text-green-600 mt-2">
-              {stats.engineers}
+              {stats.inactive}
             </p>
           </div>
 
@@ -154,12 +157,7 @@ export default function ManageUsers() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Users</option>
-                <option value="admin">Admin</option>
-                <option value="engineer">Engineer</option>
-                <option value="technician">Technician</option>
-                <option value="sales">Sales</option>
-                <option value="support">Support</option>
-                <option value="customer">Customer</option>
+                <option value="user">Customer</option>
               </select>
             </div>
 
@@ -234,8 +232,7 @@ export default function ManageUsers() {
                               user.role
                             )}`}
                           >
-                            {user.role.charAt(0).toUpperCase() +
-                              user.role.slice(1)}
+                            {getRoleLabel(user.role)}
                           </span>
                         </td>
                         <td className="px-4 sm:px-6 py-3">
@@ -306,7 +303,7 @@ export default function ManageUsers() {
                           user.role
                         )}`}
                       >
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        {getRoleLabel(user.role)}
                       </span>
                     </div>
                   </div>

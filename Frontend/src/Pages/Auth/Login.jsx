@@ -36,10 +36,11 @@ export default function Login() {
       const role = String(res.data.user?.role || "")
         .toLowerCase()
         .replace(/[\s-]/g, "_");
+      const isSupportRole = role.includes("support");
       if (role === "admin") {
         navigate("/admin");
-      } else if (role === "support") {
-        navigate("/admin/tickets");
+      } else if (isSupportRole) {
+        navigate("/support/tickets");
       } else if (role === "engineer" || role === "technician") {
         navigate("/engineer/dashboard");
       } else if (role.includes("sales")) {

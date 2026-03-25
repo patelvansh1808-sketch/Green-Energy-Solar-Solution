@@ -254,6 +254,15 @@ function AnimatedRoutes() {
           }
         />
 
+        <Route
+          path="/support/tickets"
+          element={
+            <ProtectedRoute role={["admin", "support", "support_staff"]}>
+              <TicketManagement />
+            </ProtectedRoute>
+          }
+        />
+
       </Routes>
     </div>
   );

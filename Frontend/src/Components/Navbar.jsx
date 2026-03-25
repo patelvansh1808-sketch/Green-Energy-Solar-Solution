@@ -33,10 +33,11 @@ export default function Navbar() {
   const normalizedRole = String(user?.role || "")
     .toLowerCase()
     .replace(/[\s-]/g, "_");
+  const isSupportRole = normalizedRole.includes("support");
   const isAdmin = user?.role === "admin";
   const isEngineerOrTechnician = normalizedRole === "engineer" || normalizedRole === "technician";
   const isSalesRole = normalizedRole.includes("sales");
-  const isTeamMember = isEngineerOrTechnician || isSalesRole || normalizedRole === "support";
+  const isTeamMember = isEngineerOrTechnician || isSalesRole || isSupportRole;
 
   return (
     <nav className="bg-white text-gray-800 shadow-lg sticky top-0 z-50 border-b border-gray-200">
@@ -107,6 +108,16 @@ export default function Navbar() {
                 </Link>
               )}
 
+              {/* TICKET MANAGEMENT */}
+              {(isAdmin || isSupportRole) && (
+                <Link
+                  to={isAdmin ? "/admin/tickets" : "/support/tickets"}
+                  className="hover:text-blue-600 transition"
+                >
+                  Ticket Management
+                </Link>
+              )}
+
               {/* NOTIFICATIONS BELL */}
               <NotificationBell />
 
@@ -138,10 +149,6 @@ export default function Navbar() {
                       <NavItem to="/admin/inventory" label="Inventory Management" admin />
                       <NavItem to="/admin" label="Admin Dashboard" admin />
                     </>
-                  )}
-
-                  {(isAdmin || user?.role === "support") && (
-                    <NavItem to="/admin/tickets" label="Ticket Management" admin />
                   )}
 
                   <button
@@ -230,6 +237,13 @@ export default function Navbar() {
                 <MobileItem to="/team/my-leads" label={t("nav.myLeads") || "My Leads"} />
               )}
 
+              {(isAdmin || isSupportRole) && (
+                <MobileItem
+                  to={isAdmin ? "/admin/tickets" : "/support/tickets"}
+                  label="Ticket Management"
+                />
+              )}
+
               <p className="text-xs uppercase text-gray-500 mt-3">{t("nav.profile")}</p>
               <MobileItem to="/profile" label={t("nav.myProfile")} />
               <MobileItem to="/my-activity" label="My Activity" />
@@ -244,10 +258,6 @@ export default function Navbar() {
                   <MobileItem to="/admin/inventory" label="Inventory Management" />
                   <MobileItem to="/admin" label="Admin Dashboard" />
                 </>
-              )}
-
-              {(isAdmin || user?.role === "support") && (
-                <MobileItem to="/admin/tickets" label="Ticket Management" />
               )}
 
               <MobileItem to="/support" label={t("common.support")} />

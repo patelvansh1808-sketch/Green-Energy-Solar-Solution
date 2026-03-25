@@ -14,8 +14,14 @@ export default function ProtectedRoute({ children, role }) {
   // 🔐 Role-based protection
   if (role) {
     // Support both single role (string) and multiple roles (array)
-    const allowedRoles = Array.isArray(role) ? role : [role];
-    if (!allowedRoles.includes(user.role)) {
+    const normalizeRole = (value) =>
+      String(value || "")
+        .toLowerCase()
+        .replace(/[\s-]/g, "_");
+    const allowedRoles = (Array.isArray(role) ? role : [role]).map(normalizeRole);
+    const userRole = normalizeRole(user.role);
+
+    if (!allowedRoles.includes(userRole)) {
       return <Navigate to="/login" replace />;
     }
   }

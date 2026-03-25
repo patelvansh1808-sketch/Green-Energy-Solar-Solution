@@ -40,13 +40,14 @@ export default function GoogleAuthSuccess() {
         const normalizedRole = String(payload.role || "")
           .toLowerCase()
           .replace(/[\s-]/g, "_");
+        const isSupportRole = normalizedRole.includes("support");
         
         console.log("✅ Redirecting user with role:", normalizedRole);
         
         if (normalizedRole === "admin") {
           navigate("/admin");
-        } else if (normalizedRole === "support") {
-          navigate("/admin/tickets");
+        } else if (isSupportRole) {
+          navigate("/support/tickets");
         } else if (normalizedRole === "engineer" || normalizedRole === "technician") {
           navigate("/engineer/dashboard");
         } else if (normalizedRole.includes("sales")) {

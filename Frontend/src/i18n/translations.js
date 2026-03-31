@@ -79,7 +79,7 @@ const translations = {
       welcome: "Welcome to Our Platform",
       heroTitle: "Smart Solar Energy",
       heroHighlight: "Management System",
-      heroBody: "Greenergy Solar Solution offers trusted, end-to-end solar management with premium analytics, AI power prediction, and government subsidy support. Maximize your savings and sustainability.",
+      heroBody: "A unified platform designed to simplify your solar journey—covering booking, installation, subsidies, maintenance, support, and real-time performance insights.",
       viewDashboard: "View Dashboard",
       bookSolar: "Book Solar Panel",
       benefitsTitle: "Benefits to Save Energy",
